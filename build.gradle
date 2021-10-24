@@ -1,0 +1,4 @@
+allprojects {
+    group 'org.apache.skywalking.showcase'
+    version '1.0.0-SNAPSHOT'
+}

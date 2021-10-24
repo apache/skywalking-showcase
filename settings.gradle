@@ -1,0 +1,6 @@
+rootProject.name = 'skywalking-showcase'
+
+include(
+    'services:java-service'
+)
+
