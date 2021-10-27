@@ -28,8 +28,8 @@ clean:
 
 docker: docker.push
 
-docker.build: clean
-	docker build . -t $(HUB)/song-service:$(TAG)
+docker.build: build
+	docker build . -t $(HUB)/gateway-service:$(TAG)
 
 docker.push: docker.build
-	docker push $(HUB)/song-service:$(TAG)
+	docker push $(HUB)/gateway-service:$(TAG)

@@ -1,6 +1,0 @@
-afterEvaluate {
-    exec {
-        commandLine 'python3', '-m', 'venv', '.venv'
-        ignoreExitValue true
-    }
-}

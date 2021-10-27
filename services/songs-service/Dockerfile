@@ -16,16 +16,8 @@
 # under the License.
 #
 
-FROM ghcr.io/apache/skywalking-java/jdk-11:latest as build
-
-COPY . /workspace
-
-WORKDIR /workspace
-
-RUN ./gradlew build
-
 FROM ghcr.io/apache/skywalking-java/jdk-11:latest
 
-COPY --from=build /workspace/build/libs/skywalking-showcase-0.0.1-SNAPSHOT.jar /app.jar
+COPY build/libs/songs-service-0.0.1-SNAPSHOT.jar /app.jar
 
 CMD ["java", "-jar", "/app.jar"]

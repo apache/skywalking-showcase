@@ -17,3 +17,5 @@
  * under the License.
  *
  */
+rootProject.name = 'songs-service'
+

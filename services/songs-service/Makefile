@@ -16,23 +16,20 @@
 # under the License.
 #
 
-.PHONY: build
+include ../../Makefile.in
+
+.PHONY: build clean
 build:
-	$(MAKE) -C services/gateway-service build
-	$(MAKE) -C services/songs-service build
+	./gradlew build
+clean:
+	./gradlew clean
 
-.PHONY: docker
-docker: docker.build
+.PHONY: docker docker.build docker.push
 
-.PHONY: docker.build
-docker.build:
-	$(MAKE) -C services/gateway-service docker.build
-	$(MAKE) -C services/songs-service docker.build
+docker: docker.push
 
-.PHONY: deploy.docker
-deploy.docker: undeploy.docker docker.build
-	$(MAKE) -C deploy/platform/docker deploy
+docker.build: build
+	docker build . -t $(HUB)/songs-service:$(TAG)
 
-.PHONY: undeploy.docker
-undeploy.docker:
-	$(MAKE) -C deploy/platform/docker undeploy
+docker.push: docker.build
+	docker push $(HUB)/songs-service:$(TAG)

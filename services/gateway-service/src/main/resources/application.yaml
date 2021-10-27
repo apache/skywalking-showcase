@@ -1,0 +1,12 @@
+server:
+  port: 80
+  address: 0.0.0.0
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: songs-service
+          uri: http://songs
+          predicates:
+            - Path=/songs/**

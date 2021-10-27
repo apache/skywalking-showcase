@@ -16,23 +16,10 @@
 # under the License.
 #
 
-.PHONY: build
-build:
-	$(MAKE) -C services/gateway-service build
-	$(MAKE) -C services/songs-service build
+FROM ghcr.io/apache/skywalking-java/jdk-11:latest
 
-.PHONY: docker
-docker: docker.build
+COPY build/libs/gateway-service-0.0.1-SNAPSHOT.jar /app.jar
 
-.PHONY: docker.build
-docker.build:
-	$(MAKE) -C services/gateway-service docker.build
-	$(MAKE) -C services/songs-service docker.build
+RUN mv /skywalking/agent/optional-plugins/apm-spring-cloud-gateway-3.x-plugin-*.jar /skywalking/agent/plugins/
 
-.PHONY: deploy.docker
-deploy.docker: undeploy.docker docker.build
-	$(MAKE) -C deploy/platform/docker deploy
-
-.PHONY: undeploy.docker
-undeploy.docker:
-	$(MAKE) -C deploy/platform/docker undeploy
+CMD ["java", "-jar", "/app.jar"]
