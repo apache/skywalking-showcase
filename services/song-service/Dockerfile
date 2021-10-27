@@ -15,15 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Ignore Gradle project-specific cache directory
-.gradle
 
-# Ignore Gradle build output directory
-build
+FROM ghcr.io/apache/skywalking-java/jdk-11:latest as build
 
-.idea
-*.iml
+COPY . /workspace
 
-.venv
+WORKDIR /workspace
 
-.DS_Store
+RUN ./gradlew build
+
+FROM ghcr.io/apache/skywalking-java/jdk-11:latest
+
+COPY --from=build /workspace/build/libs/skywalking-showcase-0.0.1-SNAPSHOT.jar /app.jar
+
+CMD ["java", "-jar", "/app.jar"]

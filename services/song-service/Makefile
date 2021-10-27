@@ -15,15 +15,21 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Ignore Gradle project-specific cache directory
-.gradle
 
-# Ignore Gradle build output directory
-build
+include ../../Makefile.in
 
-.idea
-*.iml
+.PHONY: build clean
+build:
+	./gradlew build
+clean:
+	./gradlew clean
 
-.venv
+.PHONY: docker docker.build docker.push
 
-.DS_Store
+docker: docker.push
+
+docker.build: clean
+	docker build . -t $(HUB)/song-service:$(TAG)
+
+docker.push: docker.build
+	docker push $(HUB)/song-service:$(TAG)

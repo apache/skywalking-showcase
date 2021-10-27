@@ -15,15 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# Ignore Gradle project-specific cache directory
-.gradle
+server:
+  port: 8081
 
-# Ignore Gradle build output directory
-build
-
-.idea
-*.iml
-
-.venv
-
-.DS_Store
+spring:
+  jpa:
+    defer-datasource-initialization: true
