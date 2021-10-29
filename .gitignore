@@ -21,7 +21,7 @@
 # Ignore Gradle build output directory
 build
 
-.venv
+venv
 
 .DS_Store
 

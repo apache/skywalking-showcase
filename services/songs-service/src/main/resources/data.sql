@@ -27,7 +27,9 @@
 --
 
 insert into song
-    (id, name, artist, genre)
-values (1, '倩女幽魂', '张国荣', 'HK-POP'),
-       (2, '沉默是金', '张国荣', 'HK-POP')
+    (id, name, artist, genre, liked)
+values (1, '倩女幽魂', '张国荣', 'HK-POP', 999),
+       (2, '沉默是金', '张国荣', 'HK-POP', 1000),
+       (3, '风继续吹', '张国荣', 'HK-POP', 1002),
+       (4, '灰色轨迹', 'Beyond', 'HK-POP', 9000)
 ;

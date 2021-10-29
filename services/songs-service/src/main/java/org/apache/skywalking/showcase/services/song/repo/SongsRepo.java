@@ -18,10 +18,12 @@
 
 package org.apache.skywalking.showcase.services.song.repo;
 
+import java.util.List;
 import org.apache.skywalking.showcase.services.song.entity.Song;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SongsRepo extends JpaRepository<Song, Integer> {
+    List<Song> findByLikedGreaterThan(long count);
 }

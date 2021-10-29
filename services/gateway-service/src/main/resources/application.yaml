@@ -10,3 +10,7 @@ spring:
           uri: http://songs
           predicates:
             - Path=/songs/**
+        - id: recommendation-service
+          uri: http://rcmd
+          predicates:
+            - Path=/rcmd/**

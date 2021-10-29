@@ -16,35 +16,17 @@
 # under the License.
 #
 
-# Build each project under services/*
-
-services = $(wildcard services/*)
-
-.PHONY: $(services)
-$(services):
-	$(MAKE) -C $@ build
+include ../../Makefile.in
 
 .PHONY: build
-build: $(services)
+build: docker.build
 
-# Build Docker images
+.PHONY: docker docker.build docker.push
 
-services_docker = $(foreach svc,$(services),$(svc).docker.build)
+docker: docker.push
 
-.PHONY: docker
-docker: $(services_docker)
+docker.build:
+	docker build . -t $(HUB)/recommendation-service:$(TAG)
 
-.PHONY: $(services_docker)
-$(services_docker): %.docker.build: %
-	$(MAKE) -C $< docker.build
-
-.PHONY: docker.build
-docker.build: $(services_docker)
-
-.PHONY: deploy.docker
-deploy.docker: undeploy.docker docker.build
-	$(MAKE) -C deploy/platform/docker deploy
-
-.PHONY: undeploy.docker
-undeploy.docker:
-	$(MAKE) -C deploy/platform/docker undeploy
+docker.push: docker.build
+	docker push $(HUB)/recommendation-service:$(TAG)

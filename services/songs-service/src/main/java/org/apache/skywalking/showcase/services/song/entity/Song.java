@@ -43,4 +43,7 @@ public class Song {
 
     @Column
     private String genre;
+
+    @Column(nullable = false)
+    private long liked = 0;
 }

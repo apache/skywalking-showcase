@@ -55,8 +55,6 @@ services:
     environment:
       SW_AGENT_NAME: gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    ports:
-      - "7389:80"
     healthcheck:
       test: [ "CMD-SHELL", "wget http://localhost/actuator/health" ]
       interval: 30s
@@ -74,10 +72,23 @@ services:
     environment:
       SW_AGENT_NAME: songs
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    ports:
-      - "7390:80"
     healthcheck:
       test: [ "CMD-SHELL", "wget http://localhost/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      oap:
+        condition: service_healthy
+
+  rcmd:
+    image: ${HUB}/recommendation-service:${TAG}
+    networks: [ sw ]
+    environment:
+      SW_AGENT_NAME: recommendation
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -96,7 +107,8 @@ services:
       - -c
       - |
         while true; do
-          curl http://gateway/songs
+          curl http://gateway/songs/top
+          curl http://gateway/songs/favorites
           sleep 3
         done
 

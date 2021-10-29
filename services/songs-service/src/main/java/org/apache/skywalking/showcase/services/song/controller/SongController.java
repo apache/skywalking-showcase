@@ -22,18 +22,37 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.apache.skywalking.showcase.services.song.entity.Song;
 import org.apache.skywalking.showcase.services.song.repo.SongsRepo;
+import org.apache.skywalking.showcase.services.song.vo.TrendingList;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/songs")
 public class SongController {
     private final SongsRepo songsRepo;
+    private final RestTemplate restTemplate;
 
     @GetMapping
     public List<Song> songs() {
         return songsRepo.findAll();
+    }
+
+    @GetMapping("/top")
+    public TrendingList top() {
+        final List<Song> top = songsRepo.findByLikedGreaterThan(1000);
+        final ResponseEntity<List<Song>> res = restTemplate.exchange(
+            "/rcmd", HttpMethod.GET, null, new ParameterizedTypeReference<List<Song>>() {
+            });
+        if (res.getStatusCode() != HttpStatus.OK) {
+            throw new RuntimeException("Failed to get recommendations");
+        }
+        return new TrendingList(top, res.getBody());
     }
 }
