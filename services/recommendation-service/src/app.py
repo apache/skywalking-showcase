@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     @app.route('/rcmd', methods=['GET'])
     def application():
-        r = requests.get('http://gateway/songs')
+        r = requests.get('http://songs/songs')
         recommendations = r.json()
         return jsonify(recommendations)
 

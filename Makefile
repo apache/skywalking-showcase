@@ -51,3 +51,12 @@ deploy.docker: undeploy.docker docker.build
 .PHONY: undeploy.docker
 undeploy.docker:
 	$(MAKE) -C deploy/platform/docker undeploy
+
+## Kubernetes
+.PHONY: deploy.kubernetes
+deploy.kubernetes: undeploy.kubernetes docker.build
+	$(MAKE) -C deploy/platform/kubernetes deploy
+
+.PHONY: undeploy.kubernetes
+undeploy.kubernetes:
+	$(MAKE) -C deploy/platform/kubernetes undeploy
