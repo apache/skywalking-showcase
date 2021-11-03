@@ -38,7 +38,7 @@ services:
         hard: -1
 
   oap:
-    image: ${OAP_IMAGE}
+    image: ${SW_OAP_IMAGE}
     networks: [ sw ]
     environment:
       SW_HEALTH_CHECKER: default
@@ -56,7 +56,7 @@ services:
         condition: service_healthy
 
   rocket-bot:
-    image: ${ROCKET_BOT_IMAGE}
+    image: ${SW_ROCKET_BOT_IMAGE}
     networks: [ sw ]
     ports:
       - "9999:8080"

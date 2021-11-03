@@ -45,7 +45,7 @@ docker.build: $(services_docker)
 
 ## Docker Compose
 .PHONY: deploy.docker
-deploy.docker: undeploy.docker docker.build
+deploy.docker: undeploy.docker
 	$(MAKE) -C deploy/platform/docker deploy
 
 .PHONY: undeploy.docker
@@ -54,7 +54,7 @@ undeploy.docker:
 
 ## Kubernetes
 .PHONY: deploy.kubernetes
-deploy.kubernetes: undeploy.kubernetes docker.build
+deploy.kubernetes: undeploy.kubernetes
 	$(MAKE) -C deploy/platform/kubernetes deploy
 
 .PHONY: undeploy.kubernetes
