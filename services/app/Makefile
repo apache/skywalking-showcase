@@ -16,14 +16,17 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+include ../../Makefile.in
 
-HUB ?= ghcr.io/apache/skywalking-showcase
-TAG ?= $(shell git rev-parse --short HEAD)
+.PHONY: build
+build: docker.build
 
-ES_VERSION ?= 7.10.0
-OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c9bd79e8bb974e404766e3490c00c7404b9baf1e
-ROCKET_BOT_IMAGE ?= ghcr.io/apache/skywalking/ui:c9bd79e8bb974e404766e3490c00c7404b9baf1e
+.PHONY: docker docker.build docker.push
 
-SW_NODEJS_BACKEND_VERSION ?= e755659c7f308d3b5589619778c8360308cb14f8
-SW_NODEJS_FRONTEND_VERSION ?= af0565a67d382b683c1dbd94c379b7080db61449
+docker: docker.push
+
+docker.build:
+	docker build . -t $(HUB)/app:$(TAG)
+
+docker.push: docker.build
+	docker push $(HUB)/app:$(TAG)
