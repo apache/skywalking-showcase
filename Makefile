@@ -41,6 +41,9 @@ $(services_docker): %.docker.build: %
 .PHONY: docker.build
 docker.build: $(services_docker)
 
+# Deploy and Undeploy
+
+## Docker Compose
 .PHONY: deploy.docker
 deploy.docker: undeploy.docker docker.build
 	$(MAKE) -C deploy/platform/docker deploy

@@ -26,7 +26,10 @@ build: docker.build
 docker: docker.push
 
 docker.build:
-	docker build . -t $(HUB)/app:$(TAG)
+	docker build \
+		--build-arg SW_AGENT_NODEJS_FRONTEND_VERSION=${SW_AGENT_NODEJS_FRONTEND_VERSION} \
+		--build-arg SW_AGENT_NODEJS_BACKEND_VERSION=${SW_AGENT_NODEJS_BACKEND_VERSION} \
+		. -t $(HUB)/app:$(TAG)
 
 docker.push: docker.build
 	docker push $(HUB)/app:$(TAG)

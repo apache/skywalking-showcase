@@ -23,6 +23,10 @@ header:
 
   paths-ignore:
     - '**/build/**'
+    - '**/node_modules/**'
+    - '**/venv/**'
+    - '**/*.md'
+    - '**/*.json'
     - 'LICENSE'
     - 'NOTICE'
 
