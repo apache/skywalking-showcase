@@ -25,7 +25,7 @@ $(services):
 	$(MAKE) -C $@ build
 
 .PHONY: build
-build: $(services) ## Build the services
+build: $(services) ## Build the services if needed (e.g.: compiling Java files, build Go binary), do nothing if no need (e.g.: Python)
 
 services_docker = $(foreach svc,$(services),$(svc).docker.build)
 .PHONY: docker
@@ -35,8 +35,13 @@ docker: $(services_docker) ## Build Docker images
 $(services_docker): %.docker.build: %
 	$(MAKE) -C $< docker.build
 
-.PHONY: docker.build
-docker.build: $(services_docker)
+services_push = $(foreach svc,$(services),$(svc).docker.push)
+.PHONY: push
+push: $(services_push) ## Build and push Docker images
+
+.PHONY: $(services_push)
+$(services_push): %.docker.push: %
+	$(MAKE) -C $< docker.push
 
 ##@ Deploy targets
 

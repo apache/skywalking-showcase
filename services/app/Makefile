@@ -19,7 +19,7 @@
 include ../../Makefile.in
 
 .PHONY: build
-build: docker.build
+build:
 
 .PHONY: docker docker.build docker.push
 
