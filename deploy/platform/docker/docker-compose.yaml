@@ -42,9 +42,12 @@ services:
     networks: [ sw ]
     environment:
       SW_HEALTH_CHECKER: default
-      SW_TELEMETRY: prometheus
+      SW_OTEL_RECEIVER: default
+      SW_OTEL_RECEIVER_ENABLED_OC_RULES: vm
+      SW_PROMETHEUS_FETCHER: "default"
       SW_STORAGE: elasticsearch
       SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_TELEMETRY: prometheus
       JAVA_OPTS: "-Xms2048m -Xmx2048m"
     healthcheck:
       test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
@@ -65,70 +68,6 @@ services:
         condition: service_healthy
     environment:
       SW_OAP_ADDRESS: http://oap:12800
-
-  gateway:
-    image: ${HUB}/gateway-service:${TAG}
-    networks: [ sw ]
-    environment:
-      SW_AGENT_NAME: gateway
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -O /dev/null http://localhost/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    depends_on:
-      oap:
-        condition: service_healthy
-      songs:
-        condition: service_healthy
-
-  songs:
-    image: ${HUB}/songs-service:${TAG}
-    networks: [ sw ]
-    environment:
-      SW_AGENT_NAME: songs
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -O /dev/null http://localhost/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    depends_on:
-      oap:
-        condition: service_healthy
-
-  rcmd:
-    image: ${HUB}/recommendation-service:${TAG}
-    networks: [ sw ]
-    environment:
-      SW_AGENT_NAME: recommendation
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    healthcheck:
-      test: [ "CMD-SHELL", "curl http://localhost/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    depends_on:
-      oap:
-        condition: service_healthy
-
-  app:
-    image: ${HUB}/app:${TAG}
-    networks: [ sw ]
-    ports:
-      - "9090:80"
-    environment:
-      SW_AGENT_NAME: app
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
-    healthcheck:
-      test: [ "CMD-SHELL", "curl http://localhost/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    depends_on:
-      oap:
-        condition: service_healthy
 
 networks:
   sw:

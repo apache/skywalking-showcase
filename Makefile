@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+include scripts/make/help.mk
 
-# Build each project under services/*
-
+##@ Build targets
 services = $(wildcard services/*)
 
 .PHONY: $(services)
@@ -25,14 +25,11 @@ $(services):
 	$(MAKE) -C $@ build
 
 .PHONY: build
-build: $(services)
-
-# Build Docker images
+build: $(services) ## Build the services
 
 services_docker = $(foreach svc,$(services),$(svc).docker.build)
-
 .PHONY: docker
-docker: $(services_docker)
+docker: $(services_docker) ## Build Docker images
 
 .PHONY: $(services_docker)
 $(services_docker): %.docker.build: %
@@ -41,22 +38,20 @@ $(services_docker): %.docker.build: %
 .PHONY: docker.build
 docker.build: $(services_docker)
 
-# Deploy and Undeploy
+##@ Deploy targets
 
-## Docker Compose
 .PHONY: deploy.docker
-deploy.docker: undeploy.docker
+deploy.docker: undeploy.docker ## Deploy the showcase with Docker Compose
 	$(MAKE) -C deploy/platform/docker deploy
 
 .PHONY: undeploy.docker
-undeploy.docker:
+undeploy.docker: ## Undeploy the showcase from Docker Compose
 	$(MAKE) -C deploy/platform/docker undeploy
 
-## Kubernetes
 .PHONY: deploy.kubernetes
-deploy.kubernetes: undeploy.kubernetes
+deploy.kubernetes: undeploy.kubernetes ## Deploy the showcase to Kubernetes
 	$(MAKE) -C deploy/platform/kubernetes deploy
 
 .PHONY: undeploy.kubernetes
-undeploy.kubernetes:
+undeploy.kubernetes: ## Undeploy the showcase from Kubernetes
 	$(MAKE) -C deploy/platform/kubernetes undeploy
