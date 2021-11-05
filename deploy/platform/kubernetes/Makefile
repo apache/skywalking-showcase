@@ -26,7 +26,6 @@ else
 endif
 
 resources := $(foreach dir,$(features),$(wildcard $(dir)/*))
-resources := $(resources) resources.yaml # Basic resources are always applied
 
 resources_deploy := $(foreach r,$(resources),$(r).deploy)
 .PHONY: $(resources_deploy)

@@ -15,6 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+# @feature: pretend these Pods are virtual machines
+
 ---
 apiVersion: v1
 kind: Service
@@ -26,7 +29,6 @@ spec:
   ports:
     - protocol: TCP
       port: 9100
-      targetPort: 9100
 
 ---
 apiVersion: apps/v1
@@ -48,29 +50,44 @@ spec:
       containers:
         - name: vm
           image: quay.io/prometheus/node-exporter:v1.2.2
+          resources:
+            limits:
+              cpu: 100m
+              memory: "128Mi"
           ports:
             - containerPort: 9100
+              name: metrics
+
+# @feature: vm; set OpenTelemetry config to scrape the VM metrics
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: otel-collector-conf
+  name: otel-collector-conf-vm
   labels:
-    app: opentelemetry
-    component: otel-collector-conf
+    app: otel-vm
 data:
   otel-collector-config: |
     receivers:
       prometheus:
         config:
           scrape_configs:
-            - job_name: 'otel-collector'
-              scrape_interval: 10s
-              static_configs:
-                - targets: [ 'vm:9100' ]
-
-    processors:
-      batch:
+            # @feature: vm; this is only for demo, in real scenarios the VM addresses should be static, not via service discovery
+            - job_name: 'vm-monitoring'
+              metrics_path: '/metrics'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: vm;metrics # @feature: vm; reference the name of the metrics port
+                - source_labels: []
+                  target_label: service
+                  replacement: vm
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: host_name
+                  regex: (.+)
+                  replacement: $$1
 
     exporters:
       opencensus:
@@ -83,39 +100,39 @@ data:
       pipelines:
         metrics:
           receivers: [ prometheus ]
-          processors: [ batch ]
           exporters: [ opencensus,logging ]
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: otel-deployment
+  name: otel-deployment-vm
   labels:
-    app: otel
+    app: otel-vm
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: otel
+      app: otel-vm
   template:
     metadata:
       labels:
-        app: otel
+        app: otel-vm
     spec:
+      serviceAccountName: otel-sa-vm
       containers:
-        - name: otel
+        - name: otel-vm
           image: otel/opentelemetry-collector:0.29.0
           command:
             - "/otelcol"
             - "--config=/conf/otel-collector-config.yaml"
           volumeMounts:
-            - name: otel-collector-config-vol
+            - name: otel-collector-config-vol-vm
               mountPath: /conf
       volumes:
-        - name: otel-collector-config-vol
+        - name: otel-collector-config-vol-vm
           configMap:
-            name: otel-collector-conf
+            name: otel-collector-conf-vm
             items:
               - key: otel-collector-config
                 path: otel-collector-config.yaml

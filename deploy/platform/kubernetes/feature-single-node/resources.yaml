@@ -65,14 +65,12 @@ spec:
   selector:
     app: oap
   ports:
+    - name: metrics
+      port: 1234
     - name: grpc
-      protocol: TCP
       port: 11800
-      targetPort: 11800
     - name: http
-      protocol: TCP
       port: 12800
-      targetPort: 12800
 
 ---
 apiVersion: apps/v1
@@ -96,25 +94,31 @@ spec:
           image: ${SW_OAP_IMAGE}
           resources:
             limits:
-              cpu: 2000m
-              memory: "2048Mi"
+              cpu: 4000m
+              memory: "4096Mi"
             requests:
               cpu: 1000m
               memory: "1024Mi"
           ports:
-            - containerPort: 11800
-            - containerPort: 12800
+            - name: metrics # @feature: so11y; set a name for the metrics port that can be referenced in otel config
+              containerPort: 1234
+            - name: grpc
+              containerPort: 11800
+            - name: http
+              containerPort: 12800
           env:
             - name: SW_HEALTH_CHECKER
               value: default
             - name: SW_OTEL_RECEIVER
-              value: default
+              value: default # @feature: so11y; enable OpenTelemetry receiver to receive OAP metrics
             - name: SW_OTEL_RECEIVER_ENABLED_OC_RULES
-              value: vm
+              value: vm,oap # @feature: so11y; enable oap rules to analyze OAP metrics
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
               value: elasticsearch:9200
+            - name: SW_TELEMETRY
+              value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
 
 ---
 apiVersion: v1
@@ -146,6 +150,7 @@ spec:
       labels:
         app: rocket-bot
     spec:
+      serviceAccountName: skywalking-sa
       containers:
         - name: rocket-bot
           image: ${SW_ROCKET_BOT_IMAGE}
@@ -153,4 +158,4 @@ spec:
             - containerPort: 8080
           env:
             - name: SW_OAP_ADDRESS
-              value: oap:12800
+              value: http://oap:12800
