@@ -27,6 +27,8 @@ header:
     - '**/venv/**'
     - '**/*.md'
     - '**/*.json'
+    - '**/gradlew'
+    - '**/gradlew.bat'
     - 'LICENSE'
     - 'NOTICE'
 
