@@ -46,17 +46,23 @@ $(services_push): %.docker.push: %
 ##@ Deploy targets
 
 .PHONY: deploy.docker
-deploy.docker: undeploy.docker ## Deploy the showcase with Docker Compose
+deploy.docker: ## Deploy the showcase with Docker Compose
 	$(MAKE) -C deploy/platform/docker deploy
 
 .PHONY: undeploy.docker
 undeploy.docker: ## Undeploy the showcase from Docker Compose
 	$(MAKE) -C deploy/platform/docker undeploy
 
+.PHONY: redeploy.docker
+redeploy.docker: undeploy.docker deploy.docker
+
 .PHONY: deploy.kubernetes
-deploy.kubernetes: undeploy.kubernetes ## Deploy the showcase to Kubernetes
+deploy.kubernetes: ## Deploy the showcase to Kubernetes
 	$(MAKE) -C deploy/platform/kubernetes deploy
 
 .PHONY: undeploy.kubernetes
 undeploy.kubernetes: ## Undeploy the showcase from Kubernetes
 	$(MAKE) -C deploy/platform/kubernetes undeploy
+
+.PHONY: redeploy.kubernetes
+redeploy.kubernetes: undeploy.kubernetes deploy.kubernetes

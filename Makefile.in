@@ -16,6 +16,8 @@
 # under the License.
 #
 
+comma := ,
+
 .EXPORT_ALL_VARIABLES:
 
 HUB ?= ghcr.io/apache/skywalking-showcase
@@ -29,4 +31,7 @@ SW_ROCKET_BOT_IMAGE ?= ghcr.io/apache/skywalking/ui:c9bd79e8bb974e404766e3490c00
 SW_AGENT_NODEJS_BACKEND_VERSION ?= e755659c7f308d3b5589619778c8360308cb14f8
 SW_AGENT_NODEJS_FRONTEND_VERSION ?= af0565a67d382b683c1dbd94c379b7080db61449
 
-FEATURE_FLAGS ?= all
+# ALL variables should be listed above ^^
+EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))
+
+features ?= all

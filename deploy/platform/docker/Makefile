@@ -18,8 +18,6 @@
 
 include ../../../Makefile.in
 
-comma := ,
-
 ifeq ($(FEATURE_FLAGS),all)
   features := $(wildcard docker-compose.*.yaml)
   features := $(foreach f,$(features),-f $(f))
@@ -30,8 +28,8 @@ endif
 
 .PHONY: deploy
 deploy:
-	docker-compose -f docker-compose.yaml $(features) up -d
+	docker-compose $(features) up -d
 
 .PHONY: undeploy
 undeploy:
-	docker-compose -f docker-compose.yaml $(features) --log-level ERROR down
+	docker-compose $(features) --log-level ERROR down

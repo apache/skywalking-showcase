@@ -1,0 +1,181 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  selector:
+    app: gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+        - name: gateway
+          image: ${HUB}/gateway-service:${TAG}
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: gateway
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: oap:11800
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: songs
+spec:
+  selector:
+    app: songs
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: songs-deployment
+  labels:
+    app: songs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: songs
+  template:
+    metadata:
+      labels:
+        app: songs
+    spec:
+      containers:
+        - name: songs
+          image: ${HUB}/songs-service:${TAG}
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: songs
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: oap:11800
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rcmd
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-deployment
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+    spec:
+      containers:
+        - name: recommendation
+          image: ${HUB}/recommendation-service:${TAG}
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: recommendation
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: oap:11800
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector:
+    app: app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app
+          image: ${HUB}/app:${TAG}
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: app
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: oap:11800

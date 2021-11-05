@@ -20,7 +20,7 @@ FROM node:10
 ARG SW_AGENT_NODEJS_BACKEND_VERSION
 ARG SW_AGENT_NODEJS_FRONTEND_VERSION
 
-WORKDIR /skywalking-nodejs-backend
+WORKDIR /skywalking-backend-js
 
 RUN git clone --recurse-submodules https://github.com/apache/skywalking-nodejs.git . ; \
     git reset --hard ${SW_AGENT_NODEJS_BACKEND_VERSION} ; \
@@ -29,7 +29,7 @@ RUN git clone --recurse-submodules https://github.com/apache/skywalking-nodejs.g
     npm install ; \
     npm run build
 
-WORKDIR /skywalking-nodejs-frontend
+WORKDIR /skywalking-client-js
 
 RUN git clone --recurse-submodules https://github.com/apache/skywalking-client-js.git . ; \
     git reset --hard ${SW_AGENT_NODEJS_FRONTEND_VERSION} ; \
@@ -42,8 +42,11 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install /skywalking-nodejs-backend ; \
-    npm install /skywalking-nodejs-frontend ; \
+RUN \
+    # @feature: nodejs-agent-backend; install skywalking-backend-js
+    npm install /skywalking-backend-js ; \
+    # @feature: nodejs-agent-frontend; install skywalking-client-js
+    npm install /skywalking-client-js ; \
     npm run build
 
 CMD npm start

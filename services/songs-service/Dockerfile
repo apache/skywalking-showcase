@@ -16,6 +16,7 @@
 # under the License.
 #
 
+# @feature: java-agent;
 FROM ghcr.io/apache/skywalking-java/jdk-11:latest
 
 COPY build/libs/songs-service-0.0.1-SNAPSHOT.jar /app.jar

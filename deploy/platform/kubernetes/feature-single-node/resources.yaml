@@ -1,0 +1,156 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+    - protocol: TCP
+      port: 9200
+      targetPort: 9200
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: es-deployment
+  labels:
+    app: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch-oss:${ES_VERSION}
+          ports:
+            - containerPort: 9200
+          env:
+            - name: 'discovery.type'
+              value: 'single-node'
+            - name: 'bootstrap.memory_lock'
+              value: 'true'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oap
+spec:
+  selector:
+    app: oap
+  ports:
+    - name: grpc
+      protocol: TCP
+      port: 11800
+      targetPort: 11800
+    - name: http
+      protocol: TCP
+      port: 12800
+      targetPort: 12800
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oap-deployment
+  labels:
+    app: oap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oap
+  template:
+    metadata:
+      labels:
+        app: oap
+    spec:
+      containers:
+        - name: oap
+          image: ${SW_OAP_IMAGE}
+          resources:
+            limits:
+              cpu: 2000m
+              memory: "2048Mi"
+            requests:
+              cpu: 1000m
+              memory: "1024Mi"
+          ports:
+            - containerPort: 11800
+            - containerPort: 12800
+          env:
+            - name: SW_HEALTH_CHECKER
+              value: default
+            - name: SW_OTEL_RECEIVER
+              value: default
+            - name: SW_OTEL_RECEIVER_ENABLED_OC_RULES
+              value: vm
+            - name: SW_STORAGE
+              value: elasticsearch
+            - name: SW_STORAGE_ES_CLUSTER_NODES
+              value: elasticsearch:9200
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocket-bot
+spec:
+  selector:
+    app: rocket-bot
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-bot-deployment
+  labels:
+    app: rocket-bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocket-bot
+  template:
+    metadata:
+      labels:
+        app: rocket-bot
+    spec:
+      containers:
+        - name: rocket-bot
+          image: ${SW_ROCKET_BOT_IMAGE}
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SW_OAP_ADDRESS
+              value: oap:12800

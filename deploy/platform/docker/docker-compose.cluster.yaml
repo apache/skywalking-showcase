@@ -1,0 +1,88 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: '2.1'
+
+services:
+  elasticsearch:
+    extends:
+      file: docker-compose.single-node.yaml
+      service: elasticsearch
+
+  zookeeper:
+    image: zookeeper:3.5
+    expose:
+      - 2181
+    networks: [ sw ]
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/2181" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  oap-init: # @feature: cluster; set up an init container to initialize the storage templates and indices
+    image: ${SW_OAP_IMAGE}
+    networks: [ sw ]
+    environment:
+      SW_STORAGE: elasticsearch
+      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      JAVA_OPTS: "-Dmode=init" # @feature: cluster; set the init container to "init" mode to initialize the storage templates and indices
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  oap1: &oap
+    image: ${SW_OAP_IMAGE}
+    networks: [ sw ]
+    environment:
+      SW_CLUSTER: zookeeper # @feature: cluster; set up a cluster coordinator
+      SW_CLUSTER_ZK_HOST_PORT: zookeeper:2181 # @feature: cluster; set up the cluster coordinator address
+      SW_HEALTH_CHECKER: default # @feature: health-check;
+      SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
+      SW_OTEL_RECEIVER_ENABLED_OC_RULES: vm # @feature: vm; enable the OC rules that analyse the VM metrics
+      SW_STORAGE: elasticsearch
+      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+      SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
+      JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode
+    healthcheck:
+      test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      oap-init:
+        condition: service_completed_successfully # @feature: cluster; wait for init container to complete
+      zookeeper:
+        condition: service_healthy
+
+  oap:
+    <<: *oap
+
+  rocket-bot:
+    image: ${SW_ROCKET_BOT_IMAGE}
+    networks: [ sw ]
+    ports:
+      - "9999:8080"
+    depends_on:
+      oap:
+        condition: service_healthy
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800,http://oap1:12800
+
+networks:
+  sw:
