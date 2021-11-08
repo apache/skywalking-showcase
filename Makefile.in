@@ -34,4 +34,4 @@ SW_AGENT_NODEJS_FRONTEND_VERSION ?= af0565a67d382b683c1dbd94c379b7080db61449
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))
 
-features ?= single-node,agent,so11y,vm
+FEATURE_FLAGS ?= single-node,agent,so11y,vm
