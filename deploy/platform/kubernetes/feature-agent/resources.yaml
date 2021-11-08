@@ -179,3 +179,24 @@ spec:
               value: app
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen-deployment
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+    spec:
+      containers:
+        - name: app
+          image: ${HUB}/load-gen:${TAG}

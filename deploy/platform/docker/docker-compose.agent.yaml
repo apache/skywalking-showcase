@@ -86,5 +86,12 @@ services:
       oap:
         condition: service_healthy
 
+  loadgen:
+    image: ${HUB}/load-gen:${TAG}
+    networks: [ sw ]
+    depends_on:
+      app:
+        condition: service_healthy
+
 networks:
   sw:

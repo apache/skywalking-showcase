@@ -29,6 +29,7 @@ const oapHttpAddress = 'http://oap:12800'
 agent.start({
     serviceName: 'app',
     maxBufferSize: 1000,
+    traceIgnorePath: '/browser/**,/v3/**,/health',
 });
 
 const PORT = process.env.PORT || 80;
