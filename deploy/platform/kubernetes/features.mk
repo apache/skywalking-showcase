@@ -16,6 +16,11 @@
 # under the License.
 #
 
-# So11y in Docker compose is enabled by default
+# This file contains the targets to deploy features that are not
+# applicable to deploy via manifest, we can deploy them via command
+# line interface here, for better maintainability.
 
-version: '2.1'
+include ../../../Makefile.in
+
+feature-istio:
+	@echo 'Example: deploying Istio via command line'

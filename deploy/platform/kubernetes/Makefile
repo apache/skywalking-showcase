@@ -17,32 +17,42 @@
 #
 
 include ../../../Makefile.in
+include features.mk
 
-ifeq ($(FEATURE_FLAGS),all)
-  features := $(wildcard feature-*)
-else
-  features := $(subst $(comma), ,$(FEATURE_FLAGS))
-  features := $(foreach f,$(features),feature-$(f))
-endif
+features := $(subst $(comma), ,$(FEATURE_FLAGS))
+features := $(foreach f,$(features),feature-$(f))
 
-resources := $(foreach dir,$(features),$(wildcard $(dir)/*))
+# Deploy
+deploy_features := $(foreach r,$(features),deploy.$(r))
+.PHONY: $(deploy_features)
+$(deploy_features): %: %.resources
 
-resources_deploy := $(foreach r,$(resources),$(r).deploy)
-.PHONY: $(resources_deploy)
-$(resources_deploy): %.deploy: %
-	@docker run --rm -v "$(shell pwd)/$<":/input \
+deploy_resources := $(foreach r,$(deploy_features),$(r).resources)
+.PHONY: $(deploy_resources)
+$(deploy_resources): deploy.%.resources: %
+	$(eval resources := $(wildcard $(shell pwd)/$</*))
+	@$(foreach resource, $(resources), docker run --rm -v "$(pwd)/$(resource)":/input \
 		$(foreach v,$(EXPORTED_VARS),-e $(v)) \
-		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl apply -f -
+		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl apply -f - ; \
+	)
 
 .PHONY: deploy
-deploy: $(resources_deploy)
+deploy: $(deploy_features)
 
-resources_undeploy := $(foreach r,$(resources),$(r).undeploy)
-.PHONY: $(resources_undeploy)
-$(resources_undeploy): %.undeploy: %
-	@docker run --rm -v "$(shell pwd)/$<":/input \
+# Undeploy
+undeploy_features := $(foreach r,$(features),undeploy.$(r))
+.PHONY: $(undeploy_features)
+$(undeploy_features): %: %.resources
+
+undeploy_resources := $(foreach r,$(undeploy_features),$(r).resources)
+.PHONY: $(undeploy_resources)
+$(undeploy_resources): undeploy.%.resources: %
+	$(info undeploying feature $<)
+	$(eval resources := $(wildcard $(shell pwd)/$</*))
+	@$(foreach resource, $(resources), docker run --rm -v "$(pwd)/$(resource)":/input \
 		$(foreach v,$(EXPORTED_VARS),-e $(v)) \
-		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl delete --ignore-not-found -f -
+		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl delete --ignore-not-found -f - ; \
+	)
 
 .PHONY: undeploy
-undeploy: $(resources_undeploy)
+undeploy: $(undeploy_features)

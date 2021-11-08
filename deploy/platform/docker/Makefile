@@ -18,13 +18,8 @@
 
 include ../../../Makefile.in
 
-ifeq ($(FEATURE_FLAGS),all)
-  features := $(wildcard docker-compose.*.yaml)
-  features := $(foreach f,$(features),-f $(f))
-else
-  features := $(subst $(comma), ,$(FEATURE_FLAGS))
-  features := $(foreach f,$(features),-f docker-compose.$(f).yaml)
-endif
+features := $(subst $(comma), ,$(FEATURE_FLAGS))
+features := $(foreach f,$(features),-f docker-compose.$(f).yaml)
 
 .PHONY: deploy
 deploy:
