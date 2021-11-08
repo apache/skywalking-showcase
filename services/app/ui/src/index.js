@@ -28,7 +28,6 @@ const OAP = process.env.OAP || 'oap';
 
 // @feature: nodejs-agent-frontend;
 ClientMonitor.register({
-    collector: `http://${OAP}:12800`,
     service: 'ui',
     pagePath: '/homepage',
     serviceVersion: 'v1.0.0',
