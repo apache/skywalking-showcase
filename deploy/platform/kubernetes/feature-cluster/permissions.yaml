@@ -19,29 +19,33 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: otel-sa-so11y
+  name: skywalking-sa-cluster
 
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: otel-role-so11y
+  name: skywalking-sa-cluster-role
 rules:
   - apiGroups: [ "" ]
     resources:
-      - "pods" # @feature: so11y; OpenTelemetry needs to read OAP Pods information to get OAP details
+      - "pods" # @feature: cluster; OAP needs to read other OAP Pods information to form a cluster
+    verbs: [ "get", "watch", "list" ]
+  - apiGroups: [ "batch" ]
+    resources:
+      - "jobs" # @feature: cluster; OAP needs to wait for the init job to complete
     verbs: [ "get", "watch", "list" ]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: otel-role-binding-so11y
+  name: skywalking-sa-cluster-role-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: otel-role-so11y
+  name: skywalking-sa-cluster-role
 subjects:
   - kind: ServiceAccount
-    name: otel-sa-so11y
+    name: skywalking-sa-cluster
     namespace: default

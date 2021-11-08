@@ -73,6 +73,42 @@ spec:
       port: 12800
 
 ---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: oap-init-job # @feature: cluster; set up an init job to initialize ES templates and indices
+spec:
+  template:
+    metadata:
+      name: oap-init-job
+    spec:
+      serviceAccountName: skywalking-sa-cluster
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-es
+          image: docker.elastic.co/elasticsearch/elasticsearch-oss:${ES_VERSION}
+          command:
+            - 'sh'
+            - '-c'
+            - 'for i in $(seq 1 60); do nc -z -w3 elasticsearch 9200 && exit 0 || sleep 5; done; exit 1'
+      containers:
+        - name: oap-init
+          image: ${SW_OAP_IMAGE}
+          env: # @feature: cluster; make sure all env vars are the same with the cluster nodes as this will affect templates / indices
+            - name: JAVA_OPTS
+              value: "-Dmode=init" # @feature: cluster; set the OAP mode to "init" so the job can complete
+            - name: SW_OTEL_RECEIVER
+              value: default
+            - name: SW_OTEL_RECEIVER_ENABLED_OC_RULES
+              value: vm,oap
+            - name: SW_STORAGE
+              value: elasticsearch
+            - name: SW_STORAGE_ES_CLUSTER_NODES
+              value: elasticsearch:9200
+            - name: SW_TELEMETRY
+              value: prometheus
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,7 +116,7 @@ metadata:
   labels:
     app: oap
 spec:
-  replicas: 1
+  replicas: 2 # @feature: cluster; set OAP replicas to >1
   selector:
     matchLabels:
       app: oap
@@ -89,6 +125,15 @@ spec:
       labels:
         app: oap
     spec:
+      serviceAccountName: skywalking-sa-cluster # @feature: cluster; set a service account with Pod "read" permission
+      initContainers:
+        - name: wait-for-oap-init
+          image: bitnami/kubectl:1.20.12
+          command:
+            - 'kubectl'
+            - 'wait'
+            - '--for=condition=complete'
+            - 'job/oap-init-job'
       containers:
         - name: oap
           image: ${SW_OAP_IMAGE}
@@ -107,6 +152,12 @@ spec:
             - name: http
               containerPort: 12800
           env:
+            - name: JAVA_OPTS
+              value: "-Dmode=no-init"
+            - name: SW_CLUSTER
+              value: kubernetes # @feature: cluster; set cluster coordinator to kubernetes
+            - name: SW_CLUSTER_K8S_LABEL
+              value: app=oap # @feature: cluster; set label selectors to select OAP Pods as a cluster
             - name: SW_HEALTH_CHECKER
               value: default
             - name: SW_OTEL_RECEIVER
@@ -150,6 +201,7 @@ spec:
       labels:
         app: rocket-bot
     spec:
+      serviceAccountName: skywalking-sa-cluster
       containers:
         - name: rocket-bot
           image: ${SW_ROCKET_BOT_IMAGE}
