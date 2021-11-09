@@ -22,5 +22,13 @@
 
 include ../../../Makefile.in
 
-feature-istio:
-	@echo 'Example: deploying Istio via command line'
+feature-als:
+
+deploy.feature-als:
+	$(eval TAG := $(TAG)-agentless)
+	$(MAKE) deploy FEATURE_FLAGS=agent
+
+undeploy.feature-als:
+	$(eval TAG := $(TAG)-agentless)
+	$(MAKE) undeploy FEATURE_FLAGS=agent
+

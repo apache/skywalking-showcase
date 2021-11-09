@@ -16,8 +16,8 @@
 # under the License.
 #
 
+include Makefile.in
 include ../../../Makefile.in
-include features.mk
 
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
@@ -47,7 +47,6 @@ $(undeploy_features): %: %.resources
 undeploy_resources := $(foreach r,$(undeploy_features),$(r).resources)
 .PHONY: $(undeploy_resources)
 $(undeploy_resources): undeploy.%.resources: %
-	$(info undeploying feature $<)
 	$(eval resources := $(wildcard $(shell pwd)/$</*))
 	@$(foreach resource, $(resources), docker run --rm -v "$(pwd)/$(resource)":/input \
 		$(foreach v,$(EXPORTED_VARS),-e $(v)) \
@@ -56,3 +55,5 @@ $(undeploy_resources): undeploy.%.resources: %
 
 .PHONY: undeploy
 undeploy: $(undeploy_features)
+
+include features.mk

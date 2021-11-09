@@ -30,3 +30,5 @@ docker.build:
 
 docker.push: docker.build
 	docker push $(HUB)/load-gen:$(TAG)
+	docker tag $(HUB)/load-gen:$(TAG) $(HUB)/load-gen:$(TAG)-agentless
+	docker push $(HUB)/load-gen:$(TAG)-agentless
