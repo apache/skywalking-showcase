@@ -156,7 +156,7 @@ spec:
             - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
               value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
             - name: K8S_SERVICE_NAME_RULE
-              value: "${service.metadata.namespace}::${service.metadata.name}"
+              value: "agentless::${service.metadata.name}"
             - name: SW_CONFIGURATION
               value: k8s-configmap
 

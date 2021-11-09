@@ -73,6 +73,8 @@ spec:
     metadata:
       labels:
         app: otel-vm
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: otel-sa-vm
       containers:

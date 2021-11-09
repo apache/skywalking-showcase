@@ -26,7 +26,7 @@ import App from './App';
 import ClientMonitor from 'skywalking-client-js';
 
 ClientMonitor.register({
-    service: 'ui',
+    service: 'agent::ui',
     pagePath: '/homepage',
     serviceVersion: 'v1.0.0',
 });

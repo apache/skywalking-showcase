@@ -19,3 +19,4 @@
 .EXPORT_ALL_VARIABLES:
 
 NAMESPACE ?= default
+AGENTLESS ?= false

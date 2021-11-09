@@ -205,6 +205,10 @@ spec:
               value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
             - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
               value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
+            - name: K8S_SERVICE_NAME_RULE
+              value: "agentless::${service.metadata.name}"
+            - name: SW_CONFIGURATION
+              value: k8s-configmap
 
 ---
 apiVersion: v1

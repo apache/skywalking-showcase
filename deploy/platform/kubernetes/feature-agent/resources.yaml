@@ -45,6 +45,8 @@ spec:
     metadata:
       labels:
         app: gateway
+      annotations:
+        sidecar.istio.io/inject: "${AGENTLESS}"
     spec:
       containers:
         - name: gateway
@@ -53,7 +55,7 @@ spec:
             - containerPort: 80
           env:
             - name: SW_AGENT_NAME
-              value: gateway
+              value: agent::gateway
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
 
@@ -86,6 +88,8 @@ spec:
     metadata:
       labels:
         app: songs
+      annotations:
+        sidecar.istio.io/inject: "${AGENTLESS}"
     spec:
       containers:
         - name: songs
@@ -94,7 +98,7 @@ spec:
             - containerPort: 80
           env:
             - name: SW_AGENT_NAME
-              value: songs
+              value: agent::songs
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
 
@@ -127,6 +131,8 @@ spec:
     metadata:
       labels:
         app: recommendation
+      annotations:
+        sidecar.istio.io/inject: "${AGENTLESS}"
     spec:
       containers:
         - name: recommendation
@@ -135,7 +141,7 @@ spec:
             - containerPort: 80
           env:
             - name: SW_AGENT_NAME
-              value: recommendation
+              value: agent::recommendation
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
 
@@ -168,6 +174,8 @@ spec:
     metadata:
       labels:
         app: app
+      annotations:
+        sidecar.istio.io/inject: "${AGENTLESS}"
     spec:
       containers:
         - name: app
@@ -176,7 +184,7 @@ spec:
             - containerPort: 80
           env:
             - name: SW_AGENT_NAME
-              value: app
+              value: agent::app
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
 
@@ -196,6 +204,8 @@ spec:
     metadata:
       labels:
         app: loadgen
+      annotations:
+        sidecar.istio.io/inject: "${AGENTLESS}"
     spec:
       containers:
         - name: app

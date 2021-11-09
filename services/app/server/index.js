@@ -27,7 +27,7 @@ const oapHttpAddress = 'http://oap:12800'
 
 // @feature: nodejs-agent-backend;
 agent.start({
-    serviceName: 'app',
+    serviceName: 'agent::app',
     maxBufferSize: 1000,
     traceIgnorePath: '/browser/**,/v3/**,/health',
 });
