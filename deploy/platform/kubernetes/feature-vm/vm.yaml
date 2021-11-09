@@ -15,33 +15,47 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+# @feature: pretend these Pods are virtual machines
+
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: Service
 metadata:
-  name: otel-sa-vm
+  name: vm
+spec:
+  selector:
+    app: vm
+  ports:
+    - protocol: TCP
+      port: 9100
 
 ---
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: otel-role-vm
-rules:
-  - apiGroups: [ "" ]
-    resources:
-      - "pods"
-    verbs: [ "get", "watch", "list" ]
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: otel-role-binding-vm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: otel-role-vm
-subjects:
-  - kind: ServiceAccount
-    name: otel-sa-vm
-    namespace: ${NAMESPACE}
+  name: vm-deployment
+  labels:
+    app: vm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vm
+  template:
+    metadata:
+      labels:
+        app: vm
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: vm
+          image: quay.io/prometheus/node-exporter:v1.2.2
+          resources:
+            limits:
+              cpu: 100m
+              memory: "128Mi"
+          ports:
+            - containerPort: 9100
+              name: metrics

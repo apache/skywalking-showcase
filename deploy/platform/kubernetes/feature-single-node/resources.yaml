@@ -44,6 +44,8 @@ spec:
     metadata:
       labels:
         app: elasticsearch
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
         - name: elasticsearch
@@ -55,6 +57,31 @@ spec:
               value: 'single-node'
             - name: 'bootstrap.memory_lock'
               value: 'true'
+
+---
+apiVersion: v1
+data:
+  core.default.log4j-xml: |-
+    <Configuration status="WARN">
+       <Appenders>
+         <Console name="Console" target="SYSTEM_OUT">
+           <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+         </Console>
+       </Appenders>
+       <Loggers>
+         <logger name="io.grpc.netty" level="INFO"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
+         <Root level="INFO">
+           <AppenderRef ref="Console"/>
+         </Root>
+        </Loggers>
+    </Configuration>
+kind: ConfigMap
+metadata:
+  labels:
+    app: oap
+  name: oap-config
 
 ---
 apiVersion: v1
@@ -88,7 +115,10 @@ spec:
     metadata:
       labels:
         app: oap
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
+      serviceAccountName: skywalking-sa # @feature: als; set a service account with Pods/Endpoints/Services/Nodes permissions to analyze Envoy access logs
       containers:
         - name: oap
           image: ${SW_OAP_IMAGE}
@@ -107,6 +137,10 @@ spec:
             - name: http
               containerPort: 12800
           env:
+            - name: SW_CLUSTER_K8S_NAMESPACE
+              value: ${NAMESPACE}
+            - name: SW_CLUSTER_K8S_LABEL
+              value: app=oap
             - name: SW_HEALTH_CHECKER
               value: default
             - name: SW_OTEL_RECEIVER
@@ -119,6 +153,12 @@ spec:
               value: elasticsearch:9200
             - name: SW_TELEMETRY
               value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+            - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
+              value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
+            - name: K8S_SERVICE_NAME_RULE
+              value: "${service.metadata.namespace}::${service.metadata.name}"
+            - name: SW_CONFIGURATION
+              value: k8s-configmap
 
 ---
 apiVersion: v1
@@ -149,6 +189,8 @@ spec:
     metadata:
       labels:
         app: rocket-bot
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
         - name: rocket-bot

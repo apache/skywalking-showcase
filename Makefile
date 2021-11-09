@@ -22,7 +22,7 @@ services = $(wildcard services/*)
 
 .PHONY: $(services)
 $(services):
-	$(MAKE) -C $@ build
+	@$(MAKE) -C $@ build
 
 .PHONY: build
 build: $(services) ## Build the services if needed (e.g.: compiling Java files, build Go binary), do nothing if no need (e.g.: Python)
@@ -33,7 +33,7 @@ docker: $(services_docker) ## Build Docker images
 
 .PHONY: $(services_docker)
 $(services_docker): %.docker.build: %
-	$(MAKE) -C $< docker.build
+	@$(MAKE) -C $< docker.build
 
 services_push = $(foreach svc,$(services),$(svc).docker.push)
 .PHONY: push
@@ -41,28 +41,28 @@ push: $(services_push) ## Build and push Docker images
 
 .PHONY: $(services_push)
 $(services_push): %.docker.push: %
-	$(MAKE) -C $< docker.push
+	@$(MAKE) -C $< docker.push
 
 ##@ Deploy targets
 
 .PHONY: deploy.docker
 deploy.docker: ## Deploy the showcase with Docker Compose
-	$(MAKE) -C deploy/platform/docker deploy
+	@$(MAKE) -C deploy/platform/docker deploy
 
 .PHONY: undeploy.docker
 undeploy.docker: ## Undeploy the showcase from Docker Compose
-	$(MAKE) -C deploy/platform/docker undeploy
+	@$(MAKE) -C deploy/platform/docker undeploy
 
 .PHONY: redeploy.docker
 redeploy.docker: undeploy.docker deploy.docker
 
 .PHONY: deploy.kubernetes
 deploy.kubernetes: ## Deploy the showcase to Kubernetes
-	$(MAKE) -C deploy/platform/kubernetes deploy
+	@$(MAKE) -C deploy/platform/kubernetes deploy
 
 .PHONY: undeploy.kubernetes
 undeploy.kubernetes: ## Undeploy the showcase from Kubernetes
-	$(MAKE) -C deploy/platform/kubernetes undeploy
+	@$(MAKE) -C deploy/platform/kubernetes undeploy
 
 .PHONY: redeploy.kubernetes
 redeploy.kubernetes: undeploy.kubernetes deploy.kubernetes

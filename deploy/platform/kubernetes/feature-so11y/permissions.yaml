@@ -44,4 +44,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: otel-sa-so11y
-    namespace: default
+    namespace: ${NAMESPACE}

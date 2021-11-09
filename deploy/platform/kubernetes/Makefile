@@ -16,8 +16,8 @@
 # under the License.
 #
 
-include Makefile.in
 include ../../../Makefile.in
+include Makefile.in
 
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
@@ -33,7 +33,7 @@ $(deploy_resources): deploy.%.resources: %
 	$(eval resources := $(wildcard $(shell pwd)/$</*))
 	@$(foreach resource, $(resources), docker run --rm -v "$(pwd)/$(resource)":/input \
 		$(foreach v,$(EXPORTED_VARS),-e $(v)) \
-		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl apply -f - ; \
+		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl -n $(NAMESPACE) apply -f - ; \
 	)
 
 .PHONY: deploy
@@ -50,7 +50,7 @@ $(undeploy_resources): undeploy.%.resources: %
 	$(eval resources := $(wildcard $(shell pwd)/$</*))
 	@$(foreach resource, $(resources), docker run --rm -v "$(pwd)/$(resource)":/input \
 		$(foreach v,$(EXPORTED_VARS),-e $(v)) \
-		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl delete --ignore-not-found -f - ; \
+		bhgedigital/envsubst sh -c "envsubst < /input" | kubectl -n $(NAMESPACE) delete --ignore-not-found -f - ; \
 	)
 
 .PHONY: undeploy

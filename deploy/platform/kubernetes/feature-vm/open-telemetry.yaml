@@ -16,48 +16,6 @@
 # under the License.
 #
 
-# @feature: pretend these Pods are virtual machines
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: vm
-spec:
-  selector:
-    app: vm
-  ports:
-    - protocol: TCP
-      port: 9100
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: vm-deployment
-  labels:
-    app: vm
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: vm
-  template:
-    metadata:
-      labels:
-        app: vm
-    spec:
-      containers:
-        - name: vm
-          image: quay.io/prometheus/node-exporter:v1.2.2
-          resources:
-            limits:
-              cpu: 100m
-              memory: "128Mi"
-          ports:
-            - containerPort: 9100
-              name: metrics
-
 # @feature: vm; set OpenTelemetry config to scrape the VM metrics
 ---
 apiVersion: v1
@@ -81,9 +39,6 @@ data:
                 - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
                   action: keep
                   regex: vm;metrics # @feature: vm; reference the name of the metrics port
-                - source_labels: []
-                  target_label: service
-                  replacement: vm
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: host_name
                   regex: (.+)

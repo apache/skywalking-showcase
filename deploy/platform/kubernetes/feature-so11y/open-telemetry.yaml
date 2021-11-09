@@ -76,6 +76,8 @@ spec:
     metadata:
       labels:
         app: otel-so11y
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: otel-sa-so11y
       containers:

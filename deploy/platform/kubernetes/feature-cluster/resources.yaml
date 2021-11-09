@@ -44,6 +44,8 @@ spec:
     metadata:
       labels:
         app: elasticsearch
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       containers:
         - name: elasticsearch
@@ -55,6 +57,31 @@ spec:
               value: 'single-node'
             - name: 'bootstrap.memory_lock'
               value: 'true'
+
+---
+apiVersion: v1
+data:
+  core.default.log4j-xml: |-
+    <Configuration status="WARN">
+       <Appenders>
+         <Console name="Console" target="SYSTEM_OUT">
+           <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+         </Console>
+       </Appenders>
+       <Loggers>
+         <logger name="io.grpc.netty" level="INFO"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
+         <Root level="INFO">
+           <AppenderRef ref="Console"/>
+         </Root>
+        </Loggers>
+    </Configuration>
+kind: ConfigMap
+metadata:
+  labels:
+    app: oap
+  name: oap-config
 
 ---
 apiVersion: v1
@@ -81,6 +108,8 @@ spec:
   template:
     metadata:
       name: oap-init-job
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: skywalking-sa-cluster
       restartPolicy: Never
@@ -124,6 +153,8 @@ spec:
     metadata:
       labels:
         app: oap
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: skywalking-sa-cluster # @feature: cluster; set a service account with Pod "read" permission
       initContainers:
@@ -156,6 +187,8 @@ spec:
               value: "-Dmode=no-init"
             - name: SW_CLUSTER
               value: kubernetes # @feature: cluster; set cluster coordinator to kubernetes
+            - name: SW_CLUSTER_K8S_NAMESPACE
+              value: ${NAMESPACE}
             - name: SW_CLUSTER_K8S_LABEL
               value: app=oap # @feature: cluster; set label selectors to select OAP Pods as a cluster
             - name: SW_HEALTH_CHECKER
@@ -170,6 +203,8 @@ spec:
               value: elasticsearch:9200
             - name: SW_TELEMETRY
               value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+            - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
+              value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
 
 ---
 apiVersion: v1
@@ -200,6 +235,8 @@ spec:
     metadata:
       labels:
         app: rocket-bot
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       serviceAccountName: skywalking-sa-cluster
       containers:
