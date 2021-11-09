@@ -22,15 +22,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 
-// @feature: nodejs-agent-frontend;
-import ClientMonitor from 'skywalking-client-js';
-
-ClientMonitor.register({
-    service: 'ui',
-    pagePath: '/homepage',
-    serviceVersion: 'v1.0.0',
-});
-
 ReactDOM.render(
     <React.StrictMode>
         <App/>

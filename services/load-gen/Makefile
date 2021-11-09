@@ -23,7 +23,7 @@ build:
 
 .PHONY: docker docker.build docker.push
 
-docker: docker.push
+docker: docker.build
 
 docker.build:
 	docker build . -t $(HUB)/load-gen:$(TAG)

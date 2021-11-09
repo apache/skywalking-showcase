@@ -26,10 +26,11 @@ clean:
 
 .PHONY: docker docker.build docker.push
 
-docker: docker.push
+docker: docker.build
 
 docker.build: build
 	docker build . -t $(HUB)/songs-service:$(TAG)
+	docker build . -t $(HUB)/songs-service:$(TAG)-agentless -f Dockerfile.agentless
 
 docker.push: docker.build
 	docker push $(HUB)/songs-service:$(TAG)

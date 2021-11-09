@@ -17,23 +17,31 @@
  * under the License.
  *
  */
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
+const path = require('path');
+const express = require('express');
+const axios = require('axios');
 
-// @feature: nodejs-agent-frontend;
-import ClientMonitor from 'skywalking-client-js';
+const PORT = process.env.PORT || 80;
+const GATEWAY = process.env.GATEWAY || 'gateway';
 
-ClientMonitor.register({
-    service: 'ui',
-    pagePath: '/homepage',
-    serviceVersion: 'v1.0.0',
+const app = express();
+
+app.use(express.static(path.resolve(__dirname, '../ui/build')));
+
+app.get('/homepage', async (req, res) => {
+    const top = await axios.get(`http://${GATEWAY}/songs/top`);
+    const rcmd = await axios.get(`http://${GATEWAY}/rcmd`);
+
+    res.json({
+        top: top.data,
+        rcmd: rcmd.data,
+    });
 });
 
-ReactDOM.render(
-    <React.StrictMode>
-        <App/>
-    </React.StrictMode>,
-    document.getElementById('root')
-);
+app.get('/health', async (req, res) => {
+    res.json({healthy: true});
+});
+
+app.listen(PORT, () => {
+    console.log(`Server listening on ${PORT}`);
+});

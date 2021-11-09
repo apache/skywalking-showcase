@@ -26,10 +26,12 @@ clean:
 
 .PHONY: docker docker.build docker.push
 
-docker: docker.push
+docker: docker.build
 
 docker.build: build
 	docker build . -t $(HUB)/gateway-service:$(TAG)
+	docker build . -t $(HUB)/gateway-service:$(TAG)-agentless -f Dockerfile.agentless
 
 docker.push: docker.build
 	docker push $(HUB)/gateway-service:$(TAG)
+	docker push $(HUB)/gateway-service:$(TAG)-agentless

@@ -23,10 +23,12 @@ build:
 
 .PHONY: docker docker.build docker.push
 
-docker: docker.push
+docker: docker.build
 
 docker.build:
 	docker build . -t $(HUB)/recommendation-service:$(TAG)
+	docker build . -t $(HUB)/recommendation-service:$(TAG)-agentless -f Dockerfile.agentless
 
 docker.push: docker.build
 	docker push $(HUB)/recommendation-service:$(TAG)
+	docker push $(HUB)/recommendation-service:$(TAG)-agentless

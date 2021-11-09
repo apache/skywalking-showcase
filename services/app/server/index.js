@@ -21,7 +21,7 @@ const path = require('path');
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
-const {default: agent} = require('skywalking-backend-js');
+const { default: agent } = require('skywalking-backend-js');
 
 const oapHttpAddress = 'http://oap:12800'
 

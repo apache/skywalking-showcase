@@ -16,23 +16,14 @@
 # under the License.
 #
 
-comma := ,
+FROM python:3
 
-.EXPORT_ALL_VARIABLES:
+WORKDIR /workspace
 
-DOCKER_BUILDKIT ?= 1
-HUB ?= ghcr.io/apache/skywalking-showcase
-TAG ?= $(shell git rev-parse --short HEAD)
+COPY requirements.txt .
 
-ES_VERSION ?= 7.10.0
+RUN pip install -r requirements.txt
 
-SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c9bd79e8bb974e404766e3490c00c7404b9baf1e
-SW_ROCKET_BOT_IMAGE ?= ghcr.io/apache/skywalking/ui:c9bd79e8bb974e404766e3490c00c7404b9baf1e
+COPY src .
 
-SW_AGENT_NODEJS_BACKEND_VERSION ?= e755659c7f308d3b5589619778c8360308cb14f8
-SW_AGENT_NODEJS_FRONTEND_VERSION ?= af0565a67d382b683c1dbd94c379b7080db61449
-
-# ALL variables should be listed above ^^
-EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))
-
-FEATURE_FLAGS ?= single-node,agent,so11y,vm
+CMD python app.py
