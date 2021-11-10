@@ -6,7 +6,7 @@
 
 # Documentations
 
-Please read the documentation in [our official website](https://skywalking.apache.org/).
+Please read the documentation in [our official website](https://skywalking.apache.org/docs/skywalking-showcase/latest/readme/).
 
 # Code of conduct
 
