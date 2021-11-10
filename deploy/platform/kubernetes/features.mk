@@ -23,7 +23,7 @@
 include ../../../Makefile.in
 
 ifeq (, $(shell which istioctl))
-	$(error "No istioctl in PATH, please make sure istioctl is available in PATH")
+  $(error "No istioctl in PATH, please make sure istioctl is available in PATH")
 endif
 
 .PHONY: istio
