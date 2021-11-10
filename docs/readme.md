@@ -18,6 +18,22 @@ graph LR;
 The showcase uses [GNU Make](https://www.gnu.org/software/make/) and Docker containers to run commands, so please make
 sure you have `make` installed and Docker daemon running.
 
+### Quick Start
+
+Make sure you have a running Kubernetes cluster and `kubectl` can access to that cluster.
+
+```shell
+git clone https://github.com/apache/skywalking-showcase.git
+cd skywalking-showcase
+make deploy.kubernetes FEATURE_FLAGS=cluster,agent,vm,so11y
+```
+
+This will install SkyWalking components, including OAP in cluster mode with 2 nodes, SkyWalking RocketBot UI,
+microservices with SkyWalking agent, 2 Pods to mimic virtual machines and export metrics to SkyWalking, and enable
+SkyWalking self observability metrics.
+
+For more advanced deployments, check [Customization](#customization) documentation below.
+
 ### Customization
 
 The variables defined in [`Makefile.in`](../Makefile.in) can be overridden to customize the showcase, by specifying an
