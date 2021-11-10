@@ -28,7 +28,7 @@ endif
 
 .PHONY: istio
 istio:
-	istioctl install -y --set profile=demo \
+	@istioctl install -y --set profile=demo \
 		--set meshConfig.enableEnvoyAccessLogService=true `# @feature: als; enable Envoy access log service` \
 		--set meshConfig.defaultConfig.envoyAccessLogService.address=oap.$(NAMESPACE):11800 `# @feature: als; set ALS address to OAP so Envoy emits logs to OAP`
 

@@ -4,9 +4,9 @@
 
 [![Twitter Follow](https://img.shields.io/twitter/follow/asfskywalking.svg?style=for-the-badge&label=Follow&logo=twitter)](https://twitter.com/AsfSkyWalking)
 
-# Usage
+# Documentations
 
-Run `make help` to get help.
+Please read the documentation in [our official website](https://skywalking.apache.org/).
 
 # Code of conduct
 
