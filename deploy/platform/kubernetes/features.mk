@@ -30,7 +30,17 @@ endif
 istio:
 	@istioctl install -y --set profile=demo \
 		--set meshConfig.enableEnvoyAccessLogService=true `# @feature: als; enable Envoy access log service` \
-		--set meshConfig.defaultConfig.envoyAccessLogService.address=oap.$(NAMESPACE):11800 `# @feature: als; set ALS address to OAP so Envoy emits logs to OAP`
+		`# @feature: als; be careful to only emit wanted metrics otherwise the traffic is HUGE` \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[0]=.*membership_healthy.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[1]=.*upstream_cx_active.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[2]=.*upstream_cx_total.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[3]=.*upstream_rq_active.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[4]=.*upstream_rq_total.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[5]=.*upstream_rq_pending_active.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[6]=.*lb_healthy_panic.*' \
+		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[7]=.*upstream_cx_none_healthy.*' \
+		--set meshConfig.defaultConfig.envoyMetricsService.address=oap.$(NAMESPACE):11800 `# @feature: als; set MetricsService address to OAP so Envoy emits metrics to OAP` \
+		--set meshConfig.defaultConfig.envoyAccessLogService.address=oap.$(NAMESPACE):11800 `# @feature: als; set AccessLogService address to OAP so Envoy emits logs to OAP`
 
 .PHONY: namespace
 namespace:
