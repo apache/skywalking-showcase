@@ -70,8 +70,8 @@ Currently, the features supported are:
 | `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
 | `so11y`       | Enable SkyWalking self observability. | This is enabled by default for platform [Docker Compose](#docker-compose). |
 | `vm`          | Start 2 virtual machines and export their metrics to SkyWalking. | The "virtual machines" are mimicked by Docker containers or Pods. |
-| `als`         | Start microservices **
-WITHOUT** SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
+| `als`         | Start microservices **WITHOUT** SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
+| `kubernetes-monitor` | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI. | |
 
 ### Kubernetes
 

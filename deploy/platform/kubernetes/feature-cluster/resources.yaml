@@ -72,7 +72,7 @@ data:
          <logger name="io.grpc.netty" level="INFO"/>
          <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
          <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
-         <Root level="INFO">
+         <Root level="WARN">
            <AppenderRef ref="Console"/>
          </Root>
         </Loggers>
@@ -194,9 +194,13 @@ spec:
             - name: SW_HEALTH_CHECKER
               value: default
             - name: SW_OTEL_RECEIVER
-              value: default # @feature: so11y; enable OpenTelemetry receiver to receive OAP metrics
+              value: default # @feature: so11y;vm;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
             - name: SW_OTEL_RECEIVER_ENABLED_OC_RULES
-              value: vm,oap # @feature: so11y; enable oap rules to analyze OAP metrics
+              # @feature: vm; enable vm rules to analyze VM metrics
+              # @feature: so11y; enable oap rules to analyze OAP metrics
+              # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
+              # @feature: istio-monitor; enable rules to analyze Istio metrics
+              value: vm,oap,k8s-cluster,k8s-node,k8s-service,istio-controlplane
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
