@@ -115,7 +115,7 @@ spec:
       restartPolicy: Never
       initContainers:
         - name: wait-for-es
-          image: busybox:1.30
+          image: busybox:${BUSYBOX_VERSION}
           command:
             - 'sh'
             - '-c'

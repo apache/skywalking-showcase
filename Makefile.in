@@ -26,6 +26,8 @@ TAG ?= $(shell git rev-parse --short HEAD)
 
 ES_VERSION ?= 7.10.0
 
+BUSYBOX_VERSION ?= 1.30
+
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c9bd79e8bb974e404766e3490c00c7404b9baf1e
 SW_ROCKET_BOT_IMAGE ?= ghcr.io/apache/skywalking/ui:c9bd79e8bb974e404766e3490c00c7404b9baf1e
 
