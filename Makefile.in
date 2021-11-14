@@ -24,7 +24,7 @@ DOCKER_BUILDKIT ?= 1
 HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
-ES_VERSION ?= 7.10.0
+ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c9bd79e8bb974e404766e3490c00c7404b9baf1e
 SW_ROCKET_BOT_IMAGE ?= ghcr.io/apache/skywalking/ui:c9bd79e8bb974e404766e3490c00c7404b9baf1e
