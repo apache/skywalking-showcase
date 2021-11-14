@@ -205,6 +205,8 @@ spec:
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
               value: elasticsearch:9200
+            - name: SW_STORAGE_ES_INDEX_REPLICAS_NUMBER
+              value: "0"
             - name: SW_TELEMETRY
               value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
             - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
