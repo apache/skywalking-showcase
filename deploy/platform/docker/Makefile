@@ -17,6 +17,7 @@
 #
 
 include ../../../Makefile.in
+include Makefile.in
 
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),-f docker-compose.$(f).yaml)

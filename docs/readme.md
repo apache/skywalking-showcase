@@ -18,6 +18,13 @@ graph LR;
 The showcase uses [GNU Make](https://www.gnu.org/software/make/) and Docker containers to run commands, so please make
 sure you have `make` installed and Docker daemon running.
 
+### Prerequisites
+
+To deploy the full features of this showcase application, you may need up to 4 CPU cores and 4 GB memory, please
+increase the Docker daemon resources or Kubernetes cluster resources if you find containers / Pods failed to start up.
+Alternatively, you can also only deploy part of the features that interest you if you don't want to increase the
+resources, via the guide in [Customization](#customization).
+
 ### Quick Start
 
 Make sure you have a running Kubernetes cluster and `kubectl` can access to that cluster.
@@ -70,7 +77,7 @@ Currently, the features supported are:
 | `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
 | `so11y`       | Enable SkyWalking self observability. | This is enabled by default for platform [Docker Compose](#docker-compose). |
 | `vm`          | Start 2 virtual machines and export their metrics to SkyWalking. | The "virtual machines" are mimicked by Docker containers or Pods. |
-| `als`         | Start microservices **WITHOUT** SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
+| `als`         | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
 | `kubernetes-monitor` | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI. | |
 
 ### Kubernetes
@@ -91,8 +98,6 @@ The connection to the server localhost:8080 was refused - did you specify the ri
 #### Deploy
 
 ```shell
-# Set the features that you want to deploy
-export FEATURE_FLAGS=cluster,agent,vm,so11y
 # Deploy
 make deploy.kubernetes
 # Undeploy
@@ -106,8 +111,6 @@ make redeploy.kubernetes # equivalent to make undeploy.kubernetes deploy.kuberne
 #### Deploy
 
 ```shell
-# Set the features that you want to deploy
-export FEATURE_FLAGS=cluster,agent,vm,so11y
 # Deploy
 make deploy.docker
 # Undeploy
