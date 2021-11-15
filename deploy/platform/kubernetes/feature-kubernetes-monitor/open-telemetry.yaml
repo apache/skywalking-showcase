@@ -37,8 +37,6 @@ data:
         insecure: true
       logging:
         loglevel: debug
-      prometheus:
-        endpoint: "0.0.0.0:9090"
     receivers:
       prometheus:
         config:

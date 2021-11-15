@@ -60,3 +60,12 @@ deploy.feature-als: prerequisites
 undeploy.feature-als:
 	$(eval TAG := $(TAG)-agentless)
 	$(MAKE) undeploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true
+
+# @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
+.PHONY: feature-kubernetes-monitor
+feature-kubernetes-monitor:
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service-account.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role-binding.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service.yaml
+	@kubectl apply -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/deployment.yaml
