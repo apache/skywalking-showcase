@@ -29,6 +29,7 @@ ClientMonitor.register({
     service: 'agent::ui',
     pagePath: '/homepage',
     serviceVersion: 'v1.0.0',
+    traceTimeInterval: 2000,
 });
 
 ReactDOM.render(
