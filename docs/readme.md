@@ -32,14 +32,18 @@ Make sure you have a running Kubernetes cluster and `kubectl` can access to that
 ```shell
 git clone https://github.com/apache/skywalking-showcase.git
 cd skywalking-showcase
-make deploy.kubernetes FEATURE_FLAGS=cluster,agent,vm,so11y
+make deploy.kubernetes
 ```
 
 This will install SkyWalking components, including OAP in cluster mode with 2 nodes, SkyWalking RocketBot UI,
-microservices with SkyWalking agent, 2 Pods to mimic virtual machines and export metrics to SkyWalking, and enable
-SkyWalking self observability metrics.
+microservices with SkyWalking agent, microservices without SkyWalking agent but managed by Istio, 
+2 Pods to mimic virtual machines and export metrics to SkyWalking, and enable kubernetes cluster monitoring as well as 
+SkyWalking self observability.
 
 For more advanced deployments, check [Customization](#customization) documentation below.
+
+Notice, when run this showcase locally such as KinD, the images are downloaded inside the KinD, which could take over 10 mins(depend on local network).
+Rerun `make deploy.kubernetes` if some timeout errors break the process.
 
 ### Customization
 
