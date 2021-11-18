@@ -76,8 +76,8 @@ deploy.feature-kubernetes-monitor:
 
 .PHONY: undeploy.feature-kubernetes-monitor
 undeploy.feature-kubernetes-monitor:
-	@kubectl delete -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service-account.yaml
-	@kubectl delete -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role.yaml
-	@kubectl delete -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role-binding.yaml
-	@kubectl delete -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service.yaml
-	@kubectl delete -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/deployment.yaml
+	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service-account.yaml
+	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role.yaml
+	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role-binding.yaml
+	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service.yaml
+	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/deployment.yaml
