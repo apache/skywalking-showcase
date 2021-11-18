@@ -21,4 +21,4 @@
 NAMESPACE ?= default
 AGENTLESS ?= false
 
-FEATURE_FLAGS ?= agent,cluster,kubernetes-monitor,so11y,vm,als
+FEATURE_FLAGS ?= agent,cluster,kubernetes-monitor,so11y,vm,als,event
