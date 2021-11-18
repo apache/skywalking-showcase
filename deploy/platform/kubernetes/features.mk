@@ -54,7 +54,7 @@ feature-als:
 
 .PHONY: deploy.feature-als
 deploy.feature-als: prerequisites
-	$(MAKE) deploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true
+	$(MAKE) deploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true SHOW_TIPS=false
 
 .PHONY: undeploy.feature-als
 undeploy.feature-als:

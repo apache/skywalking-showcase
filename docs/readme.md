@@ -83,6 +83,7 @@ Currently, the features supported are:
 | `vm`          | Start 2 virtual machines and export their metrics to SkyWalking. | The "virtual machines" are mimicked by Docker containers or Pods. |
 | `als`         | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
 | `kubernetes-monitor` | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI. | |
+| `event`       | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking. | |
 
 ### Kubernetes
 
