@@ -51,6 +51,7 @@ spec:
       containers:
         - name: gateway
           image: ${HUB}/gateway-service:${TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
@@ -94,6 +95,7 @@ spec:
       containers:
         - name: songs
           image: ${HUB}/songs-service:${TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
@@ -137,6 +139,7 @@ spec:
       containers:
         - name: recommendation
           image: ${HUB}/recommendation-service:${TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
@@ -180,6 +183,7 @@ spec:
       containers:
         - name: app
           image: ${HUB}/app:${TAG}
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           env:
@@ -210,3 +214,4 @@ spec:
       containers:
         - name: app
           image: ${HUB}/load-gen:${TAG}
+          imagePullPolicy: Always

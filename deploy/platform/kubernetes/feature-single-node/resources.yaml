@@ -50,6 +50,7 @@ spec:
       containers:
         - name: elasticsearch
           image: ${ES_IMAGE}
+          imagePullPolicy: Always
           ports:
             - containerPort: 9200
           env:
@@ -122,6 +123,7 @@ spec:
       containers:
         - name: oap
           image: ${SW_OAP_IMAGE}
+          imagePullPolicy: Always
           resources:
             limits:
               cpu: 4000m
@@ -201,6 +203,7 @@ spec:
       containers:
         - name: rocket-bot
           image: ${SW_ROCKET_BOT_IMAGE}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:

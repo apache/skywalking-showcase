@@ -74,6 +74,7 @@ spec:
       containers:
         - name: skywalking-event-exporter
           image: ${SW_EVENT_EXPORTER_IMAGE}
+          imagePullPolicy: Always
           args:
             - start
             - -v=debug
