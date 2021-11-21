@@ -15,10 +15,36 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-sa-istio-monitor
 
-.EXPORT_ALL_VARIABLES:
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: otel-role-istio-monitor
+rules:
+  - apiGroups: [ "" ]
+    resources:
+      # @feature: istiod-monitor; permissions to read resources
+      - "endpoints"
+      - "pods"
+      - "services"
+    verbs: [ "get", "watch", "list" ]
 
-NAMESPACE ?= default
-AGENTLESS ?= false
-
-FEATURE_FLAGS ?= agent,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-role-binding-istio-monitor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-role-istio-monitor
+subjects:
+  - kind: ServiceAccount
+    name: otel-sa-istio-monitor
+    namespace: ${NAMESPACE}
