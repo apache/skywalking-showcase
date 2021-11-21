@@ -151,7 +151,7 @@ spec:
               # @feature: vm; enable vm rules to analyze VM metrics
               # @feature: so11y; enable oap rules to analyze OAP metrics
               # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
-              # @feature: istio-monitor; enable rules to analyze Istio metrics
+              # @feature: istiod-monitor; enable rules to analyze Istio metrics
               value: vm,oap,k8s-cluster,k8s-node,k8s-service,istio-controlplane
             - name: SW_STORAGE
               value: elasticsearch
