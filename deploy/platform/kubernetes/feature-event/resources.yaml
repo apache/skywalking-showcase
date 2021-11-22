@@ -51,7 +51,7 @@ data:
       skywalking:
         template:
           source:
-            service: agent::"{{ .Service.Name }}"
+            service: "agent::{{ .Service.Name }}"
             serviceInstance: "{{ .Pod.Name }}"
             endpoint: ""
           message: "{{ .Event.Message }}"
