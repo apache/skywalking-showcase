@@ -29,6 +29,40 @@ spec:
       targetPort: 9200
 
 ---
+apiVersion: v1
+data:
+  metadata-service-mapping.yaml: |
+    serviceName: agentless::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
+kind: ConfigMap
+metadata:
+  name: oap-static-config
+
+---
+apiVersion: v1
+data:
+  core.default.log4j-xml: |-
+    <Configuration status="WARN">
+       <Appenders>
+         <Console name="Console" target="SYSTEM_OUT">
+           <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+         </Console>
+       </Appenders>
+       <Loggers>
+         <logger name="io.grpc.netty" level="INFO"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
+         <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
+         <Root level="WARN">
+           <AppenderRef ref="Console"/>
+         </Root>
+        </Loggers>
+    </Configuration>
+kind: ConfigMap
+metadata:
+  labels:
+    app: oap
+  name: oap-dynamic-config
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -58,31 +92,6 @@ spec:
               value: 'single-node'
             - name: 'bootstrap.memory_lock'
               value: 'true'
-
----
-apiVersion: v1
-data:
-  core.default.log4j-xml: |-
-    <Configuration status="WARN">
-       <Appenders>
-         <Console name="Console" target="SYSTEM_OUT">
-           <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
-         </Console>
-       </Appenders>
-       <Loggers>
-         <logger name="io.grpc.netty" level="INFO"/>
-         <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
-         <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
-         <Root level="WARN">
-           <AppenderRef ref="Console"/>
-         </Root>
-        </Loggers>
-    </Configuration>
-kind: ConfigMap
-metadata:
-  labels:
-    app: oap
-  name: oap-config
 
 ---
 apiVersion: v1
@@ -167,6 +176,14 @@ spec:
               value: "agentless::${service.metadata.name}"
             - name: SW_CONFIGURATION
               value: k8s-configmap
+          volumeMounts:
+            - name: config-volume
+              mountPath: /skywalking/config/metadata-service-mapping.yaml
+              subPath: metadata-service-mapping.yaml
+      volumes:
+        - name: config-volume
+          configMap:
+            name: oap-static-config
 
 ---
 apiVersion: v1
