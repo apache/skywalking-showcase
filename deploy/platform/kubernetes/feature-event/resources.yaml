@@ -43,7 +43,7 @@ metadata:
 data:
   config.yaml: |
     filters:
-      - namespace: ${NAMESPACE}|${NAMESPACE}-agentless
+      - namespace: ${NAMESPACE}
         exporters:
           - skywalking
 
@@ -51,7 +51,7 @@ data:
       skywalking:
         template:
           source:
-            service: "{{ .Service.Name }}"
+            service: agent::"{{ .Service.Name }}"
             serviceInstance: "{{ .Pod.Name }}"
             endpoint: ""
           message: "{{ .Event.Message }}"
