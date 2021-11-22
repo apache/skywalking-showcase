@@ -33,6 +33,15 @@ apiVersion: v1
 data:
   metadata-service-mapping.yaml: |
     serviceName: agentless::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
+    serviceInstanceName: ${NAME,NAME} # Just to skip the "envsubst" replacement
+  alarm-settings.yml: |
+    rules:
+      service_resp_time_rule:
+        metrics-name: service_resp_time
+        threshold: 20 # 20ms is just for demo
+        op: ">"
+        period: 5
+        count: 1
 kind: ConfigMap
 metadata:
   name: oap-static-config
@@ -178,8 +187,7 @@ spec:
               value: k8s-configmap
           volumeMounts:
             - name: config-volume
-              mountPath: /skywalking/config/metadata-service-mapping.yaml
-              subPath: metadata-service-mapping.yaml
+              mountPath: /skywalking/ext-config
       volumes:
         - name: config-volume
           configMap:
