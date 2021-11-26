@@ -24,10 +24,11 @@ const axios = require('axios');
 const { default: agent } = require('skywalking-backend-js');
 
 const oapHttpAddress = 'http://oap:12800'
+const agentName = process.env.SW_AGENT_NAME_SERVER || 'agent::app'
 
 // @feature: nodejs-agent-backend;
 agent.start({
-    serviceName: 'agent::app',
+    serviceName: agentName,
     maxBufferSize: 1000,
     traceIgnorePath: '/browser/**,/v3/**,/health',
 });

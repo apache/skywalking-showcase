@@ -24,6 +24,6 @@ COPY . .
 RUN mv ui/src/index.agentless.js ui/src/index.js
 RUN mv server/index.agentless.js server/index.js
 
-RUN npm install && npm run build
+RUN npm install
 
 CMD npm start

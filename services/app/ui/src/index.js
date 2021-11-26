@@ -25,8 +25,10 @@ import App from './App';
 // @feature: nodejs-agent-frontend;
 import ClientMonitor from 'skywalking-client-js';
 
+const agentName = process.env.REACT_APP_SW_AGENT_NAME_UI || 'agent::ui'
+
 ClientMonitor.register({
-    service: 'agent::ui',
+    service: agentName,
     pagePath: '/homepage',
     serviceVersion: 'v1.0.0',
     traceTimeInterval: 2000,

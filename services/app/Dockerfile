@@ -47,6 +47,6 @@ RUN \
     npm install /skywalking-backend-js ; \
     # @feature: nodejs-agent-frontend; install skywalking-client-js
     npm install /skywalking-client-js ; \
-    npm run build
+    npm install
 
 CMD npm start

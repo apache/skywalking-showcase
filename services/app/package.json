@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server/index.js",
+    "start": "npm run build && node server/index.js",
     "build": "cd ui && npm install && npm run build"
   },
   "keywords": [],

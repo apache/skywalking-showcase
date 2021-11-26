@@ -187,8 +187,10 @@ spec:
           ports:
             - containerPort: 80
           env:
-            - name: SW_AGENT_NAME
+            - name: SW_AGENT_NAME_SERVER
               value: agent::app
+            - name: REACT_APP_SW_AGENT_NAME_UI
+              value: agent::ui
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: oap:11800
 

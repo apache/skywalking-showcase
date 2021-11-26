@@ -75,7 +75,8 @@ services:
     ports:
       - "9090:80"
     environment:
-      SW_AGENT_NAME: app
+      SW_AGENT_NAME_SERVER: app
+      REACT_APP_SW_AGENT_NAME_UI: ui
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/health" ]
