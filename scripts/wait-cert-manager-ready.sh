@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,12 +18,37 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+TIMEOUT=120
 
-NAMESPACE ?= default
-AGENTLESS ?= false
+MANIFEST=$(mktemp)
 
-JAVA_AGENT_OPTS ?= '["$$$$(AGENT_OPTS)","-jar","/app.jar"]'
-JAVA_AGENT_OPTS_AGENTLESS ?= '["-jar","/app.jar"]'
+cat << EOF > $MANIFEST
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: test-selfsigned
+  namespace: default
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: selfsigned-cert
+  namespace: default
+spec:
+  dnsNames:
+    - example.com
+  secretName: selfsigned-cert-tls
+  issuerRef:
+    name: test-selfsigned
+EOF
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor
+timeout $TIMEOUT bash -c -- "\
+    while ! kubectl apply -f $MANIFEST 2> /dev/null; \
+    do \
+      sleep 0.1; \
+    done"
+
+# make sure the dummy Issuer and Certificate will be deleted
+trap "kubectl delete -f $MANIFEST; rm $MANIFEST" 0 2 3 15  

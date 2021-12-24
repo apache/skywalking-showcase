@@ -76,7 +76,7 @@ Currently, the features supported are:
 
 | Name          | Description | Note |
 | -----------   | ----------- | ----------- |
-| `agent`       | Deploy microservices with SkyWalking agent enabled. | The microservices include agents for Java, NodeJS server, browser, Python. |
+| `java-agent-injector`       | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled. | The microservices include agents for Java, NodeJS server, browser, Python. |
 | `cluster`     | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
 | `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
 | `so11y`       | Enable SkyWalking self observability. | This is enabled by default for platform [Docker Compose](#docker-compose). |
