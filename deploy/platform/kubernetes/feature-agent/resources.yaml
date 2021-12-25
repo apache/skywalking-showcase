@@ -44,13 +44,14 @@ spec:
   template:
     metadata:
       labels:
-        swck-java-agent-injected: "true" # enable the java agent injector
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
         app: gateway
       annotations:
         sidecar.istio.io/inject: "${AGENTLESS}"
-        #The next is used for java-agent-injector
+        # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "gateway"
-        strategy.skywalking.apache.org/agent.Overlay: "true" # enable the java agent configuration overlay
+        strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::gateway"
     spec:
       containers:
@@ -58,10 +59,10 @@ spec:
           image: ${HUB}/gateway-service:${TAG}
           imagePullPolicy: Always
           command: ["java"]
-          args: ${JAVA_AGENT} #the JAVA_AGENT will be defined in the injected agent.
+          # @feature: java-agent-injector; we need to add $(AGENT_OPTS) to enable the injected configuration 
+          args: ${JAVA_AGENT} 
           ports:
             - containerPort: 80
-          #The next is used for agentless
           env:
             - name: SW_AGENT_NAME
               value: agent::gateway
@@ -96,10 +97,12 @@ spec:
   template:
     metadata:
       labels:
+        # @feature: java-agent-injector; enable the java agent injector
         swck-java-agent-injected: "true"
         app: songs
       annotations:
         sidecar.istio.io/inject: "${AGENTLESS}"
+        # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::songs"
@@ -109,6 +112,7 @@ spec:
           image: ${HUB}/songs-service:${TAG}
           imagePullPolicy: Always
           command: ["java"]
+          # @feature: java-agent-injector; we need to add $(AGENT_OPTS) to enable the injected configuration 
           args: ${JAVA_AGENT}
           ports:
             - containerPort: 80
