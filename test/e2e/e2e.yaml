@@ -1,0 +1,56 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+setup:
+  env: kind
+  file: ./kind.yaml
+  steps:
+    - name: prepare e2e.yaml
+      command: bash scripts/prepare-e2e.sh
+    - name: setup showcase
+      command: |
+        export KUBECONFIG=$TMPDIR/e2e-k8s.config
+        export PATH="$PATH:/tmp/skywalking-infra-e2e/istio-1.12.1/bin"
+        make deploy.kubernetes
+      wait:
+        - namespace: skywalking-swck-system
+          resource: pod
+          for: condition=Ready
+        - namespace: default
+          resource: pod
+          for: condition=Ready
+        - namespace: default-agentless
+          resource: pod
+          for: condition=Ready
+        - namespace: istio-system
+          resource: pod
+          for: condition=Ready
+  kind:
+    expose-ports:
+      - namespace: default
+        resource: service/rocket-bot 
+        port: 8080
+  timeout: 20m
+
+cleanup:
+  # always never success failure
+  on: always
+
+trigger:
+  action: http
+  interval: 10s
+  times: 5
+  url: http://${service_rocket_bot_host}:${service_rocket_bot_8080}
+  method: GET
