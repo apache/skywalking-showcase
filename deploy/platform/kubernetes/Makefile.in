@@ -21,7 +21,4 @@
 NAMESPACE ?= default
 AGENTLESS ?= false
 
-JAVA_AGENT_OPTS ?= '["$$$$(AGENT_OPTS)","-jar","/app.jar"]'
-JAVA_AGENT_OPTS_AGENTLESS ?= '["-jar","/app.jar"]'
-
 FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor

@@ -22,7 +22,10 @@ setup:
     - name: setup showcase
       command: |
         export KUBECONFIG=$TMPDIR/e2e-k8s.config
-        export PATH="$PATH:/tmp/skywalking-infra-e2e/istio-1.12.1/bin"
+        export PATH="$PATH:/tmp/skywalking-infra-e2e/istio-1.9.1/bin"
+        # the kind has only one node
+        sed -i 's/cluster/single-node/' deploy/platform/kubernetes/Makefile.in
+        sed -i 's/1000m/500m/' deploy/platform/kubernetes/feature-single-node/resources.yaml 
         make deploy.kubernetes
       wait:
         - namespace: skywalking-swck-system
@@ -38,6 +41,17 @@ setup:
           resource: pod
           for: condition=Ready
   kind:
+    import-images:
+      - ${IMAGE_HUB}/gateway-service:${IMAGE_TAG}
+      - ${IMAGE_HUB}/gateway-service:${IMAGE_TAG}-agentless
+      - ${IMAGE_HUB}/songs-service:${IMAGE_TAG}
+      - ${IMAGE_HUB}/songs-service:${IMAGE_TAG}-agentless
+      - ${IMAGE_HUB}/recommendation-service:${IMAGE_TAG}
+      - ${IMAGE_HUB}/recommendation-service:${IMAGE_TAG}-agentless
+      - ${IMAGE_HUB}/app:${IMAGE_TAG}
+      - ${IMAGE_HUB}/app:${IMAGE_TAG}-agentless
+      - ${IMAGE_HUB}/load-gen:${IMAGE_TAG}
+      - ${IMAGE_HUB}/load-gen:${IMAGE_TAG}-agentless
     expose-ports:
       - namespace: default
         resource: service/rocket-bot 
@@ -54,3 +68,15 @@ trigger:
   times: 5
   url: http://${service_rocket_bot_host}:${service_rocket_bot_8080}
   method: GET
+
+verify:
+  # verify with retry strategy
+  retry:
+    # max retry count
+    count: 20
+    # the interval between two attempts, e.g. 10s, 1m.
+    interval: 30s
+  cases:
+    # test service
+    - query: swctl --display yaml --base-url=http://${service_rocket_bot_host}:${service_rocket_bot_8080}/graphql service ls
+      expected: ./verify/service.yaml

@@ -24,7 +24,8 @@ INSTALL_DIR=/usr/local/bin
 TEMP_DIR=/tmp/skywalking-infra-e2e
 
 KUBECTL_VERSION=v1.19.1
-ISTIOCTL_VERSION=1.12.1
+ISTIOCTL_VERSION=1.9.1
+SWCTL_VERSION=0.9.0
 
 prepare_ok=true
 # install kubectl
@@ -52,11 +53,25 @@ function install_istioctl()
     fi
 }
 
+# install swctl
+function install_swctl()
+{
+    if ! command -v swctl &> /dev/null; then
+      cd $TEMP_DIR && wget https://github.com/apache/skywalking-cli/archive/0.9.0.tar.gz -O - |\
+      tar xz && cd skywalking-cli-${SWCTL_VERSION} && make ${OS} && mv bin/swctl-*-${OS}-amd64 ${INSTALL_DIR}/swctl 
+      if [ $? -ne 0 ]; then
+        echo "install swctl error, please check"
+        $prepare_ok=false
+      fi
+    fi
+}
+
 function install_all()
 {
     echo "check e2e dependencies..."
     install_kubectl
     install_istioctl
+    install_swctl
     if [ "$prepare_ok" = false ]; then
         echo "check e2e dependencies failed"
         exit
