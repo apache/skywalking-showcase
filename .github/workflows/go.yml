@@ -16,14 +16,11 @@
 
 name: Continuous Integration
 
-on:
-  pull_request:
-  push:
-    branches:
-      - main
+on: pull_request
 
 env:
   IMAGE_HUB: ghcr.io/apache/skywalking-showcase
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   e2e-tests:
@@ -34,13 +31,8 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
-        id: go
-      - name: Check out code into the Go module directory
+      - name: Check out source code
         uses: actions/checkout@v2
-      - name: set image_tag to env
-        shell: bash
-        run: |
-          echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
       - name: Build Docker Image
         shell: bash
         run: make docker -j 5

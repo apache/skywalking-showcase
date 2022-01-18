@@ -35,7 +35,7 @@ function install_kubectl()
       curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${OS}/${ARCH}/kubectl && chmod +x ./kubectl && mv ./kubectl ${INSTALL_DIR}
       if [ $? -ne 0 ]; then
         echo "install kubectl error, please check"
-        $prepare_ok=false
+        prepare_ok=false
       fi
     fi
 }
@@ -47,7 +47,7 @@ function install_istioctl()
       curl -L https://istio.io/downloadIstio | ISTIO_VERSION=${ISTIOCTL_VERSION} TARGET_ARCH=${ARCH} sh -
       if [ $? -ne 0 ]; then
         echo "install istioctl error, please check"
-        $prepare_ok=false
+        prepare_ok=false
       fi
       cp istio-${ISTIO_VERSION}/bin/istioctl $INSTALL_DIR
     fi
@@ -61,7 +61,7 @@ function install_swctl()
       tar xz && cd skywalking-cli-${SWCTL_VERSION} && make ${OS} && mv bin/swctl-*-${OS}-amd64 ${INSTALL_DIR}/swctl 
       if [ $? -ne 0 ]; then
         echo "install swctl error, please check"
-        $prepare_ok=false
+        prepare_ok=false
       fi
     fi
 }

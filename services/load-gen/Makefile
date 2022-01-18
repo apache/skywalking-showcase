@@ -26,8 +26,7 @@ build:
 docker: docker.build
 
 docker.build:
-	docker build . -t $(HUB)/load-gen:$(TAG)
-	docker tag $(HUB)/load-gen:$(TAG) $(HUB)/load-gen:$(TAG)-agentless
+	docker build . -t $(HUB)/load-gen:$(TAG) -t $(HUB)/load-gen:$(TAG)-agentless
 
 docker.push: docker.build
 	docker push $(HUB)/load-gen:$(TAG)

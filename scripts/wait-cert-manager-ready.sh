@@ -44,11 +44,16 @@ spec:
     name: test-selfsigned
 EOF
 
-timeout $TIMEOUT bash -c -- "\
+( bash -c -- "\
     while ! kubectl apply -f $MANIFEST 2> /dev/null; \
     do \
       sleep 0.1; \
-    done"
+    done" ) & pid=$!
+( sleep $TIMEOUT && pkill -HUP $pid ) 2>/dev/null & watcher=$!
+if wait $pid 2>/dev/null; then
+    pkill -HUP -P $watcher
+    wait $watcher
+fi
 
 # make sure the dummy Issuer and Certificate will be deleted
-trap "kubectl delete -f $MANIFEST; rm $MANIFEST" 0 2 3 15  
+trap "kubectl delete -f $MANIFEST; rm $MANIFEST" 0 2 3 15

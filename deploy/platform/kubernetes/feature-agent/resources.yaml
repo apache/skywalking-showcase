@@ -60,7 +60,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-          # @feature: als; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
           env:
             - name: SW_AGENT_NAME
               value: agent::gateway
@@ -111,7 +111,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-          # @feature: als; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
           env:
             - name: SW_AGENT_NAME
               value: agent::songs
