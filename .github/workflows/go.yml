@@ -36,7 +36,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Build Docker Image
         shell: bash
-        run: sed -i 's/$(shell git rev-parse --short HEAD)/${IMAGE_TAG}/' Makefile.in && make docker -j 5
+        run: make docker -j 5
       - name: Run E2E Test
         uses: apache/skywalking-infra-e2e@996ed8902e941e2883fcf0ac5b3090364942d205
         with:
