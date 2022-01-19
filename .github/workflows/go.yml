@@ -21,6 +21,7 @@ on: pull_request
 env:
   IMAGE_HUB: ghcr.io/apache/skywalking-showcase
   IMAGE_TAG: ${{ github.sha }}
+  TAG: ${{ github.sha }}
 
 jobs:
   e2e-tests:
