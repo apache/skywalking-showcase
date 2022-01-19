@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,19 +18,42 @@
 # under the License.
 #
 
-include ../../Makefile.in
+TIMEOUT=120
 
-.PHONY: build
-build:
+MANIFEST=$(mktemp)
 
-.PHONY: docker docker.build docker.push
+cat << EOF > $MANIFEST
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: test-selfsigned
+  namespace: default
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: selfsigned-cert
+  namespace: default
+spec:
+  dnsNames:
+    - example.com
+  secretName: selfsigned-cert-tls
+  issuerRef:
+    name: test-selfsigned
+EOF
 
-docker: docker.build
+( bash -c -- "\
+    while ! kubectl apply -f $MANIFEST 2> /dev/null; \
+    do \
+      sleep 0.1; \
+    done" ) & pid=$!
+( sleep $TIMEOUT && pkill -HUP $pid ) 2>/dev/null & watcher=$!
+if wait $pid 2>/dev/null; then
+    pkill -HUP -P $watcher
+    wait $watcher
+fi
 
-docker.build:
-	docker build . -t $(HUB)/load-gen:$(TAG) -t $(HUB)/load-gen:$(TAG)-agentless
-
-docker.push: docker.build
-	docker push $(HUB)/load-gen:$(TAG)
-	docker tag $(HUB)/load-gen:$(TAG) $(HUB)/load-gen:$(TAG)-agentless
-	docker push $(HUB)/load-gen:$(TAG)-agentless
+# make sure the dummy Issuer and Certificate will be deleted
+trap "kubectl delete -f $MANIFEST; rm $MANIFEST" 0 2 3 15

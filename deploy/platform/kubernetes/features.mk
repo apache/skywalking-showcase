@@ -81,3 +81,29 @@ undeploy.feature-kubernetes-monitor:
 	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/cluster-role-binding.yaml
 	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/service.yaml
 	@kubectl delete --ignore-not-found -f https://raw.githubusercontent.com/kubernetes/kube-state-metrics/v2.2.4/examples/standard/deployment.yaml
+
+# @feature: java-agent-injector; use the java agent injector to inject the java agent more natively
+.PHONY: feature-java-agent-injector
+feature-java-agent-injector:
+
+# @feature: java-agent-injector; the swck operator depends on the certificate management of the cert-manager
+.PHONY: install-cert-manager
+install-cert-manager:
+	@kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
+	@sh ../../../scripts/wait-cert-manager-ready.sh
+
+# @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
+.PHONY: deploy.feature-java-agent-injector
+deploy.feature-java-agent-injector: install-cert-manager
+	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl apply -f -
+	@kubectl label namespace --overwrite $(NAMESPACE) swck-injection=enabled
+	# @feature: java-agent-injector; we can update the agent's backend address in a single-node cluster firstly so that we don't need to add the same backend env for every java agent
+	@kubectl get configmap skywalking-swck-java-agent-configmap -n skywalking-swck-system -oyaml | sed "s/127.0.0.1/$(NAMESPACE)-oap.$(NAMESPACE)/" | kubectl apply -f -
+	$(MAKE) deploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
+
+# @feature: java-agent-injector; uninstall the swck operator and cert-manager
+.PHONY: undeploy.feature-java-agent-injector
+undeploy.feature-java-agent-injector:
+	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete -f -
+	@kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
+	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
