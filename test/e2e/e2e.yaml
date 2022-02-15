@@ -23,21 +23,14 @@ setup:
       command: |
         export KUBECONFIG=$TMPDIR/e2e-k8s.config
         export PATH="$PATH:/tmp/skywalking-infra-e2e/istio-1.9.1/bin"
-        # the kind has only one node
-        sed -i 's/cluster/single-node/' deploy/platform/kubernetes/Makefile.in
-        sed -i 's/1000m/500m/' deploy/platform/kubernetes/feature-single-node/resources.yaml 
-        make deploy.kubernetes
+        make deploy.kubernetes FEATURE_FLAGS=java-agent-injector,single-node
+    - name: wait for readiness
+      command: sleep 30 # The pods are not even created so waiting for their readiness yields "No maching resources"
       wait:
         - namespace: skywalking-swck-system
           resource: pod
           for: condition=Ready
         - namespace: default
-          resource: pod
-          for: condition=Ready
-        - namespace: default-agentless
-          resource: pod
-          for: condition=Ready
-        - namespace: istio-system
           resource: pod
           for: condition=Ready
   kind:
@@ -57,10 +50,6 @@ setup:
         resource: service/rocket-bot 
         port: 8080
   timeout: 20m
-
-cleanup:
-  # always never success failure
-  on: always
 
 trigger:
   action: http

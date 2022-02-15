@@ -16,8 +16,10 @@
 # under the License.
 #
 
+ARG SW_AGENT_JAVA_TAG
+
 # @feature: java-agent;
-FROM ghcr.io/apache/skywalking-java/jdk-11:latest
+FROM ghcr.io/apache/skywalking-java/skywalking-java:$SW_AGENT_JAVA_TAG
 
 COPY build/libs/gateway-service-0.0.1-SNAPSHOT.jar /app.jar
 

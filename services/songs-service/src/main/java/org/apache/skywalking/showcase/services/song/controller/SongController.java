@@ -20,12 +20,14 @@ package org.apache.skywalking.showcase.services.song.controller;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.skywalking.showcase.services.song.entity.Song;
 import org.apache.skywalking.showcase.services.song.repo.SongsRepo;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/songs")
@@ -34,11 +36,13 @@ public class SongController {
 
     @GetMapping
     public List<Song> songs() {
+        log.info("Listing all songs");
         return songsRepo.findAll();
     }
 
     @GetMapping("/top")
     public List<Song> top() {
+        log.info("Listing top songs");
         return songsRepo.findByLikedGreaterThan(1000);
     }
 }
