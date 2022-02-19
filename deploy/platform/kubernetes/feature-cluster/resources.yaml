@@ -94,6 +94,13 @@ spec:
         - name: elasticsearch
           image: ${ES_IMAGE}
           imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 4000m
+              memory: "4096Mi"
+            requests:
+              cpu: 1000m
+              memory: "1024Mi"
           ports:
             - containerPort: 9200
           env:
