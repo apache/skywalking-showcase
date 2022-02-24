@@ -104,6 +104,6 @@ deploy.feature-java-agent-injector: install-cert-manager
 # @feature: java-agent-injector; uninstall the swck operator and cert-manager
 .PHONY: undeploy.feature-java-agent-injector
 undeploy.feature-java-agent-injector:
-	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete -f -
-	@kubectl delete -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
+	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete --ignore-not-found -f -
+	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false

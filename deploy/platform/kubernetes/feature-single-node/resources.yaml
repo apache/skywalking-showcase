@@ -99,8 +99,6 @@ spec:
           env:
             - name: 'discovery.type'
               value: 'single-node'
-            - name: 'bootstrap.memory_lock'
-              value: 'true'
 
 ---
 apiVersion: v1
