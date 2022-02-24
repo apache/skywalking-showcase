@@ -42,5 +42,9 @@ jobs:
           registry: ${{ env.HUB }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '8'
       - name: Build and push Docker image
         run: make push -j 6 || make push -j 6
