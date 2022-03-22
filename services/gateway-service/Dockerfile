@@ -23,6 +23,6 @@ FROM ghcr.io/apache/skywalking-java/skywalking-java:$SW_AGENT_JAVA_TAG
 
 COPY build/libs/gateway-service-0.0.1-SNAPSHOT.jar /app.jar
 
-RUN mv /skywalking/agent/optional-plugins/apm-spring-cloud-gateway-3.x-plugin-*.jar /skywalking/agent/plugins/
+RUN mv /skywalking/agent/optional-plugins/apm-spring-cloud-gateway-*.jar /skywalking/agent/plugins/
 
 CMD ["java", "-jar", "/app.jar"]
