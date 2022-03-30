@@ -1,5 +1,7 @@
 # SkyWalking showcase
 
+**Notice, this is the legacy showcase for SkyWalking 8.x**
+
 This showcase repository includes an example music application and other manifests to demonstrate the main features of
 SkyWalking. The music application is composed of several microservices that are written in different programming
 languages. Here is the architecture:
