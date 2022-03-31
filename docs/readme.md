@@ -85,6 +85,7 @@ Currently, the features supported are:
 | `kubernetes-monitor` | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI. | |
 | `istiod-monitor`     | Deploy OpenTelemetry and export Istio control plane metrics to SkyWalking for analysis and display on UI. | |
 | `event`       | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking. | |
+| `satellite`   | Deploy SkyWalking Satellite to load balance the monitoring data.| |
 
 ### Kubernetes
 
@@ -127,9 +128,12 @@ make redeploy.docker # equivalent to make undeploy.docker deploy.docker
 
 ## Traffic Flow
 
-After deploy the showcase, the business system would send monitoring traffic to the Satellite service, and the Satellite 
-receives the backend oap cluster, load balances the traffic to the OAP nodes. If there is not satellite service, the traffic 
-would be directly connected to an OAP node.
+After deploy the showcase, the business system would send monitoring traffic to the OAP node, and one agent/sidecar connect to one OAP node directly.
+
+### Satellite
+If the business traffic is unbalanced, it would cause the OAP node receive unbalanced monitoring data. So, you could add the Satellite component.
+After deploy the showcase with the satellite component, the monitoring traffic would send to the Satellite service, and satellite
+load balances the traffic to the OAP nodes.
 
 ```mermaid
 %% please read this doc in our official website, otherwise the graph is not correctly rendered. 

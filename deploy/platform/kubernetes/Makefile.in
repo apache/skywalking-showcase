@@ -21,4 +21,4 @@
 NAMESPACE ?= default
 AGENTLESS ?= false
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite
+FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor

@@ -22,9 +22,9 @@ include Makefile.in
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),-f docker-compose.$(f).yaml)
 
-BACKEND_ADDRESS := oap:11800
+BACKEND_SERVICE := oap
 ifneq (,$(findstring satellite,$(features)))
-	BACKEND_ADDRESS := satellite:11800
+	BACKEND_SERVICE := satellite
 endif
 
 .PHONY: deploy
