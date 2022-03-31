@@ -19,38 +19,30 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: skywalking-oap-sa-cluster
+  name: skywalking-satellite-sa
+  namespace: ${NAMESPACE}
 
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: skywalking-oap-sa-cluster-role
+  name: skywalking-satellite-sa-role
 rules:
   - apiGroups: [ "" ]
     resources:
-      - "pods" # @feature: cluster; OAP needs to read other OAP Pods information to form a cluster
-               # @feature: als; OAP needs to read Pods metadata to analyze the access logs
-      - "services" # @feature: als; OAP needs to read services metadata to analyze the access logs
-      - "endpoints" # @feature: als; OAP needs to read endpoints metadata to analyze the access logs
-      - "nodes" # @feature: als; OAP needs to read nodes metadata to analyze the access logs
-      - "configmaps"
-    verbs: [ "get", "watch", "list" ]
-  - apiGroups: [ "batch" ]
-    resources:
-      - "jobs" # @feature: cluster; OAP needs to wait for the init job to complete
+      - "pods"
     verbs: [ "get", "watch", "list" ]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: skywalking-oap-sa-cluster-role-binding
+  name: skywalking-satellite-sa-role-binding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: skywalking-oap-sa-cluster-role
+  name: skywalking-satellite-sa-role
 subjects:
   - kind: ServiceAccount
-    name: skywalking-oap-sa-cluster
+    name: skywalking-satellite-sa
     namespace: ${NAMESPACE}

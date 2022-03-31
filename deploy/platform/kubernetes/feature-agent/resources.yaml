@@ -65,7 +65,7 @@ spec:
             - name: SW_AGENT_NAME
               value: agent::gateway
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
-              value: oap:11800
+              value: ${BACKEND_SERVICE}:11800
 
 ---
 apiVersion: v1
@@ -116,7 +116,7 @@ spec:
             - name: SW_AGENT_NAME
               value: agent::songs
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
-              value: oap:11800
+              value: ${BACKEND_SERVICE}:11800
 
 ---
 apiVersion: v1
@@ -160,7 +160,7 @@ spec:
             - name: SW_AGENT_NAME
               value: agent::recommendation
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
-              value: oap:11800
+              value: ${BACKEND_SERVICE}:11800
 
 ---
 apiVersion: v1
@@ -206,7 +206,7 @@ spec:
             - name: REACT_APP_SW_AGENT_NAME_UI
               value: agent::ui
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
-              value: oap:11800
+              value: ${BACKEND_SERVICE}:11800
 
 ---
 apiVersion: apps/v1

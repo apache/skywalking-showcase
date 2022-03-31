@@ -24,7 +24,7 @@ services:
     networks: [ sw ]
     environment:
       SW_AGENT_NAME: gateway
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_ADDRESS}
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
       interval: 30s
@@ -42,7 +42,7 @@ services:
     networks: [ sw ]
     environment:
       SW_AGENT_NAME: songs
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_ADDRESS}
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
       interval: 30s
@@ -58,7 +58,7 @@ services:
     networks: [ sw ]
     environment:
       SW_AGENT_NAME: recommendation
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_ADDRESS}
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/health" ]
       interval: 30s
@@ -77,7 +77,7 @@ services:
     environment:
       SW_AGENT_NAME_SERVER: app
       REACT_APP_SW_AGENT_NAME_UI: ui
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_ADDRESS}
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/health" ]
       interval: 30s

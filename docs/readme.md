@@ -124,3 +124,16 @@ make undeploy.docker
 # Redeploy
 make redeploy.docker # equivalent to make undeploy.docker deploy.docker
 ```
+
+## Traffic Flow
+
+After deploy the showcase, the business system would send monitoring traffic to the Satellite service, and the Satellite 
+receives the backend oap cluster, load balances the traffic to the OAP nodes. If there is not satellite service, the traffic 
+would be directly connected to an OAP node.
+
+```mermaid
+%% please read this doc in our official website, otherwise the graph is not correctly rendered. 
+graph LR;
+  agent["business app(agent)"] --> satellite("satellite") --> oap("oap");
+  envoy["sidecar(envoy)"] --> satellite;
+```

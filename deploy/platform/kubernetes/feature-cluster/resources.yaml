@@ -135,7 +135,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: skywalking-sa-cluster
+      serviceAccountName: skywalking-oap-sa-cluster
       restartPolicy: Never
       initContainers:
         - name: wait-for-es
@@ -189,7 +189,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: skywalking-sa-cluster # @feature: cluster; set a service account with Pod "read" permission
+      serviceAccountName: skywalking-oap-sa-cluster # @feature: cluster; set a service account with Pod "read" permission
       initContainers:
         - name: wait-for-oap-init
           image: bitnami/kubectl:1.20.12
@@ -287,7 +287,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: skywalking-sa-cluster
+      serviceAccountName: skywalking-oap-sa-cluster
       containers:
         - name: rocket-bot
           image: ${SW_ROCKET_BOT_IMAGE}

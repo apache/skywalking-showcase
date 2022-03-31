@@ -39,8 +39,8 @@ istio:
 		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[5]=.*upstream_rq_pending_active.*' \
 		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[6]=.*lb_healthy_panic.*' \
 		--set 'meshConfig.defaultConfig.proxyStatsMatcher.inclusionRegexps[7]=.*upstream_cx_none_healthy.*' \
-		--set meshConfig.defaultConfig.envoyMetricsService.address=oap.$(NAMESPACE):11800 `# @feature: als; set MetricsService address to OAP so Envoy emits metrics to OAP` \
-		--set meshConfig.defaultConfig.envoyAccessLogService.address=oap.$(NAMESPACE):11800 `# @feature: als; set AccessLogService address to OAP so Envoy emits logs to OAP`
+		--set meshConfig.defaultConfig.envoyMetricsService.address=$(BACKEND_SERVICE).$(NAMESPACE):11800 `# @feature: als; set MetricsService address to Backend Service so Envoy emits metrics to Backend Service` \
+		--set meshConfig.defaultConfig.envoyAccessLogService.address=$(BACKEND_SERVICE).$(NAMESPACE):11800 `# @feature: als; set AccessLogService address to Backend Service so Envoy emits logs to Backend Service`
 
 .PHONY: namespace
 namespace:
@@ -98,7 +98,7 @@ deploy.feature-java-agent-injector: install-cert-manager
 	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl apply -f -
 	@kubectl label namespace --overwrite $(NAMESPACE) swck-injection=enabled
 	# @feature: java-agent-injector; we can update the agent's backend address in a single-node cluster firstly so that we don't need to add the same backend env for every java agent
-	@kubectl get configmap skywalking-swck-java-agent-configmap -n skywalking-swck-system -oyaml | sed "s/127.0.0.1/$(NAMESPACE)-oap.$(NAMESPACE)/" | kubectl apply -f -
+	@kubectl get configmap skywalking-swck-java-agent-configmap -n skywalking-swck-system -oyaml | sed "s/127.0.0.1/$(NAMESPACE)-$(BACKEND_SERVICE).$(NAMESPACE)/" | kubectl apply -f -
 	$(MAKE) deploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
 
 # @feature: java-agent-injector; uninstall the swck operator and cert-manager

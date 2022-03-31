@@ -22,6 +22,11 @@ include Makefile.in
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),-f docker-compose.$(f).yaml)
 
+BACKEND_ADDRESS := oap:11800
+ifneq (,$(findstring satellite,$(features)))
+	BACKEND_ADDRESS := satellite:11800
+endif
+
 .PHONY: deploy
 deploy:
 	docker-compose $(features) up -d
