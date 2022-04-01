@@ -15,22 +15,24 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+version: '2.1'
 
-include ../../../Makefile.in
-include Makefile.in
+services:
+  satellite:
+    image: ${SW_SATELLITE_IMAGE}
+    networks: [ sw ]
+    healthcheck:
+      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      SATELLITE_GRPC_CLIENT_FINDER: static
+      SATELLITE_GRPC_CLIENT: oap:11800
+      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
+    depends_on:
+      oap:
+        condition: service_healthy
 
-features := $(subst $(comma), ,$(FEATURE_FLAGS))
-features := $(foreach f,$(features),-f docker-compose.$(f).yaml)
-
-BACKEND_SERVICE := oap
-ifneq (,$(findstring satellite,$(features)))
-	BACKEND_SERVICE := satellite
-endif
-
-.PHONY: deploy
-deploy:
-	docker-compose $(features) up -d
-
-.PHONY: undeploy
-undeploy:
-	docker-compose $(features) --log-level ERROR down
+networks:
+  sw:

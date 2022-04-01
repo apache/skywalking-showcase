@@ -135,7 +135,7 @@ spec:
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: skywalking-sa # @feature: als; set a service account with Pods/Endpoints/Services/Nodes permissions to analyze Envoy access logs
+      serviceAccountName: skywalking-oap-sa # @feature: als; set a service account with Pods/Endpoints/Services/Nodes permissions to analyze Envoy access logs
       containers:
         - name: oap
           image: ${SW_OAP_IMAGE}
