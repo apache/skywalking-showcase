@@ -242,11 +242,17 @@ spec:
             - name: SW_TELEMETRY
               value: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
             - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
-              value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
+              value: "mx-mesh,persistence" # @feature: als; enable mesh analyzer (mx-mesh) to analyze ALS logs
             - name: K8S_SERVICE_NAME_RULE
               value: "agentless::${service.metadata.name}"
             - name: SW_CONFIGURATION
               value: k8s-configmap
+            - name: SW_ENVOY_METRIC_ALS_TCP_ANALYSIS
+              value: "mx-mesh"
+            - name: SW_ENABLE_UPDATE_UI_TEMPLATE
+              value: "false"
+            - name: SW_SLOW_DB_THRESHOLD
+              value: default:0,mongodb:100
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
