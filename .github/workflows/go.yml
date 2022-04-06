@@ -38,6 +38,6 @@ jobs:
         shell: bash
         run: make docker -j 5
       - name: Run E2E Test
-        uses: apache/skywalking-infra-e2e@996ed8902e941e2883fcf0ac5b3090364942d205
+        uses: apache/skywalking-infra-e2e@ccb8dd74a8f75d5ee3e59992c219f36aaf0c3944
         with:
           e2e-file: test/e2e/e2e.yaml
