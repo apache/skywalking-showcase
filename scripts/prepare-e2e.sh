@@ -58,7 +58,7 @@ function install_swctl()
 {
     if ! command -v swctl &> /dev/null; then
       cd $TEMP_DIR && wget https://github.com/apache/skywalking-cli/archive/${SWCTL_VERSION}.tar.gz -O - |\
-      tar xz && cd skywalking-cli-${SWCTL_VERSION} && make ${OS} && mv bin/swctl-*-${OS}-amd64 ${INSTALL_DIR}/swctl
+      tar xz && cd skywalking-cli-${SWCTL_VERSION} && make install DESTDIR=${INSTALL_DIR}
       if [ $? -ne 0 ]; then
         echo "install swctl error, please check"
         prepare_ok=false
