@@ -16,28 +16,46 @@
 # under the License.
 
 {{- contains . }}
-- id: {{ b64enc "agentless::gateway" }}.1
-  name: agentless::gateway
+- id: {{ b64enc "localhost:-1" }}.0
+  name: localhost:-1
   group: ""
-- id: {{ b64enc "agentless::songs" }}.1
-  name: agentless::songs
-  group: ""
-- id: {{ b64enc "agentless::recommendation" }}.1
-  name: agentless::recommendation
-  group: ""
-- id: {{ b64enc "agentless::app" }}.1
-  name: agentless::app
-  group: ""
+  shortname: localhost:-1
+  layers:
+    - VIRTUAL_DATABASE
+  normal: false
 - id: {{ b64enc "agent::gateway" }}.1
   name: agent::gateway
-  group: ""
+  group: "agent"
+  shortname: gateway
+  layers:
+    - GENERAL
+  normal: true
 - id: {{ b64enc "agent::songs" }}.1
   name: agent::songs
-  group: ""
+  group: "agent"
+  shortname: songs
+  layers:
+    - GENERAL
+  normal: true
 - id: {{ b64enc "agent::recommendation" }}.1
   name: agent::recommendation
-  group: ""
+  group: "agent"
+  shortname: recommendation
+  layers:
+    - GENERAL
+  normal: true
 - id: {{ b64enc "agent::app" }}.1
   name: agent::app
-  group: ""
+  group: "agent"
+  shortname: app
+  layers:
+    - GENERAL
+  normal: true
+- id: {{ b64enc "agent::ui" }}.1
+  name: agent::ui
+  group: "agent"
+  shortname: ui
+  layers:
+    - BROWSER
+  normal: true
 {{- end }}
