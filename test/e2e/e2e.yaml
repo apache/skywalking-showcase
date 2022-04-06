@@ -36,15 +36,10 @@ setup:
   kind:
     import-images:
       - ${IMAGE_HUB}/gateway-service:${IMAGE_TAG}
-      - ${IMAGE_HUB}/gateway-service:${IMAGE_TAG}-agentless
       - ${IMAGE_HUB}/songs-service:${IMAGE_TAG}
-      - ${IMAGE_HUB}/songs-service:${IMAGE_TAG}-agentless
       - ${IMAGE_HUB}/recommendation-service:${IMAGE_TAG}
-      - ${IMAGE_HUB}/recommendation-service:${IMAGE_TAG}-agentless
       - ${IMAGE_HUB}/app:${IMAGE_TAG}
-      - ${IMAGE_HUB}/app:${IMAGE_TAG}-agentless
       - ${IMAGE_HUB}/load-gen:${IMAGE_TAG}
-      - ${IMAGE_HUB}/load-gen:${IMAGE_TAG}-agentless
     expose-ports:
       - namespace: default
         resource: service/rocket-bot 
