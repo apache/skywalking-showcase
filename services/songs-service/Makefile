@@ -29,7 +29,7 @@ clean:
 docker: docker.build
 
 docker.build: build
-	docker build --build-arg SW_AGENT_JAVA_TAG=${SW_AGENT_JAVA_TAG} . -t $(HUB)/songs-service:$(TAG)
+	docker build --build-arg SW_AGENT_JAVA_IMAGE=${SW_AGENT_JAVA_IMAGE} . -t $(HUB)/songs-service:$(TAG)
 	docker build . -t $(HUB)/songs-service:$(TAG)-agentless -f Dockerfile.agentless
 
 docker.push: docker.build
