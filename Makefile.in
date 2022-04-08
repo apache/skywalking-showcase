@@ -33,7 +33,7 @@ SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/s
 
 SW_AGENT_JAVA_TAG ?= 8a0f79743cee6bc429218928f6afb296ed758ea4-java8
 SW_AGENT_NODEJS_BACKEND_VERSION ?= 59ef1aed6a404e2e8afffbb4b81ea849ae4f3026
-SW_AGENT_NODEJS_FRONTEND_VERSION ?= af0565a67d382b683c1dbd94c379b7080db61449
+SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 
 SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v0c52a26e37d778c0734ebcf9cd8a0e313c8ba682
 
