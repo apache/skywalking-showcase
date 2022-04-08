@@ -47,7 +47,7 @@ ifneq ($(SHOW_TIPS),false)
 	@echo
 	@echo "Now wait the Pods to be ready and use the following command to expose the port of SkyWalking UI"
 	@echo
-	@echo "  $$ kubectl port-forward svc/rocket-bot 8080:8080 --namespace $(NAMESPACE)"
+	@echo "  $$ kubectl port-forward svc/ui 8080:8080 --namespace $(NAMESPACE)"
 	@echo
 	@echo "Then open your browser and navigate to http://localhost:8080"
 	@echo

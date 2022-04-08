@@ -58,7 +58,7 @@ services:
       elasticsearch:
         condition: service_healthy
 
-  rocket-bot:
+  ui:
     image: ${SW_UI_IMAGE}
     networks: [ sw ]
     ports:

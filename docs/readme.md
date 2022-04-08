@@ -7,7 +7,7 @@ SkyWalking. The music application is composed of several microservices that are 
 languages. Here is the architecture:
 
 ```mermaid
-%% please read this doc in our official website, otherwise the graph is not correctly rendered. 
+%% please read this doc in our official website, otherwise the graph is not correctly rendered.
 graph LR;
   loadgen[load generator] --> ui("UI (React)") --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
   gateway --> songs("songs (Spring)") & rcmd("recommendations (Python)");
@@ -37,9 +37,9 @@ cd skywalking-showcase
 make deploy.kubernetes
 ```
 
-This will install SkyWalking components, including OAP in cluster mode with 2 nodes, SkyWalking RocketBot UI,
-microservices with SkyWalking agent, microservices without SkyWalking agent but managed by Istio, 
-2 Pods to mimic virtual machines and export metrics to SkyWalking, and enable kubernetes cluster monitoring as well as 
+This will install SkyWalking components, including OAP in cluster mode with 2 nodes, SkyWalking UI,
+microservices with SkyWalking agent, microservices without SkyWalking agent but managed by Istio,
+2 Pods to mimic virtual machines and export metrics to SkyWalking, and enable kubernetes cluster monitoring as well as
 SkyWalking self observability.
 
 For more advanced deployments, check [Customization](#customization) documentation below.
@@ -79,8 +79,8 @@ Currently, the features supported are:
 | Name          | Description | Note |
 | -----------   | ----------- | ----------- |
 | `java-agent-injector`       | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled. | The microservices include agents for Java, NodeJS server, browser, Python. |
-| `cluster`     | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
-| `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking RocketBot UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
+| `cluster`     | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
+| `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
 | `so11y`       | Enable SkyWalking self observability. | This is enabled by default for platform [Docker Compose](#docker-compose). |
 | `vm`          | Start 2 virtual machines and export their metrics to SkyWalking. | The "virtual machines" are mimicked by Docker containers or Pods. |
 | `als`         | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
@@ -138,7 +138,7 @@ After deploy the showcase with the satellite component, the monitoring traffic w
 load balances the traffic to the OAP nodes.
 
 ```mermaid
-%% please read this doc in our official website, otherwise the graph is not correctly rendered. 
+%% please read this doc in our official website, otherwise the graph is not correctly rendered.
 graph LR;
   agent["business app(agent)"] --> satellite("satellite") --> oap("oap");
   envoy["sidecar(envoy)"] --> satellite;
