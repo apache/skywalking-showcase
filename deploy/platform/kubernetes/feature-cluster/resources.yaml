@@ -296,7 +296,7 @@ spec:
       serviceAccountName: skywalking-oap-sa-cluster
       containers:
         - name: rocket-bot
-          image: ${SW_ROCKET_BOT_IMAGE}
+          image: ${SW_UI_IMAGE}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
