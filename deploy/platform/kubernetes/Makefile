@@ -22,7 +22,6 @@ include Makefile.in
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
 
-BACKEND_SERVICE := oap
 ifneq (,$(findstring satellite,$(features)))
 	BACKEND_SERVICE := satellite
 endif

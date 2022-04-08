@@ -99,11 +99,11 @@ deploy.feature-java-agent-injector: install-cert-manager
 	@kubectl label namespace --overwrite $(NAMESPACE) swck-injection=enabled
 	# @feature: java-agent-injector; we can update the agent's backend address in a single-node cluster firstly so that we don't need to add the same backend env for every java agent
 	@kubectl get configmap skywalking-swck-java-agent-configmap -n skywalking-swck-system -oyaml | sed "s/127.0.0.1/$(NAMESPACE)-$(BACKEND_SERVICE).$(NAMESPACE)/" | kubectl apply -f -
-	$(MAKE) deploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
+	$(MAKE) deploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false BACKEND_SERVICE=$(BACKEND_SERVICE)
 
 # @feature: java-agent-injector; uninstall the swck operator and cert-manager
 .PHONY: undeploy.feature-java-agent-injector
 undeploy.feature-java-agent-injector:
 	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete --ignore-not-found -f -
 	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
-	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
+	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false BACKEND_SERVICE=$(BACKEND_SERVICE)
