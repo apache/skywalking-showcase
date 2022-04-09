@@ -139,7 +139,7 @@ After deploy the showcase with the satellite component, the monitoring traffic w
 load balances the traffic to the OAP nodes.
 
 ```mermaid
-%% please read this doc in our official website, otherwise the graph is not correctly rendered. 
+%% please read this doc in our official website, otherwise the graph is not correctly rendered.
 graph LR;
   agent["business app(agent)"] --> satellite("satellite") --> oap("oap");
   envoy["sidecar(envoy)"] --> satellite;
