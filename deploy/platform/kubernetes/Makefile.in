@@ -20,5 +20,6 @@
 
 NAMESPACE ?= default
 AGENTLESS ?= false
+BACKEND_SERVICE ?= oap
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor
+FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite

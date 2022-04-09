@@ -22,7 +22,6 @@ include Makefile.in
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
 
-BACKEND_SERVICE := oap
 ifneq (,$(findstring satellite,$(features)))
 	BACKEND_SERVICE := satellite
 endif
@@ -47,7 +46,7 @@ ifneq ($(SHOW_TIPS),false)
 	@echo
 	@echo "Now wait the Pods to be ready and use the following command to expose the port of SkyWalking UI"
 	@echo
-	@echo "  $$ kubectl port-forward svc/rocket-bot 8080:8080 --namespace $(NAMESPACE)"
+	@echo "  $$ kubectl port-forward svc/ui 8080:8080 --namespace $(NAMESPACE)"
 	@echo
 	@echo "Then open your browser and navigate to http://localhost:8080"
 	@echo

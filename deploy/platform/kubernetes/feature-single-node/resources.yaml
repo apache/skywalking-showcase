@@ -195,10 +195,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rocket-bot
+  name: ui
 spec:
   selector:
-    app: rocket-bot
+    app: ui
   ports:
     - protocol: TCP
       port: 8080
@@ -208,24 +208,24 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rocket-bot-deployment
+  name: ui-deployment
   labels:
-    app: rocket-bot
+    app: ui
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rocket-bot
+      app: ui
   template:
     metadata:
       labels:
-        app: rocket-bot
+        app: ui
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
       containers:
-        - name: rocket-bot
-          image: ${SW_ROCKET_BOT_IMAGE}
+        - name: ui
+          image: ${SW_UI_IMAGE}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

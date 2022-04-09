@@ -58,8 +58,8 @@ services:
       elasticsearch:
         condition: service_healthy
 
-  rocket-bot:
-    image: ${SW_ROCKET_BOT_IMAGE}
+  ui:
+    image: ${SW_UI_IMAGE}
     networks: [ sw ]
     ports:
       - "9999:8080"

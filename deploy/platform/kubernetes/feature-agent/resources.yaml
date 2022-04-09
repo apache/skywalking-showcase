@@ -53,6 +53,8 @@ spec:
         strategy.skywalking.apache.org/inject.Container: "gateway"
         strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::gateway"
+        optional.skywalking.apache.org: "spring-cloud-gateway"
+        sidecar.skywalking.apache.org/initcontainer.Image: "${SW_AGENT_JAVA_IMAGE}"
     spec:
       containers:
         - name: gateway
@@ -104,6 +106,7 @@ spec:
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::songs"
+        sidecar.skywalking.apache.org/initcontainer.Image: "${SW_AGENT_JAVA_IMAGE}"
     spec:
       containers:
         - name: songs

@@ -16,10 +16,10 @@
 # under the License.
 #
 
-ARG SW_AGENT_JAVA_TAG
+ARG SW_AGENT_JAVA_IMAGE
 
 # @feature: java-agent;
-FROM ghcr.io/apache/skywalking-java/skywalking-java:$SW_AGENT_JAVA_TAG
+FROM $SW_AGENT_JAVA_IMAGE
 
 COPY build/libs/songs-service-0.0.1-SNAPSHOT.jar /app.jar
 
