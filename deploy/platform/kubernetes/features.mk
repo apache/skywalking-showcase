@@ -109,7 +109,7 @@ undeploy.feature-java-agent-injector:
 	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false
 
 .PHONY: open-function
-open-function:
+open-function: install-cert-manager
 ifeq (, $(shell which ofn))
   $(error "No ofn in PATH, please make sure ofn is available in PATH")
 endif
