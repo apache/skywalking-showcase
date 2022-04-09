@@ -107,3 +107,23 @@ undeploy.feature-java-agent-injector:
 	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete --ignore-not-found -f -
 	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false BACKEND_SERVICE=$(BACKEND_SERVICE)
+
+.PHONY: open-function
+open-function: install-cert-manager
+ifeq (, $(shell which ofn))
+  $(error "No ofn in PATH, please make sure ofn is available in PATH")
+endif
+	@ofn install --knative --ingress --region-cn -y
+	@kubectl patch configmap/config-deployment -n knative-serving --type merge -p '{"data":{"registriesSkippingTagResolving":"ghcr.io"}}'
+
+.PHONY: deploy.feature-function
+deploy.feature-function: open-function
+	@echo "deploy.feature-function"
+
+# @feature: feature-function;
+.PHONY: feature-function
+feature-function:
+
+.PHONY: undeploy.feature-function
+undeploy.feature-function:
+	@ofn uninstall --all --region-cn -y

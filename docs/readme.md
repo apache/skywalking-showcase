@@ -76,18 +76,19 @@ necessarily the same so make sure to specify the right feature flags.
 
 Currently, the features supported are:
 
-| Name          | Description | Note |
-| -----------   | ----------- | ----------- |
-| `java-agent-injector`       | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled. | The microservices include agents for Java, NodeJS server, browser, Python. |
-| `cluster`     | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
-| `single-node` | Deploy only one single node of SkyWalking OAP, and SkyWalking UI, ElasticSearch as storage. | Only one of `cluster` or `single-node` can be enabled. |
-| `so11y`       | Enable SkyWalking self observability. | This is enabled by default for platform [Docker Compose](#docker-compose). |
-| `vm`          | Start 2 virtual machines and export their metrics to SkyWalking. | The "virtual machines" are mimicked by Docker containers or Pods. |
-| `als`         | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
-| `kubernetes-monitor` | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI. | |
-| `istiod-monitor`     | Deploy OpenTelemetry and export Istio control plane metrics to SkyWalking for analysis and display on UI. | |
-| `event`       | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking. | |
-| `satellite`   | Deploy SkyWalking Satellite to load balance the monitoring data.| |
+| Name                  | Description                                                                                                                                | Note                                                                                                                                  |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `java-agent-injector` | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled.              | The microservices include agents for Java, NodeJS server, browser, Python.                                                            |
+| `cluster`             | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking UI, ElasticSearch as storage.                                          | Only one of `cluster` or `single-node` can be enabled.                                                                                |
+| `single-node`         | Deploy only one single node of SkyWalking OAP, and SkyWalking UI, ElasticSearch as storage.                                                | Only one of `cluster` or `single-node` can be enabled.                                                                                |
+| `so11y`               | Enable SkyWalking self observability.                                                                                                      | This is enabled by default for platform [Docker Compose](#docker-compose).                                                            |
+| `vm`                  | Start 2 virtual machines and export their metrics to SkyWalking.                                                                           | The "virtual machines" are mimicked by Docker containers or Pods.                                                                     |
+| `als`                 | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs. | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
+| `kubernetes-monitor`  | Deploy OpenTelemetry and export Kubernetes monitoring metrics to SkyWalking for analysis and display on UI.                                |                                                                                                                                       |
+| `istiod-monitor`      | Deploy OpenTelemetry and export Istio control plane metrics to SkyWalking for analysis and display on UI.                                  |                                                                                                                                       |
+| `event`               | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking.                                 |                                                                                                                                       |
+| `satellite`           | Deploy SkyWalking Satellite to load balance the monitoring data.                                                                           |                                                                                                                                       |
+| `function`            | Deploy [OpenFunction](https://openfunction.dev/) and export trace to SkyWalking.                                                           | Command [ofn](https://github.com/OpenFunction/cli) is required to run this feature.                                                   |
 
 ### Kubernetes
 
