@@ -116,11 +116,11 @@ endif
 	@ofn install --knative --ingress --region-cn -y
 	@kubectl patch configmap/config-deployment -n knative-serving --type merge -p '{"data":{"registriesSkippingTagResolving":"ghcr.io"}}'
 
+# @feature: function; install open function resources
 .PHONY: deploy.feature-function
 deploy.feature-function: open-function
 	@echo "deploy.feature-function"
 
-# @feature: feature-function;
 .PHONY: feature-function
 feature-function:
 
