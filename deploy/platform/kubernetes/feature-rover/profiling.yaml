@@ -21,7 +21,7 @@ kind: CronJob
 metadata:
   name: ebpf-profiling-trgigger
 spec:
-  schedule: "8 * * * *"
+  schedule: "5 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -33,7 +33,7 @@ spec:
         spec:
           containers:
             - name: ebpf-profiling-trigger
-              image: ghcr.io/apache/skywalking-cli/skywalking-cli:d2c95c3782f137518b09554331794c10e1457d95
+              image: ${SW_CLI_IMAGE}
               volumeMounts:
               command:
                 - /bin/sh
