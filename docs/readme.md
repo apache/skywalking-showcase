@@ -89,6 +89,7 @@ Currently, the features supported are:
 | `event`               | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking.                                 |                                                                                                                                       |
 | `satellite`           | Deploy SkyWalking Satellite to load balance the monitoring data.                                                                           |                                                                                                                                       |
 | `function`            | Deploy [OpenFunction](https://openfunction.dev/) and export trace to SkyWalking.                                                           | Command [ofn](https://github.com/OpenFunction/cli) is required to run this feature.                                                   |
+| `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 
 ### Kubernetes
 
