@@ -21,7 +21,7 @@ kind: CronJob
 metadata:
   name: trace-profiling-trgigger
 spec:
-  schedule: "8 * * * *"
+  schedule: "8 0 * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:

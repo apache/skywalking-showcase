@@ -21,7 +21,7 @@ kind: CronJob
 metadata:
   name: ebpf-profiling-trgigger
 spec:
-  schedule: "5 * * * *"
+  schedule: "5 0 * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
