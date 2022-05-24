@@ -40,11 +40,14 @@ spec:
                 - -c
                 - >
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::recommendation --labels mesh-envoy --duration=9m;
+                    --service-name agentless::recommendation --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::app --labels mesh-envoy --duration=9m;
+                    --service-name agentless::app --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::songs --labels mesh-envoy --duration=9m;
+                    --service-name agentless::songs --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::gateway --labels mesh-envoy --duration=9m;
+                    --service-name agentless::gateway --labels mesh-envoy --duration=9m --target-type ON_CPU;
+
+                  /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
+                    --service-name agentless::songs --labels mesh-envoy --duration=9m --target-type OFF_CPU;
           restartPolicy: Never
