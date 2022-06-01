@@ -30,6 +30,7 @@ rules:
   - apiGroups: [ "" ]
     resources:
       - "pods" # @feature: als; OAP needs to read pods metadata to analyze the access logs
+      - "pods/log" # @feature: on-demand-pod-logs; in feature on demand Pod logs, OAP needs to read pods logs
       - "services" # @feature: als; OAP needs to read services metadata to analyze the access logs
       - "endpoints" # @feature: als; OAP needs to read endpoints metadata to analyze the access logs
       - "nodes" # @feature: als; OAP needs to read nodes metadata to analyze the access logs
