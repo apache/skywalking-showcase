@@ -34,7 +34,6 @@ spec:
           containers:
             - name: trace-profiling-trigger
               image: ${SW_CLI_IMAGE}
-              volumeMounts:
               command:
                 - /bin/sh
                 - -c
