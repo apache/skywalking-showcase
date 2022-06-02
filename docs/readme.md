@@ -17,6 +17,10 @@ graph LR;
 
 ## Usage
 
+**Please run the showcase in a brand new test cluster, otherwise the undeploy process may delete
+some resources that you have installed before running this showcase (for example cert-manager).
+If you don't do this in a new test cluster, it's all on your own risks!**
+
 The showcase uses [GNU Make](https://www.gnu.org/software/make/) and Docker containers to run commands, so please make
 sure you have `make` installed and Docker daemon running.
 
@@ -79,6 +83,7 @@ Currently, the features supported are:
 | Name                  | Description                                                                                                                                | Note                                                                                                                                  |
 |-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | `java-agent-injector` | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled.              | The microservices include agents for Java, NodeJS server, browser, Python.                                                            |
+| `agent`               | Deploy microservices with SkyWalking agent pre-installed.                                                                                  | In Kubernetes sceanarios, please use `java-agent-injector` instead of this, if possible.                                              |
 | `cluster`             | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking UI, ElasticSearch as storage.                                          | Only one of `cluster` or `single-node` can be enabled.                                                                                |
 | `single-node`         | Deploy only one single node of SkyWalking OAP, and SkyWalking UI, ElasticSearch as storage.                                                | Only one of `cluster` or `single-node` can be enabled.                                                                                |
 | `so11y`               | Enable SkyWalking self observability.                                                                                                      | This is enabled by default for platform [Docker Compose](#docker-compose).                                                            |
@@ -89,6 +94,7 @@ Currently, the features supported are:
 | `event`               | Deploy tools to trigger events, and SkyWalking Kubernetes event exporter to export events into SkyWalking.                                 |                                                                                                                                       |
 | `satellite`           | Deploy SkyWalking Satellite to load balance the monitoring data.                                                                           |                                                                                                                                       |
 | `function`            | Deploy [OpenFunction](https://openfunction.dev/) and export trace to SkyWalking.                                                           | Command [ofn](https://github.com/OpenFunction/cli) is required to run this feature.                                                   |
+| `trace-profiling`     | Deploy tools to submit trace profiling tasks.                                                                                              | Only support deployment with SkyWalking agents installed, currently Java agent and Python agent support trace profiling.              |
 | `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 
 ### Kubernetes
