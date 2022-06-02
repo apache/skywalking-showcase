@@ -234,7 +234,7 @@ spec:
               # @feature: so11y; enable oap rules to analyze OAP metrics
               # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
               # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
-              value: vm,oap,k8s-cluster,k8s-node,k8s-service,istio-controlplane
+              value: vm,oap,k8s-cluster,k8s-node,k8s-service,k8s-instance,istio-controlplane
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
@@ -253,6 +253,8 @@ spec:
               value: "false"
             - name: SW_SLOW_DB_THRESHOLD
               value: default:0,mongodb:100
+            - name: SW_ENABLE_ON_DEMAND_POD_LOG
+              value: "true"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
