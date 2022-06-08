@@ -19,7 +19,10 @@ module skywalking.apache.org/function2
 
 go 1.17
 
-require github.com/OpenFunction/functions-framework-go v0.2.3
+require (
+	github.com/OpenFunction/functions-framework-go v0.3.1-0.20220607140310-83d5da8c73d2
+	k8s.io/klog/v2 v2.30.0
+)
 
 require (
 	github.com/SkyAPM/go2sky v1.4.1 // indirect
@@ -44,6 +47,5 @@ require (
 	google.golang.org/grpc v1.40.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/klog/v2 v2.30.0 // indirect
 	skywalking.apache.org/repo/goapi v0.0.0-20220401015832-2c9eee9481eb // indirect
 )
