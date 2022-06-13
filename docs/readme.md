@@ -34,6 +34,7 @@ Make sure you have a running Kubernetes cluster and `kubectl` can access to that
 ```shell
 git clone https://github.com/apache/skywalking-showcase.git
 cd skywalking-showcase
+git checkout -b v8 origin/8.x
 make deploy.kubernetes
 ```
 
