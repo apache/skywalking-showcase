@@ -37,22 +37,22 @@ ClientMonitor.register({
 // promise error
 function foo() {
     Promise.reject({
-      message: 'promise test',
-      stack: 'promise error'
+        message: 'promise test',
+        stack: 'promise error'
     });
   }
-  foo();
-  function timeout() {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => Math.random() > 0.5 ?
-        resolve() :
-        reject({
-          message: 'timeout test',
-          stack: 2000
-        }), 500)
-    })
-  }
-  timeout();
+foo();
+function timeout() {
+return new Promise((resolve, reject) => {
+    setTimeout(() => Math.random() > 0.5 ?
+    resolve() :
+    reject({
+        message: 'timeout test',
+        stack: 2000
+    }), 500)
+})
+}
+timeout();
 
 ReactDOM.render(
     <React.StrictMode>
