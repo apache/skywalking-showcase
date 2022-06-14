@@ -34,9 +34,32 @@ ClientMonitor.register({
     traceTimeInterval: 2000,
 });
 
+// promise error
+function foo() {
+    Promise.reject({
+      message: 'promise test',
+      stack: 'promise error'
+    });
+  }
+  foo();
+  function timeout() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => Math.random() > 0.5 ?
+        resolve() :
+        reject({
+          message: 'timeout test',
+          stack: 2000
+        }), 500)
+    })
+  }
+  timeout();
+
 ReactDOM.render(
     <React.StrictMode>
         <App/>
     </React.StrictMode>,
     document.getElementById('root')
 );
+// js error
+const s = null;
+s.v;
