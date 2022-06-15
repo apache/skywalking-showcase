@@ -60,6 +60,3 @@ ReactDOM.render(
     </React.StrictMode>,
     document.getElementById('root')
 );
-// js error
-const s = null;
-s.v;
