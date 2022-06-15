@@ -27,7 +27,11 @@ function App() {
         fetch("/homepage")
             .then((res) => res.json())
             .then((data) => setData(JSON.stringify(data)));
-    }, []);
+        // mock error
+        const xhr = new XMLHttpRequest();
+        xhr.open('post', '/test');
+        xhr.send();
+}, []);
 
     return (
         <div className="App">
