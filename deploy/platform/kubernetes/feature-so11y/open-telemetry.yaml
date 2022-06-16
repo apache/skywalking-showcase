@@ -50,7 +50,8 @@ data:
     exporters:
       opencensus:
         endpoint: "oap:11800"
-        insecure: true
+        tls:
+          insecure: true
       logging:
         logLevel: debug
 
@@ -82,7 +83,7 @@ spec:
       serviceAccountName: otel-sa-so11y
       containers:
         - name: otel
-          image: otel/opentelemetry-collector:0.29.0
+          image: otel/opentelemetry-collector:0.50.0
           command:
             - "/otelcol"
             - "--config=/conf/otel-collector-config.yaml"
