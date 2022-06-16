@@ -35,7 +35,7 @@ SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:b83865f6cd
 SW_AGENT_NODEJS_BACKEND_VERSION ?= 59ef1aed6a404e2e8afffbb4b81ea849ae4f3026
 SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 
-SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:ea27a3f4e126a24775fe12e2aa2695bcb23d99c3
+SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:vea27a3f4e126a24775fe12e2aa2695bcb23d99c3
 SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:49529367b9efce580852294603f1f7dac28622a3
 
 SWCK_OPERATOR_VERSION ?= 0.6.0
