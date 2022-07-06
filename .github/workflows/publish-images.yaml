@@ -20,6 +20,7 @@ on:
   push:
     branches:
       - main
+      - 8.x
 
 env:
   HUB: ghcr.io/apache/skywalking-showcase
