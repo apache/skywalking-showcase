@@ -53,7 +53,7 @@ spec:
         strategy.skywalking.apache.org/inject.Container: "gateway"
         strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::gateway"
-        optional.skywalking.apache.org: "spring-cloud-gateway"
+        optional.skywalking.apache.org: "spring-cloud-gateway-3.x"
         sidecar.skywalking.apache.org/initcontainer.Image: "${SW_AGENT_JAVA_IMAGE}"
     spec:
       containers:
