@@ -22,12 +22,12 @@
 
 include ../../../Makefile.in
 
-ifeq (, $(shell which istioctl))
-  $(error "No istioctl in PATH, please make sure istioctl is available in PATH")
-endif
+.PHONY: istioctl
+istioctl:
+	@istioctl version >/dev/null 2>&1 || (echo "No istioctl in PATH, please make sure istioctl is available in PATH."; exit 1)
 
 .PHONY: istio
-istio:
+istio: istioctl
 	@istioctl install -y --set profile=demo \
 		--set meshConfig.enableEnvoyAccessLogService=true `# @feature: als; enable Envoy access log service` \
 		`# @feature: als; be careful to only emit wanted metrics otherwise the traffic is HUGE` \
@@ -57,7 +57,7 @@ deploy.feature-als: prerequisites
 	$(MAKE) deploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true SHOW_TIPS=false
 
 .PHONY: undeploy.feature-als
-undeploy.feature-als:
+undeploy.feature-als: istioctl
 	$(eval TAG := $(TAG)-agentless)
 	$(MAKE) undeploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true
 	istioctl x uninstall --purge -y
@@ -108,11 +108,12 @@ undeploy.feature-java-agent-injector:
 	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false BACKEND_SERVICE=$(BACKEND_SERVICE)
 
+.PHONY: ofn
+ofn:
+	@ofn version >/dev/null 2>&1 || (echo "No ofn in PATH, please make sure ofn is available in PATH."; exit 1)
+
 .PHONY: open-function
-open-function: install-cert-manager
-ifeq (, $(shell which ofn))
-  $(error "No ofn in PATH, please make sure ofn is available in PATH")
-endif
+open-function: ofn install-cert-manager
 	@ofn install --knative --ingress --region-cn -y
 	@kubectl patch configmap/config-deployment -n knative-serving --type merge -p '{"data":{"registriesSkippingTagResolving":"ghcr.io"}}'
 
@@ -125,5 +126,5 @@ deploy.feature-function: open-function
 feature-function:
 
 .PHONY: undeploy.feature-function
-undeploy.feature-function:
+undeploy.feature-function: ofn
 	@ofn uninstall --all --region-cn -y
