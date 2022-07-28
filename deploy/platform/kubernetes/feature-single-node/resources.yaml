@@ -185,6 +185,8 @@ spec:
               value: k8s-configmap
             - name: SW_ENABLE_ON_DEMAND_POD_LOG
               value: "true"
+            - name: SW_METER_ANALYZER_ACTIVE_FILES
+              value: datasource,threadpool,satellite,network-profiling
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
