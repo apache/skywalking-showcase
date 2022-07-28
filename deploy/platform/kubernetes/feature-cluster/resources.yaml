@@ -163,6 +163,8 @@ spec:
               value: "0"
             - name: SW_TELEMETRY
               value: prometheus
+            - name: SW_METER_ANALYZER_ACTIVE_FILES
+              value: datasource,threadpool,satellite,network-profiling
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
