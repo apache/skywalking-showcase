@@ -38,7 +38,7 @@ SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v33bd6520e95c9024989aa388f4523c4641f874ad
 SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:96bfd2a51e582f34ccbbedfd4bceb7407559de2a
 
-SWCK_OPERATOR_VERSION ?= 0.6.0
+SWCK_OPERATOR_VERSION ?= 0.6.1
 CERT_MANAGER_VERSION ?= v1.3.1
 
 # ALL variables should be listed above ^^
