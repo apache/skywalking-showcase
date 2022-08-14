@@ -1,0 +1,179 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-sql-mysql
+  labels:
+    app: mysql-load
+data:
+  mock-sql: |
+    CREATE DATABASE IF NOT EXISTS test;
+    USE test;
+    CREATE TABLE IF NOT EXISTS `t1`(
+       `te1` VARCHAR(100) NOT NULL
+    )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    SET GLOBAL event_scheduler = 1;
+    
+    CREATE EVENT `event_1` 
+    ON SCHEDULE EVERY 1 SECOND 
+    DO INSERT INTO t1 values('test');
+    
+    CREATE EVENT `event_2` 
+    ON SCHEDULE EVERY 1 SECOND 
+    DO UPDATE t1 SET `te1` = 1;
+    
+    CREATE EVENT `event_3` 
+    ON SCHEDULE EVERY 1 SECOND 
+    DO DELETE FROM t1;
+    
+    CREATE EVENT `event_4` 
+    ON SCHEDULE EVERY 1 SECOND 
+    DO COMMIT;
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  labels:
+    app: mysql
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0.30 
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+          ports:
+            - containerPort: 3306
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+spec:
+  selector:
+    app: mysql-service
+  ports:
+    - protocol: TCP
+      port: 9104
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-service-deployment
+  labels:
+    app: mysql-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mysql-service
+  template:
+    metadata:
+      labels:
+        app: mysql-service
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: mysql-service
+          image: prom/mysqld-exporter:v0.14.0
+          env:
+            - name: DATA_SOURCE_NAME
+              value: root:password@(mysql:3306)/
+          resources:
+            limits:
+              cpu: 100m
+              memory: "128Mi"
+          ports:
+            - containerPort: 9104
+              name: metrics
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mysql-load
+# spec:
+#   selector:
+#     app: mysql-load
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-load-deployment
+  labels:
+    app: mysql-load
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mysql-load
+  template:
+    metadata:
+      labels:
+        app: mysql-load
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: mysql-load
+          image: mysql:8.0.30
+          command:
+            - "-c"
+            - "mysql -h mysql -uroot -ppassword < /conf/mock.sql"
+          volumeMounts:
+            - name: mock-sql-vol-mysql
+              mountPath: /conf
+      volumes:
+        - name: mock-sql-vol-mysql
+          configMap:
+            name: mock-sql-mysql
+            items:
+              - key: mock-sql
+                path: mock.sql
+

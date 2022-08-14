@@ -15,11 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-sa-mysql
 
-.EXPORT_ALL_VARIABLES:
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: otel-role-mysql
+rules:
+  - apiGroups: [ "" ]
+    resources:
+      - "pods"
+    verbs: [ "get", "watch", "list" ]
 
-NAMESPACE ?= default
-AGENTLESS ?= false
-BACKEND_SERVICE ?= oap
-
-FEATURE_FLAGS ?= java-agent-injector,cluster,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-role-binding-mysql
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-role-mysql
+subjects:
+  - kind: ServiceAccount
+    name: otel-sa-mysql
+    namespace: ${NAMESPACE}
