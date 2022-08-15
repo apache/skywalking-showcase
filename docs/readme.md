@@ -96,7 +96,7 @@ Currently, the features supported are:
 | `function`            | Deploy [OpenFunction](https://openfunction.dev/) and export trace to SkyWalking.                                                           | Command [ofn](https://github.com/OpenFunction/cli) is required to run this feature.                                                   |
 | `trace-profiling`     | Deploy tools to submit trace profiling tasks.                                                                                              | Only support deployment with SkyWalking agents installed, currently Java agent and Python agent support trace profiling.              |
 | `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.         
-| `mysql`               | Start a MySQL server, execute the test sql periodically, and export their metrics to SkyWalking.                                                           |                                                  |
+| `mysql`               | Start a MySQL server, execute the sample SQLs periodically, and export their metrics to SkyWalking.                                                           |                                                  |
 
 ### Kubernetes
 
