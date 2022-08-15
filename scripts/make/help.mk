@@ -22,12 +22,12 @@ define usage
   You can customize the settings in Makefile.in
   by specifying the variable in make command:
 
-  $$ make deploy.docker FEATURE_FLAGS=agent,vm
+  $$ make deploy.docker FEATURE_FLAGS=agent,vm,mysql
 
   or via environment variable:
 
-  $$ export FEATURE_FLAGS=single-node,agent,vm && make deploy.docker
-  $$ export FEATURE_FLAGS=cluster,agent,vm && make deploy.docker
+  $$ export FEATURE_FLAGS=single-node,agent,vm,mysql && make deploy.docker
+  $$ export FEATURE_FLAGS=cluster,agent,vm,mysql && make deploy.docker
 endef
 
 export usage
