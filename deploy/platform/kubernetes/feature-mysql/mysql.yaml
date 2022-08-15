@@ -31,21 +31,21 @@ data:
        `te1` VARCHAR(100) NOT NULL
     )ENGINE=InnoDB DEFAULT CHARSET=utf8;
     SET GLOBAL event_scheduler = 1;
-    
-    CREATE EVENT `event_1` 
-    ON SCHEDULE EVERY 1 SECOND 
+
+    CREATE EVENT `event_1`
+    ON SCHEDULE EVERY 1 SECOND
     DO INSERT INTO t1 values('test');
-    
-    CREATE EVENT `event_2` 
-    ON SCHEDULE EVERY 1 SECOND 
+
+    CREATE EVENT `event_2`
+    ON SCHEDULE EVERY 1 SECOND
     DO UPDATE t1 SET `te1` = 1;
-    
-    CREATE EVENT `event_3` 
-    ON SCHEDULE EVERY 1 SECOND 
+
+    CREATE EVENT `event_3`
+    ON SCHEDULE EVERY 1 SECOND
     DO DELETE FROM t1;
-    
-    CREATE EVENT `event_4` 
-    ON SCHEDULE EVERY 1 SECOND 
+
+    CREATE EVENT `event_4`
+    ON SCHEDULE EVERY 1 SECOND
     DO COMMIT;
 
 ---
@@ -68,7 +68,7 @@ metadata:
   labels:
     app: mysql
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mysql
@@ -81,13 +81,12 @@ spec:
     spec:
       containers:
         - name: mysql
-          image: mysql:8.0.30 
+          image: mysql:8.0.30
           env:
             - name: MYSQL_ROOT_PASSWORD
               value: password
           ports:
             - containerPort: 3306
-
 ---
 apiVersion: v1
 kind: Service
@@ -108,7 +107,7 @@ metadata:
   labels:
     app: mysql-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: mysql-service
@@ -120,7 +119,7 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       containers:
-        - name: mysql-service
+        - name: mysql
           image: prom/mysqld-exporter:v0.14.0
           env:
             - name: DATA_SOURCE_NAME
@@ -132,40 +131,30 @@ spec:
           ports:
             - containerPort: 9104
               name: metrics
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: mysql-load
-# spec:
-#   selector:
-#     app: mysql-load
-
 ---
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: mysql-load-deployment
-  labels:
-    app: mysql-load
+  name: mysql-load-deployment # @feature: mysql; set up job to trigger mysql commands, you don't need this in production env.
 spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: mysql-load
   template:
     metadata:
-      labels:
-        app: mysql-load
+      name: mysql-load-deployment
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
+      restartPolicy: Never
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox
+          command:  ["sh", "-c", "until nc -z mysql 3306 > /dev/null; do echo Waiting for mysql.; sleep 2; done;"]
       containers:
         - name: mysql-load
           image: mysql:8.0.30
           command:
-            - "-c"
-            - "mysql -h mysql -uroot -ppassword < /conf/mock.sql"
+            - bash
+            - -c
+            - mysql -hmysql -uroot -ppassword < /conf/mock.sql
           volumeMounts:
             - name: mock-sql-vol-mysql
               mountPath: /conf
@@ -176,4 +165,3 @@ spec:
             items:
               - key: mock-sql
                 path: mock.sql
-
