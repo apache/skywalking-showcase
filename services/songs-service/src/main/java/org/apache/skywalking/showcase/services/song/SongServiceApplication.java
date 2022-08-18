@@ -20,15 +20,12 @@
 
 package org.apache.skywalking.showcase.services.song;
 
-import org.apache.skywalking.apm.meter.micrometer.SkywalkingConfig;
-import org.apache.skywalking.apm.meter.micrometer.SkywalkingMeterRegistry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Arrays;
+import org.springframework.web.util.DefaultUriTemplateHandler;
 
 @SpringBootApplication
 public class SongServiceApplication {
@@ -37,12 +34,6 @@ public class SongServiceApplication {
         return new RestTemplateBuilder()
             .rootUri("http://gateway")
             .build();
-    }
-
-    @Bean
-    SkywalkingMeterRegistry skywalkingMeterRegistry() {
-        SkywalkingConfig config = new SkywalkingConfig(Arrays.asList(""));
-        return new SkywalkingMeterRegistry(config);
     }
 
     public static void main(String[] args) {
