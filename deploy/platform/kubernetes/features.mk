@@ -114,7 +114,7 @@ ofn:
 
 .PHONY: open-function
 open-function: ofn install-cert-manager
-	@ofn install --knative --ingress --region-cn -y
+	@ofn install --knative --ingress --region-cn --version ${OPEN_FUNCTION_VERSION} -y
 	@kubectl patch configmap/config-deployment -n knative-serving --type merge -p '{"data":{"registriesSkippingTagResolving":"ghcr.io"}}'
 
 # @feature: function; install open function resources
