@@ -19,23 +19,12 @@
  */
 package org.apache.skywalking.showcase.gateway;
 
-import org.apache.skywalking.apm.meter.micrometer.SkywalkingConfig;
-import org.apache.skywalking.apm.meter.micrometer.SkywalkingMeterRegistry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-
-import java.util.Arrays;
 
 //
 @SpringBootApplication
 public class GatewayApplication {
-
-	@Bean
-	SkywalkingMeterRegistry skywalkingMeterRegistry() {
-		SkywalkingConfig config = new SkywalkingConfig(Arrays.asList(""));
-		return new SkywalkingMeterRegistry(config);
-	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(GatewayApplication.class, args);
