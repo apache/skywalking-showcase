@@ -49,6 +49,7 @@ services:
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
       JAVA_OPTS: "-Xms2048m -Xmx2048m"
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth
     healthcheck:
       test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
       interval: 30s
