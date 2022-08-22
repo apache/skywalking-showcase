@@ -29,8 +29,8 @@ endif
 
 .PHONY: deploy
 deploy:
-	docker-compose $(features) up -d
+	docker compose $(features) up -d
 
 .PHONY: undeploy
 undeploy:
-	docker-compose $(features) --log-level ERROR down
+	docker compose $(features) down
