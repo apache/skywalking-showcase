@@ -30,9 +30,9 @@ data:
       pipelines:
         metrics:
           receivers: [ prometheus ]
-          exporters: [ logging, opencensus ]
+          exporters: [ logging, otlp ]
     exporters:
-      opencensus:
+      otlp:
         endpoint: "oap:11800"
         insecure: true
       logging:

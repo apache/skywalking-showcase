@@ -27,7 +27,7 @@ processors:
   batch:
 
 exporters:
-  opencensus:
+  otlp:
     endpoint: "oap:11800"
     insecure: true
   logging:
@@ -38,4 +38,4 @@ service:
     metrics:
       receivers: [ prometheus ]
       processors: [ batch ]
-      exporters: [ opencensus,logging ]
+      exporters: [ otlp,logging ]
