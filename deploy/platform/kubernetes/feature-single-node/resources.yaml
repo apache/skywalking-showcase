@@ -163,7 +163,7 @@ spec:
               value: default
             - name: SW_OTEL_RECEIVER
               value: default # @feature: so11y;mysql;vm;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
-            - name: SW_OTEL_RECEIVER_ENABLED_OC_RULES
+            - name: SW_OTEL_RECEIVER_ENABLED_OTEL_RULES
               # @feature: vm; enable vm rules to analyze VM metrics
               # @feature: so11y; enable oap rules to analyze OAP metrics
               # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics

@@ -47,7 +47,7 @@ data:
     processors:
       batch:
     exporters:
-      opencensus:
+      otlp:
         endpoint: oap:11800
         tls:
           insecure: true
@@ -61,7 +61,7 @@ data:
           processors:
           - batch
           exporters:
-          - opencensus
+          - otlp
 
 ---
 apiVersion: apps/v1
