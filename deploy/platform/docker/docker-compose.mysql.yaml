@@ -22,7 +22,7 @@ version: '2.1'
 
 services:
   mysql:
-    image: mysql:8.0.30 
+    image: mysql:8.0.30
     networks:
       - sw
     ports:
@@ -31,7 +31,7 @@ services:
       - MYSQL_ROOT_PASSWORD=password
 
   mysql-load:
-    image: mysql:8.0.30 
+    image: mysql:8.0.30
     depends_on:
       - otel-collector
     networks:
@@ -42,7 +42,7 @@ services:
     command:
       - -c
       - "mysql -h mysql -uroot -ppassword < /docker/mock.sql"
-      
+
   mysql-service:
     image: prom/mysqld-exporter:v0.14.0
     ports:
@@ -53,20 +53,20 @@ services:
       - sw
     depends_on:
       - mysql
-    
+
 
   otel-collector:
     image: otel/opentelemetry-collector:0.50.0
     networks:
       - sw
-    command: [ "--config=/etc/mysql-otel-collector-config.yaml" ]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
-      - ./config/mysql-otel-collector-config.yaml:/etc/mysql-otel-collector-config.yaml
+      - ./config/otel-collector-config-mysql:/etc/otel-collector-config.yaml
     expose:
       - 55678
     depends_on:
       oap:
         condition: service_healthy
-  
+
 networks:
   sw:

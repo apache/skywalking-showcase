@@ -1,0 +1,168 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-sql-psql
+  labels:
+    app: psql-load
+data:
+  mock-sql: |
+    CREATE TABLE COMPANY(
+      ID INT PRIMARY KEY     NOT NULL,
+      NAME           TEXT    NOT NULL,
+      AGE            INT     NOT NULL,
+      ADDRESS        CHAR(50),
+      SALARY         REAL
+    );
+    SELECT pg_sleep(10);
+    INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY) VALUES (1, 'Paul', 32, 'California', 20000.00);
+    UPDATE COMPANY SET SALARY = 15000 WHERE ID = 1;
+    DELETE FROM COMPANY WHERE ID = 1;
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: psql
+spec:
+  selector:
+    app: psql
+  ports:
+    - protocol: TCP
+      port: 5432
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: psql-deployment
+  labels:
+    app: psql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psql
+  template:
+    metadata:
+      labels:
+        app: psql
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: psql
+          image: postgres:14.1
+          env:
+            - name: POSTGRES_PASSWORD
+              value: password
+          ports:
+            - containerPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: psql-service
+spec:
+  selector:
+    app: psql-service
+  ports:
+    - protocol: TCP
+      port: 9104
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: psql-service-deployment
+  labels:
+    app: psql-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: psql-service
+  template:
+    metadata:
+      labels:
+        app: psql-service
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: psql
+          image: prometheuscommunity/postgres-exporter:v0.11.0
+          env:
+            - name: DATA_SOURCE_NAME
+              value: postgresql://postgres:password@psql:5432/postgres?sslmode=disable
+          resources:
+            limits:
+              cpu: 100m
+              memory: "128Mi"
+          ports:
+            - containerPort: 9187
+              name: metrics
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: psql-load-deployment # @feature: postgresql; set up job to trigger postgresql commands, you don't need this in production env.
+spec:
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: wait-for-psql
+              image: busybox:1.30
+              command:
+                [
+                  "sh",
+                  "-c",
+                  "until nc -z psql 5432 > /dev/null; do echo Waiting for psql.; sleep 2; done;",
+                ]
+          containers:
+            - name: psql-load
+              image: postgres:14.1
+              env:
+                - name: PGPASSWORD
+                  value: password
+              command:
+                - bash
+                - -c
+                - "psql -f /conf/mock.sql -h psql -p 5432 -U postgres postgres"
+              volumeMounts:
+                - name: mock-sql-vol-psql
+                  mountPath: /conf
+          volumes:
+            - name: mock-sql-vol-psql
+              configMap:
+                name: mock-sql-psql
+                items:
+                  - key: mock-sql
+                    path: mock.sql

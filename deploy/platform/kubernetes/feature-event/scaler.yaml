@@ -24,13 +24,13 @@ metadata:
   name: event-role
 rules:
   - apiGroups:
-      - ''
+      - ""
       - extensions
       - apps
     resources:
-      - '*'
+      - "*"
     verbs:
-      - '*'
+      - "*"
 
 ---
 kind: RoleBinding
@@ -71,7 +71,6 @@ spec:
           containers:
             - name: event-scaler
               image: bitnami/kubectl:1.20.12
-              volumeMounts:
               command:
                 - sh
                 - -c
@@ -98,7 +97,6 @@ spec:
           containers:
             - name: event-scaler
               image: bitnami/kubectl:1.20.12
-              volumeMounts:
               command:
                 - sh
                 - -c
