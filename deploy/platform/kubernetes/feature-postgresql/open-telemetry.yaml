@@ -16,29 +16,29 @@
 # under the License.
 #
 
-# @feature: mysql; set OpenTelemetry config to scrape the mysql metrics
+# @feature: postgresql; set OpenTelemetry config to scrape the psql metrics
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: otel-collector-conf-mysql
+  name: otel-collector-conf-psql
   labels:
-    app: otel-mysql
+    app: otel-psql
 data:
   otel-collector-config: |
     receivers:
       prometheus:
         config:
-         scrape_configs:
-            # @feature: mysql; set up the scrape configs according to your mysql instances
-            - job_name: 'mysql-monitoring'
+          scrape_configs:
+            # @feature: postgresql; set up the scrape configs according to your postgresql instances
+            - job_name: "postgresql-monitoring"
               metrics_path: '/metrics'
               kubernetes_sd_configs:
                 - role: pod
               relabel_configs:
                 - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: mysql;metrics # @feature: mysql; reference the name of the metrics port
+                  regex: psql;metrics # @feature: postgresql; reference the name of the metrics port
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: host_name
                   regex: (.+)
@@ -46,56 +46,59 @@ data:
 
     processors:
       batch:
+
     exporters:
       otlp:
         endpoint: oap:11800
         tls:
           insecure: true
       logging:
-        logLevel: debug
+        loglevel: debug
+
     service:
       pipelines:
         metrics:
           receivers:
-          - prometheus
+            - prometheus
           processors:
-          - batch
+            - batch
           exporters:
-          - otlp
+            - logging
+            - otlp
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: otel-deployment-mysql
+  name: otel-deployment-psql
   labels:
-    app: otel-mysql
+    app: otel-psql
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: otel-mysql
+      app: otel-psql
   template:
     metadata:
       labels:
-        app: otel-mysql
+        app: otel-psql
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: otel-sa-mysql
+      serviceAccountName: otel-sa-psql
       containers:
-        - name: otel-mysql
+        - name: otel-psql
           image: otel/opentelemetry-collector:0.50.0
           command:
             - "/otelcol"
             - "--config=/conf/otel-collector-config.yaml"
           volumeMounts:
-            - name: otel-collector-config-vol-mysql
+            - name: otel-collector-config-vol-psql
               mountPath: /conf
       volumes:
-        - name: otel-collector-config-vol-mysql
+        - name: otel-collector-config-vol-psql
           configMap:
-            name: otel-collector-conf-mysql
+            name: otel-collector-conf-psql
             items:
               - key: otel-collector-config
                 path: otel-collector-config.yaml

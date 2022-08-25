@@ -104,8 +104,8 @@ spec:
           ports:
             - containerPort: 9200
           env:
-            - name: 'discovery.type'
-              value: 'single-node'
+            - name: "discovery.type"
+              value: "single-node"
 
 ---
 apiVersion: v1
@@ -141,9 +141,9 @@ spec:
         - name: wait-for-es
           image: busybox:1.30
           command:
-            - 'sh'
-            - '-c'
-            - 'for i in $(seq 1 60); do nc -z -w3 elasticsearch 9200 && exit 0 || sleep 5; done; exit 1'
+            - "sh"
+            - "-c"
+            - "for i in $(seq 1 60); do nc -z -w3 elasticsearch 9200 && exit 0 || sleep 5; done; exit 1"
       containers:
         - name: oap-init
           image: ${SW_OAP_IMAGE}
@@ -196,10 +196,10 @@ spec:
         - name: wait-for-oap-init
           image: bitnami/kubectl:1.20.12
           command:
-            - 'kubectl'
-            - 'wait'
-            - '--for=condition=complete'
-            - 'job/oap-init-job'
+            - "kubectl"
+            - "wait"
+            - "--for=condition=complete"
+            - "job/oap-init-job"
       containers:
         - name: oap
           image: ${SW_OAP_IMAGE}
@@ -237,7 +237,7 @@ spec:
               # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
               # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
               # @feature: mysql; enable mysql rules to analyze MySQL metrics
-              value: vm,oap,k8s-cluster,k8s-node,k8s-service,k8s-instance,istio-controlplane,mysql
+              value: vm,oap,k8s-cluster,k8s-node,k8s-service,k8s-instance,istio-controlplane,mysql,postgresql
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
