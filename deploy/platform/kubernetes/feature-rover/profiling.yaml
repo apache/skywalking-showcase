@@ -49,4 +49,9 @@ spec:
 
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
                     --service-name agentless::songs --labels mesh-envoy --duration=9m --target-type OFF_CPU;
+
+                  apk update && apk add yq;
+                  /swctl --base-url=http://oap:12800/graphql profiling ebpf create network \
+                    --service-name=agentless::recommendation \
+                    --instance-name=$(/swctl --base-url=http://oap:12800/graphql instance ls --service-name agentless::recommendation|yq e '.[0].name' -);
           restartPolicy: Never
