@@ -16,81 +16,89 @@
 # under the License.
 #
 
-# @feature: vm; set OpenTelemetry config to scrape the VM metrics
+# @feature: postgresql; set OpenTelemetry config to scrape the psql metrics
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: otel-collector-conf-vm
+  name: otel-collector-conf-psql
   labels:
-    app: otel-vm
+    app: otel-psql
 data:
   otel-collector-config: |
     receivers:
       prometheus:
         config:
           scrape_configs:
-            # @feature: vm; this is only for demo, in real scenarios the VM addresses should be static, not via service discovery
-            - job_name: 'vm-monitoring'
+            # @feature: postgresql; set up the scrape configs according to your postgresql instances
+            - job_name: "postgresql-monitoring"
               metrics_path: '/metrics'
               kubernetes_sd_configs:
                 - role: pod
               relabel_configs:
                 - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: vm;metrics # @feature: vm; reference the name of the metrics port
+                  regex: psql;metrics # @feature: postgresql; reference the name of the metrics port
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: host_name
                   regex: (.+)
                   replacement: $$1
 
+    processors:
+      batch:
+
     exporters:
       otlp:
-        endpoint: "oap:11800"
+        endpoint: oap:11800
         tls:
           insecure: true
       logging:
-        logLevel: debug
+        loglevel: debug
 
     service:
       pipelines:
         metrics:
-          receivers: [ prometheus ]
-          exporters: [ otlp,logging ]
+          receivers:
+            - prometheus
+          processors:
+            - batch
+          exporters:
+            - logging
+            - otlp
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: otel-deployment-vm
+  name: otel-deployment-psql
   labels:
-    app: otel-vm
+    app: otel-psql
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: otel-vm
+      app: otel-psql
   template:
     metadata:
       labels:
-        app: otel-vm
+        app: otel-psql
       annotations:
         sidecar.istio.io/inject: "false"
     spec:
-      serviceAccountName: otel-sa-vm
+      serviceAccountName: otel-sa-psql
       containers:
-        - name: otel-vm
+        - name: otel-psql
           image: otel/opentelemetry-collector:0.50.0
           command:
             - "/otelcol"
             - "--config=/conf/otel-collector-config.yaml"
           volumeMounts:
-            - name: otel-collector-config-vol-vm
+            - name: otel-collector-config-vol-psql
               mountPath: /conf
       volumes:
-        - name: otel-collector-config-vol-vm
+        - name: otel-collector-config-vol-psql
           configMap:
-            name: otel-collector-conf-vm
+            name: otel-collector-conf-psql
             items:
               - key: otel-collector-config
                 path: otel-collector-config.yaml

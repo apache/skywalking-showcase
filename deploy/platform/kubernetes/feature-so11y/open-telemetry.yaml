@@ -48,7 +48,7 @@ data:
                   replacement: $$1
 
     exporters:
-      opencensus:
+      otlp:
         endpoint: "oap:11800"
         tls:
           insecure: true
@@ -59,7 +59,7 @@ data:
       pipelines:
         metrics:
           receivers: [ prometheus ]
-          exporters: [ opencensus,logging ]
+          exporters: [ otlp,logging ]
 
 ---
 apiVersion: apps/v1
