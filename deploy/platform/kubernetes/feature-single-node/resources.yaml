@@ -146,6 +146,8 @@ spec:
               value: "true"
             - name: SW_METER_ANALYZER_ACTIVE_FILES
               value: datasource,threadpool,satellite,network-profiling,spring-sleuth
+            - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
+              value: "50000"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
