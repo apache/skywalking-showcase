@@ -52,7 +52,7 @@ services:
         condition: service_healthy
 
   otel-collector:
-    image: otel/opentelemetry-collector:0.50.0
+    image: otel/opentelemetry-collector:0.29.0
     networks: [ sw ]
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
