@@ -17,19 +17,6 @@
 #
 ---
 apiVersion: v1
-kind: Service
-metadata:
-  name: elasticsearch
-spec:
-  selector:
-    app: elasticsearch
-  ports:
-    - protocol: TCP
-      port: 9200
-      targetPort: 9200
-
----
-apiVersion: v1
 data:
   metadata-service-mapping.yaml: |
     serviceName: agentless::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
@@ -70,35 +57,6 @@ metadata:
   labels:
     app: oap
   name: oap-dynamic-config
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: es-deployment
-  labels:
-    app: elasticsearch
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: elasticsearch
-  template:
-    metadata:
-      labels:
-        app: elasticsearch
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - name: elasticsearch
-          image: ${ES_IMAGE}
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 9200
-          env:
-            - name: 'discovery.type'
-              value: 'single-node'
 
 ---
 apiVersion: v1
@@ -188,6 +146,8 @@ spec:
               value: "true"
             - name: SW_METER_ANALYZER_ACTIVE_FILES
               value: datasource,threadpool,satellite,network-profiling,spring-sleuth
+            - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
+              value: "50000"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
