@@ -34,7 +34,16 @@ data:
     exporters:
       otlp:
         endpoint: "oap:11800"
-        insecure: true
+        tls:
+          insecure: true
+        ###############################################################################
+        # OTEL previous version before 0.34.0 the config format, eg. 0.29.0 should be:#
+        # insecure: true                                                              #
+        # The new version should be:                                                  #
+        # tls:                                                                        #
+        #   insecure: true                                                            #
+        ###############################################################################
+        #insecure: true
       logging:
         loglevel: debug
     receivers:
@@ -77,7 +86,7 @@ spec:
       serviceAccountName: otel-sa-istio-monitor
       containers:
         - name: otel-istio-monitor
-          image: otel/opentelemetry-collector:0.29.0
+          image: otel/opentelemetry-collector:0.50.0
           command:
             - "/otelcol"
             - "--config=/conf/otel-collector-config.yaml"
