@@ -36,14 +36,6 @@ data:
         endpoint: "oap:11800"
         tls:
           insecure: true
-        ###############################################################################
-        # OTEL previous version before 0.34.0 the config format, eg. 0.29.0 should be:#
-        # insecure: true                                                              #
-        # The new version should be:                                                  #
-        # tls:                                                                        #
-        #   insecure: true                                                            #
-        ###############################################################################
-        #insecure: true
       logging:
         loglevel: debug
     receivers:
