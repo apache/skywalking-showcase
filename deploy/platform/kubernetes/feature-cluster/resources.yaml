@@ -119,6 +119,10 @@ spec:
               value: datasource,threadpool,satellite,network-profiling,spring-sleuth
             - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
               value: "50000"
+            - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
+              value: "6"
+            - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
+              value: "2"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
@@ -216,6 +220,10 @@ spec:
               value: datasource,threadpool,satellite,network-profiling,spring-sleuth
             - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
               value: "50000"
+            - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
+              value: "6"
+            - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
+              value: "2"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
