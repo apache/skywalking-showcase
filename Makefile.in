@@ -39,7 +39,7 @@ SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v
 SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:159e9cdc211bb3846c93e6fdb244a898ae86b9f6
 
 SWCK_OPERATOR_VERSION ?= 0.6.1
-CERT_MANAGER_VERSION ?= v1.3.1
+CERT_MANAGER_VERSION ?= v1.9.1
 
 OPEN_FUNCTION_VERSION ?= v0.6.0
 
