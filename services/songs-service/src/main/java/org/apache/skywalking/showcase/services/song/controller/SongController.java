@@ -18,6 +18,8 @@
 
 package org.apache.skywalking.showcase.services.song.controller;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,15 +36,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class SongController {
     private final SongsRepo songsRepo;
 
+    private final Cache<String, String> guavaCache = CacheBuilder.newBuilder()
+                                                                 .concurrencyLevel(
+                                                                     Runtime.getRuntime().availableProcessors())
+                                                                 .build();
+
     @GetMapping
     public List<Song> songs() {
         log.info("Listing all songs");
-        return songsRepo.findAll();
+        List<Song> songs = songsRepo.findAll();
+        saveCache(songs);
+        return songs;
     }
 
     @GetMapping("/top")
     public List<Song> top() {
         log.info("Listing top songs");
         return songsRepo.findByLikedGreaterThan(1000);
+    }
+
+    private void saveCache(final List<Song> songs) {
+        for (Song song : songs) {
+            String key = "song_" + song.getId();
+            guavaCache.put(key, String.format("%s,%s,%s", song.getName(), song.getArtist(), song.getGenre()));
+            guavaCache.getIfPresent(key);
+            guavaCache.invalidate(key);
+        }
     }
 }
