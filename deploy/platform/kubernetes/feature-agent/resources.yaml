@@ -106,6 +106,7 @@ spec:
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
         agent.skywalking.apache.org/agent.service_name: "agent::songs"
+        optional.skywalking.apache.org: "guava-cache-plugin"
         sidecar.skywalking.apache.org/initcontainer.Image: "${SW_AGENT_JAVA_IMAGE}"
     spec:
       containers:
