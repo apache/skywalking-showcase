@@ -48,7 +48,7 @@ data:
          <logger name="io.grpc.netty" level="INFO"/>
          <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
          <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
-         <Root level="WARN">
+         <Root level="INFO">
            <AppenderRef ref="Console"/>
          </Root>
         </Loggers>
@@ -185,6 +185,10 @@ spec:
               value: ${NAMESPACE}
             - name: SW_CLUSTER_K8S_LABEL
               value: app=oap # @feature: cluster; set label selectors to select OAP Pods as a cluster
+            - name: SKYWALKING_COLLECTOR_UID # @feature: cluster; set collector uid to identify the OAP node
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
             - name: SW_HEALTH_CHECKER
               value: default
             - name: SW_OTEL_RECEIVER

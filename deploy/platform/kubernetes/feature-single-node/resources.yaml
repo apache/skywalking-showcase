@@ -47,7 +47,7 @@ data:
          <logger name="io.grpc.netty" level="INFO"/>
          <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
          <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
-         <Root level="WARN">
+         <Root level="INFO">
            <AppenderRef ref="Console"/>
          </Root>
         </Loggers>
