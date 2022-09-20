@@ -22,5 +22,6 @@ ARG SW_AGENT_JAVA_IMAGE
 FROM $SW_AGENT_JAVA_IMAGE
 
 COPY build/libs/songs-service-0.0.1-SNAPSHOT.jar /app.jar
-
+# Activate guava-cache plugin for virtual cache show case
+RUN cp /skywalking/agent/optional-plugins/apm-guava-cache-plugin*.jar /skywalking/agent/plugins/
 CMD ["java", "-jar", "/app.jar"]
