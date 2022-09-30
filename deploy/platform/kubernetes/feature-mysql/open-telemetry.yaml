@@ -38,7 +38,7 @@ data:
               relabel_configs:
                 - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
                   action: keep
-                  regex: mysql;metrics # @feature: mysql; reference the name of the metrics port
+                  regex: mysqld-exporter;metrics # @feature: mysql; reference the name of the metrics port
                 - source_labels: [__meta_kubernetes_pod_name]
                   target_label: host_name
                   regex: (.+)
@@ -62,6 +62,7 @@ data:
           - batch
           exporters:
           - otlp
+          - logging
 
 ---
 apiVersion: apps/v1

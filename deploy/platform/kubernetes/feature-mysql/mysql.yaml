@@ -16,6 +16,25 @@
 # under the License.
 #
 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysqld-config
+  labels:
+    app: mysqld-config
+data:
+  mysqld-config-file: |
+    [mysqld]
+    init_connect='SET NAMES utf8'
+    slow_query_log=ON
+    event_scheduler=ON
+    long_query_time=1
+    slow_query_log_file=/data/slow.log
+    [client]
+    default-character-set=utf8
+    [mysql]
+    default-character-set=utf8
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -48,6 +67,10 @@ data:
     ON SCHEDULE EVERY 1 SECOND
     DO COMMIT;
 
+    CREATE EVENT `event_5`
+    ON SCHEDULE EVERY 1 SECOND
+    DO SELECT SLEEP(3);
+
 ---
 apiVersion: v1
 kind: Service
@@ -59,6 +82,10 @@ spec:
   ports:
     - protocol: TCP
       port: 3306
+      name: mysqld
+    - protocol: TCP
+      port: 9104
+      name: mysqld-exporter
 
 ---
 apiVersion: apps/v1
@@ -80,46 +107,19 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       containers:
-        - name: mysql
-          image: mysql:8.0.30
+        - name: fluent-bit
+          image: fluent/fluent-bit:1.9
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: password
-          ports:
-            - containerPort: 3306
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-spec:
-  selector:
-    app: mysql-service
-  ports:
-    - protocol: TCP
-      port: 9104
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql-service-deployment
-  labels:
-    app: mysql-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mysql-service
-  template:
-    metadata:
-      labels:
-        app: mysql-service
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - name: mysql
+            - name: SW_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: slowsql-mysql-fluent-bit
+              mountPath: /fluent-bit/etc/
+            - name: shared-data
+              mountPath: /data/
+        - name: mysqld-exporter
           image: prom/mysqld-exporter:v0.14.0
           env:
             - name: DATA_SOURCE_NAME
@@ -131,6 +131,38 @@ spec:
           ports:
             - containerPort: 9104
               name: metrics
+        - name: mysql
+          image: mysql:8.0.30
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: password
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysqld-config
+              mountPath: /etc/mysql/conf.d/
+            - name: shared-data
+              mountPath: /data/
+      volumes:
+        - name: shared-data
+          emptyDir: {}
+        - name: slowsql-mysql-fluent-bit
+          configMap:
+            name: slowsql-mysql-fluent-bit
+            items:
+              - key: fluent-bit-conf
+                path: fluent-bit.conf
+              - key: fluent-bit-parser-conf
+                path: fluent-bit-parser.conf
+              - key: fluent-bit-script-lua
+                path: fluent-bit-script.lua
+        - name: mysqld-config
+          configMap:
+            name: mysqld-config
+            items:
+              - key: mysqld-config-file
+                path: config-file.cnf
+
 ---
 apiVersion: batch/v1
 kind: Job

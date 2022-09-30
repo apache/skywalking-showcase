@@ -21,9 +21,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: fluent-bit-slowsql-mysql
+  name: slowsql-mysql-fluent-bit
   labels:
-    app: fluent-bit-slowsql-mysql
+    app: slowsql-mysql-fluent-bit
 data:
   fluent-bit-conf: |
     [SERVICE]
@@ -89,7 +89,7 @@ data:
         re1["layer"] = "MYSQL"
         record["layer"] = "MYSQL"
         id1,_ = string.find(arr[2],"Id:")
-        service = os.getenv("SW_SERVICE")
+        service = "mysql::"..os.getenv("SW_SERVICE")
         record["service"]=service
         re1["service"]= service
 
@@ -170,161 +170,3 @@ data:
         rule      "second_state"  "^(# User@Host.*)"  "third_state"
         rule      "third_state"   "^(# Query_time: .*)"    "statement"
         rule      "statement"     "^\w+.*"             "statement"
-
-  mysqld-config-file: |
-    [mysqld]
-    init_connect='SET NAMES utf8'
-    slow_query_log=ON
-    event_scheduler=ON
-    long_query_time=1
-    slow_query_log_file=/data/slow.log
-    [client]
-    default-character-set=utf8
-    [mysql]
-    default-character-set=utf8
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mock-sql-slowsql-mysql
-  labels:
-    app: mysql-load
-data:
-  mock-sql: |
-    CREATE DATABASE IF NOT EXISTS test;
-    USE test;
-    CREATE TABLE IF NOT EXISTS `t1`(
-       `te1` VARCHAR(100) NOT NULL
-    )ENGINE=InnoDB DEFAULT CHARSET=utf8;
-    SET GLOBAL event_scheduler = 1;
-
-    CREATE EVENT `event_1`
-    ON SCHEDULE EVERY 1 SECOND
-    DO INSERT INTO t1 values('test');
-
-    CREATE EVENT `event_2`
-    ON SCHEDULE EVERY 1 SECOND
-    DO UPDATE t1 SET `te1` = 1;
-
-    CREATE EVENT `event_3`
-    ON SCHEDULE EVERY 1 SECOND
-    DO DELETE FROM t1;
-
-    CREATE EVENT `event_4`
-    ON SCHEDULE EVERY 1 SECOND
-    DO COMMIT;
-
-    CREATE EVENT `event_5`
-    ON SCHEDULE EVERY 1 SECOND
-    DO SELECT SLEEP(3);
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: slowsql-mysql
-spec:
-  selector:
-    app: slowsql-mysql
-  ports:
-    - protocol: TCP
-      port: 3306
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: slowsql-mysql
-  labels:
-    app: slowsql-mysql
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: slowsql-mysql
-  template:
-    metadata:
-      labels:
-        app: slowsql-mysql
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - name: fluent-bit
-          image: fluent/fluent-bit:1.9
-          env:
-            - name: SW_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-          volumeMounts:
-            - name: fluent-bit-slowsql-mysql
-              mountPath: /fluent-bit/etc/
-            - name: shared-data
-              mountPath: /data/
-        - name: mysql
-          image: mysql:8.0.30
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: password
-          ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: mysqld-config
-              mountPath: /etc/mysql/conf.d/
-            - name: shared-data
-              mountPath: /data/
-      volumes:
-        - name: shared-data
-          emptyDir: {}
-        - name: fluent-bit-slowsql-mysql
-          configMap:
-            name: fluent-bit-slowsql-mysql
-            items:
-              - key: fluent-bit-conf
-                path: fluent-bit.conf
-              - key: fluent-bit-parser-conf
-                path: fluent-bit-parser.conf
-              - key: fluent-bit-script-lua
-                path: fluent-bit-script.lua
-        - name: mysqld-config
-          configMap:
-            name: fluent-bit-slowsql-mysql
-            items:
-              - key: mysqld-config-file
-                path: config-file.cnf
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: slowsql-mysql-load-generator # @feature: slowsql-mysql; set up job to trigger mysql slow commands, you don't need this in production env.
-spec:
-  template:
-    metadata:
-      name: mysql-load-deployment-slowsql
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      restartPolicy: Never
-      initContainers:
-        - name: wait-for-mysql
-          image: busybox
-          command:  ["sh", "-c", "until nc -z slowsql-mysql 3306 > /dev/null; do echo Waiting for slowsql-mysql.; sleep 2; done;"]
-      containers:
-        - name: mysql-load-slowsql
-          image: mysql:8.0.30
-          command:
-            - bash
-            - -c
-            - mysql -hslowsql-mysql -uroot -ppassword < /conf/mock.sql
-          volumeMounts:
-            - name: mock-sql-vol-slowsql-mysql
-              mountPath: /conf
-      volumes:
-        - name: mock-sql-vol-slowsql-mysql
-          configMap:
-            name: mock-sql-slowsql-mysql
-            items:
-              - key: mock-sql
-                path: mock.sql
