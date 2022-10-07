@@ -15,25 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import time
-import traceback
+**/node_modules/**
+**/build/**
+**/apisix-config/**
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-
-url = os.getenv('URL', 'http://frontend/index.html')
-
-options = FirefoxOptions()
-options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
-
-while True:
-    print(f'Sending traffic to {url}')
-    # noinspection PyBroadException
-    try:
-        driver.get(url)
-    except Exception:
-        traceback.print_exc()
-    finally:
-        time.sleep(10)
+index.js # ignore agent files to fail the build in case we have bugs

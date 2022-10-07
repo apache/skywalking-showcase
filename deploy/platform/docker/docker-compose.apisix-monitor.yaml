@@ -15,25 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import time
-import traceback
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+# @feature: mysql; set up mysqld_exporter and OpenTelemetry collector
 
-url = os.getenv('URL', 'http://frontend/index.html')
+version: '2.1'
 
-options = FirefoxOptions()
-options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
+services:
+ # frontend metrics collector
+  apisix-otel-collector:
+    image: otel/opentelemetry-collector:0.50.0
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./config/apisix/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    environment:
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
+      OTEL_TARGET_ADDREESS: frontend:9091
+    depends_on:
+      oap:
+        condition: service_healthy
+    networks: [ sw ]
 
-while True:
-    print(f'Sending traffic to {url}')
-    # noinspection PyBroadException
-    try:
-        driver.get(url)
-    except Exception:
-        traceback.print_exc()
-    finally:
-        time.sleep(10)
+networks:
+  sw:

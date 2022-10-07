@@ -199,7 +199,8 @@ spec:
               # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
               # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
               # @feature: mysql; enable mysql rules to analyze MySQL metrics
-              value: vm,oap,k8s-cluster,k8s-node,k8s-service,k8s-instance,istio-controlplane,mysql,postgresql
+              # @feature: APISIX; enable APISIX rules to analyze APISIX metrics
+              value: vm,oap,k8s-cluster,k8s-node,k8s-service,k8s-instance,istio-controlplane,mysql,postgresql,apisix
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES

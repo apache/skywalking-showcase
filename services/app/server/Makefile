@@ -15,7 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-**/node_modules/**
-**/build/**
 
-index.js # ignore agent files to fail the build in case we have bugs
+include ../../../Makefile.in
+
+.PHONY: build
+build:
+
+.PHONY: docker docker.build docker.push
+
+docker: docker.build
+
+docker.build:
+	docker build \
+		--build-arg SW_AGENT_NODEJS_BACKEND_VERSION=${SW_AGENT_NODEJS_BACKEND_VERSION} \
+		. -t $(HUB)/app:$(TAG)
+	docker build \
+		. -t $(HUB)/app:$(TAG)-agentless -f Dockerfile.agentless
+
+docker.push: docker.build
+	docker push $(HUB)/app:$(TAG)
+	docker push $(HUB)/app:$(TAG)-agentless

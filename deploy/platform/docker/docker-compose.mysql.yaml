@@ -61,7 +61,7 @@ services:
       - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
-      - ./config/otel-collector-config-mysql:/etc/otel-collector-config.yaml
+      - ./config/otel-collector-config-mysql.yaml:/etc/otel-collector-config.yaml
     expose:
       - 55678
     depends_on:

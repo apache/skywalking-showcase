@@ -25,14 +25,10 @@ build:
 
 docker: docker.build
 
-docker.build:
-	docker build \
-		--build-arg SW_AGENT_NODEJS_FRONTEND_VERSION=${SW_AGENT_NODEJS_FRONTEND_VERSION} \
-		--build-arg SW_AGENT_NODEJS_BACKEND_VERSION=${SW_AGENT_NODEJS_BACKEND_VERSION} \
-		. -t $(HUB)/app:$(TAG)
-	docker build \
-		. -t $(HUB)/app:$(TAG)-agentless -f Dockerfile.agentless
+docker.build: 
+	@$(MAKE) -C server docker.build
+	@$(MAKE) -C frontend docker.build
 
 docker.push: docker.build
-	docker push $(HUB)/app:$(TAG)
-	docker push $(HUB)/app:$(TAG)-agentless
+	@$(MAKE) -C server docker.push
+	@$(MAKE) -C frontend docker.push

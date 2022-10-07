@@ -68,7 +68,7 @@ services:
       oap:
         condition: service_healthy
 
-  # NodeJS backend agent and NodeJS frontend agent
+  # NodeJS backend agent
   app:
     image: ${HUB}/app:${TAG}
     networks: [ sw ]
@@ -93,6 +93,15 @@ services:
     depends_on:
       app:
         condition: service_healthy
+
+  frontend:
+    image: ${HUB}/frontend:${TAG}
+    environment:
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
+    networks: [ sw ]
+    volumes:
+      - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
+      - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml
 
 networks:
   sw:

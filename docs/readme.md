@@ -9,7 +9,7 @@ languages. Here is the architecture:
 ```mermaid
 %% please read this doc in our official website, otherwise the graph is not correctly rendered.
 graph LR;
-  loadgen[load generator] --> ui("UI (React)") --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
+  loadgen[load generator] --> frontend("APISIX with UI (React)") --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
   gateway --> songs("songs (Spring)") & rcmd("recommendations (Python)");
   rcmd --> songs;
   songs --> db("database (H2)");
@@ -99,11 +99,12 @@ Currently, the features supported are:
 | `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 | `mysql`               | Start a MySQL server and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                        |                                                                                                                                       |
 | `postgresql`          | Start a PostgreSQL server, and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                  |                                                                                                                                       |
+| `apisix-monitor`          | Deploy OpenTelemetry and export APISIX metrics to SkyWalking for analysis and display on UI                               |                                                                                                                                       |
 
 ### Kubernetes
 
-To deploy the example application in Kubernetes, please make sure that you have `kubectl` command available, and it can
-connect to the Kubernetes cluster successfully.
+To deploy the example application in Kubernetes, please make sure the version lower than `v1.25` to support `CronJob`.
+Also you should have `kubectl` command available, and it can connect to the Kubernetes cluster successfully.
 
 If you don't have a running cluster, you can also leverage [KinD (Kubernetes in Docker)](https://kind.sigs.k8s.io)
 or [minikube](https://minikube.sigs.k8s.io) to create a cluster.

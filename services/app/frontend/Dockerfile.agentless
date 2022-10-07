@@ -15,25 +15,13 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import time
-import traceback
+FROM apache/apisix:2.15.0-debian
+RUN  apt update -y &&  apt install nodejs npm -y 
+WORKDIR /app
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+COPY . .
 
-url = os.getenv('URL', 'http://frontend/index.html')
+RUN mv src/index.agentless.js src/index.js
 
-options = FirefoxOptions()
-options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
-
-while True:
-    print(f'Sending traffic to {url}')
-    # noinspection PyBroadException
-    try:
-        driver.get(url)
-    except Exception:
-        traceback.print_exc()
-    finally:
-        time.sleep(10)
+RUN npm install && \
+    npm run build

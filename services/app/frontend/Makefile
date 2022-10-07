@@ -15,15 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM node:10
 
-WORKDIR /app
+include ../../../Makefile.in
 
-COPY . .
+.PHONY: build
+build:
 
-RUN mv ui/src/index.agentless.js ui/src/index.js
-RUN mv server/index.agentless.js server/index.js
+.PHONY: docker docker.build docker.push
 
-RUN npm install
+docker: docker.build
 
-CMD npm start
+docker.build:
+	docker build \
+		--build-arg SW_AGENT_NODEJS_FRONTEND_VERSION=${SW_AGENT_NODEJS_FRONTEND_VERSION} \
+		. -t $(HUB)/frontend:$(TAG)
+	docker build \
+		. -t $(HUB)/frontend:$(TAG)-agentless -f Dockerfile.agentless
+
+docker.push: docker.build
+	docker push $(HUB)/frontend:$(TAG)
+	docker push $(HUB)/frontend:$(TAG)-agentless

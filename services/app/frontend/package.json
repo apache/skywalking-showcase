@@ -6,11 +6,12 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
+    "skywalking-client-js": "^0.8.0",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm install && npm install skywalking-client-js && react-scripts build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
