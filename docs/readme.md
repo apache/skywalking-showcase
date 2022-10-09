@@ -9,7 +9,9 @@ languages. Here is the architecture:
 ```mermaid
 %% please read this doc in our official website, otherwise the graph is not correctly rendered.
 graph LR;
-  loadgen[load generator] --> frontend("APISIX with UI (React)") --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
+  loadgen[load generator] --> ui("UI (React)") --> Traffic1("HTTP Request for backend serv") -->  apisix("APISIX as UI container")
+ --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
+  ui("UI (React)") --> Traffic2("HTTP Request for UI codes") --> apisix("APISIX with  UI container")
   gateway --> songs("songs (Spring)") & rcmd("recommendations (Python)");
   rcmd --> songs;
   songs --> db("database (H2)");

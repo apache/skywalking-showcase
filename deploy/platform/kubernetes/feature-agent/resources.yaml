@@ -284,6 +284,10 @@ data:
                       export_addr:
                         ip: "0.0.0.0"
                         port: 9091
+              skywalking:
+                  service_name: APISIX
+                  service_instance_name: "$hostname"
+                  endpoint_addr: http://oap:12800                                     
       #END
   config: |
       apisix:
@@ -296,7 +300,13 @@ data:
           export_addr:
             ip: "0.0.0.0"
             port: 9091
-
+        skywalking:
+          service_name: APISIX
+          service_instance_name: "$hostname"
+          endpoint_addr: http://oap:12800                 
+      plugins:
+        - prometheus
+        - skywalking
       nginx_config:
           http_server_configuration_snippet: |
               location ~ \.(gif|jpg|png|js|css|html)$ {
