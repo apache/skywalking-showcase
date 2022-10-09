@@ -23,9 +23,19 @@ routes:
     -
         uri: /homepage
         service_id: 2         
+        plugins:
+            skywalking:
+                service_name: APISIX
+                service_instance_name: "$hostname"
+                endpoint_addr: http://oap:12800                 
     -
         uri: /test
         service_id: 2                
+        plugins:
+            skywalking:
+                service_name: APISIX
+                service_instance_name: "$hostname"
+                endpoint_addr: http://oap:12800         
 services:
     -
         id: 1
@@ -52,8 +62,5 @@ global_rules:
                 export_addr:
                   ip: "0.0.0.0"
                   port: 9091
-            skywalking:
-                service_name: APISIX
-                service_instance_name: "$hostname"
-                endpoint_addr: http://oap:12800                   
+          
 #END
