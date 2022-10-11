@@ -20,6 +20,49 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: psql-slowsql-conf
+data:
+  psql-config-file: |
+    listen_addresses = '*'
+    max_connections = 100
+
+    shared_buffers = 128MB
+
+    max_wal_size = 1GB
+    min_wal_size = 80MB
+
+    log_timezone = 'Etc/UTC'
+
+    datestyle = 'iso, mdy'
+
+    timezone = 'Etc/UTC'
+
+    lc_messages = 'en_US.utf8'
+
+    lc_monetary = 'en_US.utf8'
+    lc_numeric = 'en_US.utf8'
+    lc_time = 'en_US.utf8'
+
+    default_text_search_config = 'pg_catalog.english'
+
+    logging_collector = on
+    log_directory = 'log'
+    log_filename = 'slow.log'
+    log_rotation_age = 1d
+    log_rotation_size = 10MB
+    log_min_messages = info
+
+    log_min_duration_statement = 1000
+    log_checkpoints = on
+    log_connections = on
+    log_disconnections = on
+    log_duration = on
+    log_line_prefix = '%m'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: mock-sql-psql
   labels:
     app: psql-load
@@ -48,6 +91,10 @@ spec:
   ports:
     - protocol: TCP
       port: 5432
+      name: psql
+    - protocol: TCP
+      port: 9187
+      name: psql-exporter
 
 ---
 apiVersion: apps/v1
@@ -69,64 +116,71 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       containers:
+        - name: fluent-bit
+          image: fluent/fluent-bit:1.9
+          env:
+            - name: SW_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: slowsql-psql-fluent-bit
+              mountPath: /fluent-bit/etc/
+            - name: shared-data
+              mountPath: /data/
         - name: psql
           image: postgres:14.1
+          command: ["docker-entrypoint.sh", "-c", "config_file=/etc/postgresql.conf"]
           env:
             - name: POSTGRES_PASSWORD
               value: password
           ports:
-            - containerPort: 3306
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: psql-service
-spec:
-  selector:
-    app: psql-service
-  ports:
-    - protocol: TCP
-      port: 9104
-
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: psql-service-deployment
-  labels:
-    app: psql-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: psql-service
-  template:
-    metadata:
-      labels:
-        app: psql-service
-      annotations:
-        sidecar.istio.io/inject: "false"
-    spec:
-      containers:
-        - name: psql
+            - containerPort: 5432
+          volumeMounts:
+            - name: psql-slowsql-conf
+              mountPath: /etc/postgresql.conf
+              subPath: postgresql.conf
+            - name: shared-data
+              mountPath: /var/lib/postgresql/data/
+        - name: psql-exporter
           image: prometheuscommunity/postgres-exporter:v0.11.0
-          env:
-            - name: DATA_SOURCE_NAME
-              value: postgresql://postgres:password@psql:5432/postgres?sslmode=disable
           resources:
             limits:
               cpu: 100m
               memory: "128Mi"
+          env:
+            - name: DATA_SOURCE_NAME
+              value: postgresql://postgres:password@psql:5432/postgres?sslmode=disable
           ports:
             - containerPort: 9187
               name: metrics
+      volumes:
+        - name: shared-data
+          emptyDir: {}
+        - name: slowsql-psql-fluent-bit
+          configMap:
+            name: slowsql-psql-fluent-bit
+            items:
+              - key: fluent-bit-conf
+                path: fluent-bit.conf
+              - key: fluent-bit-parser-conf
+                path: fluent-bit-parser.conf
+              - key: fluent-bit-script-lua
+                path: fluent-bit-script.lua
+        - name: psql-slowsql-conf
+          configMap:
+            name: psql-slowsql-conf
+            items:
+              - key: psql-config-file
+                path: postgresql.conf
+
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: psql-load-deployment # @feature: postgresql; set up job to trigger postgresql commands, you don't need this in production env.
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "*/1 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
