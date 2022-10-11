@@ -98,7 +98,7 @@ Currently, the features supported are:
 | `trace-profiling`     | Deploy tools to submit trace profiling tasks.                                                                                              | Only support deployment with SkyWalking agents installed, currently Java agent and Python agent support trace profiling.              |
 | `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 | `mysql`               | Start a MySQL server and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                        |                                                                                                                                       |
-| `postgresql`          | Start a PostgreSQL server, execute the sample SQLs periodically, and export their metrics to SkyWalking.                                   |                                                                                                                                       |
+| `postgresql`          | Start a PostgreSQL server, and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                  |                                                                                                                                       |
 
 ### Kubernetes
 
