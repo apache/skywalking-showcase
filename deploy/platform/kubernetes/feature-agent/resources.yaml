@@ -257,7 +257,7 @@ data:
               service_id: 2         
               plugins:
                   skywalking:
-                      service_name: APISIX
+                      service_name: frontend
                       service_instance_name: "$hostname"
                       endpoint_addr: http://oap:12800                  
           -
@@ -265,7 +265,7 @@ data:
               service_id: 2                
               plugins:
                   skywalking:
-                      service_name: APISIX
+                      service_name: frontend
                       service_instance_name: "$hostname"
                       endpoint_addr: http://oap:12800                     
       services:
@@ -307,7 +307,7 @@ data:
             ip: "0.0.0.0"
             port: 9091
         skywalking:
-          service_name: APISIX
+          service_name: frontend
           service_instance_name: "$hostname"
           endpoint_addr: http://oap:12800                 
       plugins:

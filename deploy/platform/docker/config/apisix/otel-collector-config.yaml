@@ -22,6 +22,8 @@ receivers:
          metrics_path: "/apisix/prometheus/metrics"
          static_configs:
            - targets: ['${OTEL_TARGET_ADDREESS}']
+             labels:
+              skywalking_service: frontend           
 processors:
   batch:
 
