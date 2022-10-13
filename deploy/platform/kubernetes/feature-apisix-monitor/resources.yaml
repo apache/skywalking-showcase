@@ -34,8 +34,6 @@ data:
                 metrics_path: "/apisix/prometheus/metrics"
                 kubernetes_sd_configs:
                   - role: pod
-                labels:
-                  skywalking_service: frontend
                 relabel_configs:
                   - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
                     action: keep
@@ -44,9 +42,10 @@ data:
                     target_label: host_name
                     regex: (.+)
                     replacement: $$1
+                  - target_label: skywalking_service
+                    replacement: frontend
       processors:
         batch:
-
       exporters:
         otlp:
           endpoint: oap:11800
