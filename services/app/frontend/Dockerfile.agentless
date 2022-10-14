@@ -16,13 +16,6 @@
 # under the License.
 #
 FROM node:10 AS build
-FROM apache/apisix:2.15.0-debian
-
-# node npm 
-COPY --from=build /usr/local/bin /usr/local/bin
-COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
-# git 
-RUN apt install git -y 
 
 WORKDIR /app
 
@@ -32,3 +25,7 @@ RUN mv src/index.agentless.js src/index.js
 
 RUN npm install && \
     npm run build
+
+FROM apache/apisix:2.15.0-debian
+
+COPY --from=build /app/build /app/build
