@@ -27,7 +27,7 @@ data:
   otel-collector-config: |
       receivers:
         prometheus:
-          config: 
+          config:
             scrape_configs:
               - job_name: 'apisix-monitoring'
                 scrape_interval: 5s
@@ -39,7 +39,7 @@ data:
                     action: keep
                     regex: frontend;metrics # @feature: apisix-monitor; reference the name of the metrics port
                   - source_labels: [__meta_kubernetes_pod_name]
-                    target_label: host_name
+                    target_label: service_instance_id
                     regex: (.+)
                     replacement: $$1
                   - target_label: skywalking_service
@@ -48,7 +48,7 @@ data:
         batch:
       exporters:
         otlp:
-          endpoint: ${BACKEND_SERVICE}:11800
+          endpoint: oap:11800
           tls:
             insecure: true
       service:
@@ -60,7 +60,7 @@ data:
             - batch
             exporters:
             - otlp
----    
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -94,11 +94,11 @@ spec:
               memory: "512Mi"
             requests:
               cpu: 500m
-              memory: "512Mi"   
+              memory: "512Mi"
       volumes:
         - name: otel-collector-conf-apisix
           configMap:
             name: otel-collector-conf-apisix
             items:
               - key: otel-collector-config
-                path: otel-collector-config.yaml              
+                path: otel-collector-config.yaml

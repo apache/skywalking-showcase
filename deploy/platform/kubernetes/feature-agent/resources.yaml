@@ -246,79 +246,72 @@ metadata:
 data:
   apisix: |
       routes:
-          -
-              uri: /browser/*
-              service_id: 1
-          -
-              uri: /v3/*
-              service_id: 1
-          -
-              uri: /homepage
-              service_id: 2
-              plugins:
-                  skywalking:
-                      service_name: agent::frontend
-                      service_instance_name: "$hostname"
-                      endpoint_addr: http://oap:12800
-          -
-              uri: /test
-              service_id: 2
-              plugins:
-                  skywalking:
-                      service_name: agent::frontend
-                      service_instance_name: "$hostname"
-                      endpoint_addr: http://oap:12800
+      - uri: /browser/*
+        service_id: 1
+      - uri: /v3/*
+        service_id: 1
+      - uri: /homepage
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: "${{SW_AGENT_SERVICE}}"
+            service_instance_name: "${{SW_AGENT_SERVICE_INSTANCE}}"
+            endpoint_addr: http://oap:12800
+      - uri: /test
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: "${{SW_AGENT_SERVICE}}"
+            service_instance_name: "${{SW_AGENT_SERVICE_INSTANCE}}"
+            endpoint_addr: http://oap:12800
       services:
-          -
-              id: 1
-              upstream_id: 1
-          -
-              id: 2
-              upstream_id: 2
+      - id: 1
+        upstream_id: 1
+      - id: 2
+        upstream_id: 2
 
       upstreams:
-          - id: 1
-            nodes:
-              "oap:12800": 1
-            type: roundrobin
-          - id: 2
-            nodes:
-              "app:80": 1
-            type: roundrobin
+      - id: 1
+        nodes:
+          "oap:12800": 1
+        type: roundrobin
+      - id: 2
+        nodes:
+          "app:80": 1
+        type: roundrobin
 
       global_rules:
-          -
-              id: 1
-              plugins:
-                  prometheus:
-                      export_addr:
-                        ip: "0.0.0.0"
-                        port: 9091
+      - id: 1
+        plugins:
+          prometheus:
+            export_addr:
+              ip: "0.0.0.0"
+              port: 9091
       #END
   config: |
-      apisix:
-        node_listen: 80
-        enable_ipv6: false
-        enable_admin: false
-        config_center: yaml
-      plugin_attr:
-        prometheus:
-          export_addr:
-            ip: "0.0.0.0"
-            port: 9091
-        skywalking:
-          service_name: agent::frontend
-          service_instance_name: "$hostname"
-          endpoint_addr: http://oap:12800
-      plugins:
-        - prometheus
-        - skywalking
-      nginx_config:
-          http_server_configuration_snippet: |
-              location ~ \.(gif|jpg|png|js|css|html)$ {
-                root /app/build;
-                index index.html;
-              }
+    apisix:
+      node_listen: 80
+      enable_ipv6: false
+      enable_admin: false
+      config_center: yaml
+    plugin_attr:
+      prometheus:
+        export_addr:
+          ip: "0.0.0.0"
+          port: 9091
+      skywalking:
+        service_name: "${{SW_AGENT_SERVICE}}"
+        service_instance_name: "${{SW_AGENT_SERVICE_INSTANCE}}"
+        endpoint_addr: http://oap:12800
+    plugins:
+      - prometheus
+      - skywalking
+    nginx_config:
+      http_server_configuration_snippet: |
+        location ~ \.(gif|jpg|png|js|css|html)$ {
+          root /app/build;
+          index index.html;
+        }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -350,15 +343,17 @@ spec:
               cpu: 500m
               memory: "256Mi"
           ports:
-            -
-              containerPort: 80
+            - containerPort: 80
               name: http
-            -
-              containerPort: 9091 # APISIX Prometheus pulgin port
+            - containerPort: 9091 # APISIX Prometheus pulgin port
               name: metrics
           env:
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: ${BACKEND_SERVICE}:11800
+            - name: SW_SERVICE_INSTANCE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           volumeMounts:
             - name: apisix-config
               mountPath: /usr/local/apisix/conf/config.yaml

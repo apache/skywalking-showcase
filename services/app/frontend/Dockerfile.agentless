@@ -28,4 +28,7 @@ RUN npm install && \
 
 FROM apache/apisix:2.15.0-debian
 
+ENV SW_AGENT_SERVICE=frontend
+ENV SW_AGENT_SERVICE_INSTANCE=frontend-instance
+
 COPY --from=build /app/build /app/build

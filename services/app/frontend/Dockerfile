@@ -28,7 +28,7 @@ RUN git clone --recurse-submodules https://github.com/apache/skywalking-client-j
     git submodule sync ; \
     npm install ; \
     npm run build
-    
+
 WORKDIR /app
 
 COPY . .
@@ -39,5 +39,7 @@ RUN npm install /skywalking-client-js && \
 
 FROM apache/apisix:2.15.0-debian
 
-COPY --from=build /app/build /app/build
+ENV SW_AGENT_SERVICE=agent::frontend
+ENV SW_AGENT_SERVICE_INSTANCE=agent::frontend-instance
 
+COPY --from=build /app/build /app/build
