@@ -17,7 +17,6 @@
  * under the License.
  *
  */
-const path = require('path');
 const express = require('express');
 const axios = require('axios');
 
@@ -25,8 +24,6 @@ const PORT = process.env.PORT || 80;
 const GATEWAY = process.env.GATEWAY || 'gateway';
 
 const app = express();
-
-app.use(express.static(path.resolve(__dirname, '../ui/build')));
 
 app.get('/homepage', async (req, res) => {
     const top = await axios.get(`http://${GATEWAY}/songs/top`);

@@ -15,25 +15,29 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import time
-import traceback
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+FROM node:10 AS build
 
-url = os.getenv('URL', 'http://frontend/index.html')
+ARG SW_AGENT_NODEJS_FRONTEND_VERSION
 
-options = FirefoxOptions()
-options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
+WORKDIR /skywalking-client-js
 
-while True:
-    print(f'Sending traffic to {url}')
-    # noinspection PyBroadException
-    try:
-        driver.get(url)
-    except Exception:
-        traceback.print_exc()
-    finally:
-        time.sleep(10)
+RUN git clone --recurse-submodules https://github.com/apache/skywalking-client-js.git . ; \
+    git reset --hard ${SW_AGENT_NODEJS_FRONTEND_VERSION} ; \
+    git submodule update ; \
+    git submodule sync ; \
+    npm install ; \
+    npm run build
+    
+WORKDIR /app
+
+COPY . .
+
+RUN npm install /skywalking-client-js && \
+    npm install && \
+    npm run build
+
+FROM apache/apisix:2.15.0-debian
+
+COPY --from=build /app/build /app/build
+

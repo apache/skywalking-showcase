@@ -15,25 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-import os
-import time
-import traceback
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-sa-apisix
 
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: otel-role-apisix
+rules:
+  - apiGroups: [ "" ]
+    resources:
+      - "pods"
+    verbs: [ "get", "watch", "list" ]
 
-url = os.getenv('URL', 'http://frontend/index.html')
-
-options = FirefoxOptions()
-options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
-
-while True:
-    print(f'Sending traffic to {url}')
-    # noinspection PyBroadException
-    try:
-        driver.get(url)
-    except Exception:
-        traceback.print_exc()
-    finally:
-        time.sleep(10)
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-role-binding-apisix
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-role-apisix
+subjects:
+  - kind: ServiceAccount
+    name: otel-sa-apisix
+    namespace: ${NAMESPACE}

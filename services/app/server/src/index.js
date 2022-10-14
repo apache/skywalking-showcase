@@ -17,32 +17,22 @@
  * under the License.
  *
  */
-const path = require('path');
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
 const axios = require('axios');
 const { default: agent } = require('skywalking-backend-js');
-
-const oapHttpAddress = 'http://oap:12800'
 const agentName = process.env.SW_AGENT_NAME_SERVER || 'agent::app'
 
 // @feature: nodejs-agent-backend;
 agent.start({
     serviceName: agentName,
     maxBufferSize: 1000,
-    traceIgnorePath: '/browser/**,/v3/**,/health',
+    traceIgnorePath: '/health',
 });
 
 const PORT = process.env.PORT || 80;
 const GATEWAY = process.env.GATEWAY || 'gateway';
 
 const app = express();
-
-app.use(express.static(path.resolve(__dirname, '../ui/build')));
-
-// @feature: nodejs-agent-frontend; you need to proxy the path '/browser/*' and '/v3/*' in UI to the OAP 12800 endpoint. You can use reverse proxy like Nginx or anything similar.
-app.use('/browser', createProxyMiddleware({ target: oapHttpAddress }))
-app.use('/v3', createProxyMiddleware({ target: oapHttpAddress }))
 
 app.get('/homepage', async (req, res) => {
     const top = await axios.get(`http://${GATEWAY}/songs/top`);

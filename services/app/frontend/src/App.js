@@ -27,10 +27,14 @@ function App() {
         fetch("/homepage")
             .then((res) => res.json())
             .then((data) => setData(JSON.stringify(data)));
-        // mock error
+        // mock app server error
         const xhr = new XMLHttpRequest();
         xhr.open('post', '/test');
-        xhr.send();
+        xhr.send();    
+        // mock apisix error
+        const apisix = new XMLHttpRequest();
+        apisix.open('post', '/test-apisix-404');
+        apisix.send();
 }, []);
 
     return (

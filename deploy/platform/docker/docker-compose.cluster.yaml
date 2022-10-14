@@ -53,7 +53,7 @@ services:
       SW_CLUSTER_ZK_HOST_PORT: zookeeper:2181 # @feature: cluster; set up the cluster coordinator address
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_RULES: vm,mysql,postgresql # @feature: vm; enable the OC rules that analyse the VM metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_RULES: vm,mysql,postgresql,apisix # @feature: vm; enable the OC rules that analyse the VM metrics
       SW_STORAGE: elasticsearch
       SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus

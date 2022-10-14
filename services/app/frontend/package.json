@@ -10,7 +10,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm install && npm install skywalking-client-js && react-scripts build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
