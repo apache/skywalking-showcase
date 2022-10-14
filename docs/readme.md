@@ -105,8 +105,8 @@ Currently, the features supported are:
 
 ### Kubernetes
 
-To deploy the example application in Kubernetes, please make sure the version lower than `v1.25` to support `CronJob`.
-Also you should have `kubectl` command available, and it can connect to the Kubernetes cluster successfully.
+To deploy the example application in Kubernetes, please make sure that you have `kubectl` command available, and it can
+connect to the Kubernetes cluster successfully.
 
 If you don't have a running cluster, you can also leverage [KinD (Kubernetes in Docker)](https://kind.sigs.k8s.io)
 or [minikube](https://minikube.sigs.k8s.io) to create a cluster.
