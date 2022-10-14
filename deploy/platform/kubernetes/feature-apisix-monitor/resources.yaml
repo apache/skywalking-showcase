@@ -48,7 +48,7 @@ data:
         batch:
       exporters:
         otlp:
-          endpoint: oap:11800
+          endpoint: ${BACKEND_SERVICE}:11800
           tls:
             insecure: true
       service:
