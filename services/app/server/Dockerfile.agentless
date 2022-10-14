@@ -21,6 +21,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN mv src/index.agentless.js src/index.js
+RUN mv src/index.agentless.js src/index.js ; \
+    npm install
 
 CMD npm start
