@@ -175,7 +175,7 @@ spec:
                 path: postgresql.conf
 
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: psql-load-deployment # @feature: postgresql; set up job to trigger postgresql commands, you don't need this in production env.
