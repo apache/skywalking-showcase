@@ -17,15 +17,8 @@
 #
 
 FROM node:10 AS build
-FROM apache/apisix:2.15.0-debian
 
 ARG SW_AGENT_NODEJS_FRONTEND_VERSION
-
-# node npm 
-COPY --from=build /usr/local/bin /usr/local/bin
-COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
-# git 
-RUN apt install git -y 
 
 WORKDIR /skywalking-client-js
 
@@ -43,4 +36,8 @@ COPY . .
 RUN npm install /skywalking-client-js && \
     npm install && \
     npm run build
+
+FROM apache/apisix:2.15.0-debian
+
+COPY --from=build /app/build /app/build
 
