@@ -52,7 +52,7 @@ metadata:
   name: event-scaler-sa
 
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: event-scale-up
@@ -78,7 +78,7 @@ spec:
           restartPolicy: Never
 
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: event-scale-down
