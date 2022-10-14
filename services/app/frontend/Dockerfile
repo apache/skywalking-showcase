@@ -15,11 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+FROM node:10 AS build
 FROM apache/apisix:2.15.0-debian
 
 ARG SW_AGENT_NODEJS_FRONTEND_VERSION
 
-RUN apt update -y && apt install nodejs npm git -y 
+# node npm 
+COPY --from=build /usr/local/bin /usr/local/bin
+COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
+# git 
+RUN apt install git -y 
 
 WORKDIR /skywalking-client-js
 
