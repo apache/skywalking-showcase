@@ -30,7 +30,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.2
+          cpus: '0.2'
           memory: 256M
     depends_on:
       oap:
@@ -45,7 +45,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: 0.2
+          cpus: '0.2'
           memory: 256M
     depends_on:
       oap:
