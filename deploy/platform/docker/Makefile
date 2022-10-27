@@ -28,4 +28,4 @@ deploy:
 
 .PHONY: undeploy
 undeploy:
-	docker compose $(features) --log-level ERROR down
+	docker compose $(features) down
