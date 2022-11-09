@@ -52,7 +52,7 @@ public class SongMessageReceiver {
     public void initMQSource() {
         try {
             ConnectionFactory factory = new ActiveMQConnectionFactory(activeMQUrl);
-            connection = factory.createConnection(this.activeMQUser, this.activeMQPassword);
+            connection = factory.createConnection();
             connection.start();
             session = connection.createSession(Boolean.TRUE, Session.AUTO_ACKNOWLEDGE);
             Destination destination = session.createQueue(activeMQQueue);

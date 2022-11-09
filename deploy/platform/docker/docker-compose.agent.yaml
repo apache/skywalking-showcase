@@ -25,6 +25,8 @@ services:
     environment:
       SW_AGENT_NAME: gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
+      ACTIVE_MQ_URL: tcp://activemq:61616
+      ACTIVE_MQ_QUEUE: queue-songs-ping
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
       interval: 30s
@@ -43,6 +45,8 @@ services:
     environment:
       SW_AGENT_NAME: songs
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
+      ACTIVE_MQ_URL: tcp://activemq:61616
+      ACTIVE_MQ_QUEUE: queue-songs-ping      
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
       interval: 30s
@@ -50,6 +54,8 @@ services:
       retries: 3
     depends_on:
       oap:
+        condition: service_healthy      
+      activemq:
         condition: service_healthy
 
   # Python agent
@@ -102,6 +108,14 @@ services:
     volumes:
       - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
       - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml
+  activemq:
+    image: rmohr/activemq:5.15.9
+    networks: [ sw ]
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost:8161/admin" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3    
 
 networks:
   sw:
