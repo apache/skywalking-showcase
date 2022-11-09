@@ -18,29 +18,21 @@
  *
  */
 
-package org.apache.skywalking.showcase.gateway;
-
-import java.util.Date;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.cloud.gateway.route.Route;
-import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
+package org.apache.skywalking.showcase.services.song.controller;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
-import javax.jms.MessageProducer;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.util.Optional;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.springframework.beans.factory.annotation.Value;
 
-public class SongMessageSender implements GlobalFilter {
+public class SongMessageReceiver {
     @Value("${ACTIVE_MQ_URL:tcp://127.0.0.1:61616}")
     private String activeMQUrl;
     @Value("${ACTIVE_MQ_USER:user}")
@@ -52,29 +44,9 @@ public class SongMessageSender implements GlobalFilter {
 
     private Session session;
 
-    private MessageProducer messageProducer;
+    private MessageConsumer messageConsumer;
 
     private Connection connection;
-
-    private void sendMsg() {
-        try {
-            if (this.session != null && this.messageProducer != null) {
-                TextMessage message = session.createTextMessage("ping at -> " + new Date());
-                messageProducer.send(message);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
-        if (route != null && "songs-service".equals(route.getId())) {
-            sendMsg();
-        }
-        return chain.filter(exchange);
-    }
 
     @PostConstruct
     public void initMQSource() {
@@ -84,7 +56,17 @@ public class SongMessageSender implements GlobalFilter {
             connection.start();
             session = connection.createSession(Boolean.TRUE, Session.AUTO_ACKNOWLEDGE);
             Destination destination = session.createQueue(activeMQQueue);
-            messageProducer = session.createProducer(destination);
+            messageConsumer = session.createConsumer(destination);
+            new Thread(this::receiveMsg).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void receiveMsg() {
+        try {
+            final Message message = messageConsumer.receive();
+            System.out.println("receive msg : " + ((TextMessage) message).getText());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -93,8 +75,8 @@ public class SongMessageSender implements GlobalFilter {
     @PreDestroy
     public void releaseMQSource() {
         try {
-            if (this.messageProducer != null) {
-                this.messageProducer.close();
+            if (this.messageConsumer != null) {
+                this.messageConsumer.close();
             }
             if (this.session != null) {
                 this.session.close();

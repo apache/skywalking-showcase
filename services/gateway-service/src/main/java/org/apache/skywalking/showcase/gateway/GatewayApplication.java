@@ -37,6 +37,10 @@ public class GatewayApplication {
 		return new SkywalkingMeterRegistry(config);
 	}
 
+	SongMessageSender songMessageSender(){
+		return new SongMessageSender();
+	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(GatewayApplication.class, args);
 	}
