@@ -28,6 +28,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
@@ -69,11 +70,15 @@ public class SongMessageSender implements GlobalFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
-        if (route != null && "songs-service".equals(route.getId())) {
-            sendMsg();
-        }
-        return chain.filter(exchange);
+        return Mono.from(chain.filter(exchange)).doOnNext(
+            e -> {
+                Route route = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR);
+                if (route != null && "songs-service".equals(route.getId())) {
+                    sendMsg();
+                }
+            }
+        );
+
     }
 
     @PostConstruct

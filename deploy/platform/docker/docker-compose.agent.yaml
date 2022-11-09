@@ -112,7 +112,7 @@ services:
     image: rmohr/activemq:5.15.9
     networks: [ sw ]
     healthcheck:
-      test: [ "CMD-SHELL", "curl http://localhost:8161/admin" ]
+      test: [ "CMD-SHELL", "curl --silent --fail  http://localhost:8161 -I" ]
       interval: 30s
       timeout: 10s
       retries: 3    

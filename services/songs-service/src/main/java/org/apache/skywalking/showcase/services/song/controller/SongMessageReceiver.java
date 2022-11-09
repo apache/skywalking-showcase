@@ -31,7 +31,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SongMessageReceiver {
     @Value("${ACTIVE_MQ_URL:tcp://127.0.0.1:61616}")
     private String activeMQUrl;

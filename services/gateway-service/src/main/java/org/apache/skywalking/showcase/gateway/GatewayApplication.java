@@ -17,6 +17,7 @@
  * under the License.
  *
  */
+
 package org.apache.skywalking.showcase.gateway;
 
 import org.apache.skywalking.apm.meter.micrometer.SkywalkingConfig;
@@ -26,23 +27,26 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 import java.util.Arrays;
+import org.springframework.core.annotation.Order;
 
 //
 @SpringBootApplication
 public class GatewayApplication {
 
-	@Bean
-	SkywalkingMeterRegistry skywalkingMeterRegistry() {
-		SkywalkingConfig config = new SkywalkingConfig(Arrays.asList(""));
-		return new SkywalkingMeterRegistry(config);
-	}
+    @Bean
+    SkywalkingMeterRegistry skywalkingMeterRegistry() {
+        SkywalkingConfig config = new SkywalkingConfig(Arrays.asList(""));
+        return new SkywalkingMeterRegistry(config);
+    }
 
-	SongMessageSender songMessageSender(){
-		return new SongMessageSender();
-	}
+    @Bean
+    @Order
+    SongMessageSender songMessageSender() {
+        return new SongMessageSender();
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(GatewayApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
+    }
 
 }
