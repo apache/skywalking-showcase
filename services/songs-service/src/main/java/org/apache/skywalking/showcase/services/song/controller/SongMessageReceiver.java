@@ -37,10 +37,6 @@ import org.springframework.stereotype.Component;
 public class SongMessageReceiver {
     @Value("${ACTIVE_MQ_URL:tcp://127.0.0.1:61616}")
     private String activeMQUrl;
-    @Value("${ACTIVE_MQ_USER:user}")
-    private String activeMQUser;
-    @Value("${ACTIVE_MQ_PASSWORD:password}")
-    private String activeMQPassword;
     @Value("${ACTIVE_MQ_QUEUE:queue}")
     private String activeMQQueue;
 
@@ -67,8 +63,10 @@ public class SongMessageReceiver {
 
     private void receiveMsg() {
         try {
-            final Message message = messageConsumer.receive();
-            System.out.println("receive msg : " + ((TextMessage) message).getText());
+            for (; ; ) {
+                final Message message = messageConsumer.receive();
+                System.out.println("receive msg : " + ((TextMessage) message).getText());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
