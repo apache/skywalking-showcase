@@ -106,7 +106,7 @@ spec:
             - name: SW_OTEL_RECEIVER
               value: default
             - name: SW_OTEL_RECEIVER_ENABLED_OTEL_RULES
-              value: vm,oap,mysql
+              value: vm,oap,mysql/*
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
@@ -200,7 +200,7 @@ spec:
               # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
               # @feature: mysql; enable mysql rules to analyze MySQL metrics
               # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
-              value: vm,oap,k8s/*,istio-controlplane,mysql,postgresql,apisix
+              value: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql,apisix
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
