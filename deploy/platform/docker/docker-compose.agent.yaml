@@ -108,11 +108,12 @@ services:
     volumes:
       - ./config/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
       - ./config/apisix/config.yaml:/usr/local/apisix/conf/config.yaml
+      
   activemq:
     image: rmohr/activemq:5.15.9
     networks: [ sw ]
     healthcheck:
-      test: [ "CMD-SHELL", "curl --silent --fail  http://localhost:8161 -I" ]
+      test: [ "CMD-SHELL", "curl http://localhost:8161" ]
       interval: 30s
       timeout: 10s
       retries: 3    
