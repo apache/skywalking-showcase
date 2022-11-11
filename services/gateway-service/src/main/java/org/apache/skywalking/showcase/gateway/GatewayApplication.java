@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Bean;
 import java.util.Arrays;
 import org.springframework.core.annotation.Order;
 
-//
 @SpringBootApplication
 public class GatewayApplication {
 
