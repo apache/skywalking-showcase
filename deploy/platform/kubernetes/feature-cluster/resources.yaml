@@ -200,7 +200,7 @@ spec:
               # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
               # @feature: mysql; enable mysql rules to analyze MySQL metrics
               # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
-              value: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql,apisix
+              value: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix
             - name: SW_STORAGE
               value: elasticsearch
             - name: SW_STORAGE_ES_CLUSTER_NODES
@@ -229,6 +229,8 @@ spec:
               value: "6"
             - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
               value: "2"
+            - name: SW_STORAGE_ES_INDEX_REPLICAS_NUMBER
+              value: "0"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
