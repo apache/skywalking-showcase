@@ -25,8 +25,6 @@ services:
     environment:
       SW_AGENT_NAME: gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
-      ACTIVE_MQ_URL: tcp://activemq:61616
-      ACTIVE_MQ_QUEUE: queue-songs-ping
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
       interval: 30s

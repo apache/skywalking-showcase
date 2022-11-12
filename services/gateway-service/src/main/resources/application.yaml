@@ -23,7 +23,6 @@ spring:
   cloud:
     gateway:
       routes:
-        # This id is hard-coded in SongMessageSender
         - id: songs-service
           uri: http://songs
           predicates:

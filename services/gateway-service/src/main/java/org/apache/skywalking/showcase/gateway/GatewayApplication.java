@@ -38,12 +38,6 @@ public class GatewayApplication {
         return new SkywalkingMeterRegistry(config);
     }
 
-    @Bean
-    @Order
-    SongMessageSender songMessageSender() {
-        return new SongMessageSender();
-    }
-
     public static void main(String[] args) {
         SpringApplication.run(GatewayApplication.class, args);
     }

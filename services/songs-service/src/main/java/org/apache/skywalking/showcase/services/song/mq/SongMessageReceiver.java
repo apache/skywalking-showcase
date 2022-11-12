@@ -18,7 +18,7 @@
  *
  */
 
-package org.apache.skywalking.showcase.services.song.controller;
+package org.apache.skywalking.showcase.services.song.mq;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;

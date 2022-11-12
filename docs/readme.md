@@ -13,6 +13,8 @@ graph LR;
  --> app("app server (NodeJS)") --> gateway("gateway (Spring)");
   ui("UI (React)") --> Traffic2("HTTP Request for UI codes") --> apisix("APISIX with  UI container")
   gateway --> songs("songs (Spring)") & rcmd("recommendations (Python)");
+  songs --> activeMQ
+  activeMQ --> songs
   rcmd --> songs;
   songs --> db("database (H2)");
 ```

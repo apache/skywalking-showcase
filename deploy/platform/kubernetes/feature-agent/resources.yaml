@@ -68,10 +68,6 @@ spec:
               value: agent::gateway
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: ${BACKEND_SERVICE}:11800
-            - name: ACTIVE_MQ_URL
-              value: tcp://activemq:61616
-            - name: ACTIVE_MQ_QUEUE
-              value: queue-songs-ping
 
 ---
 apiVersion: v1
