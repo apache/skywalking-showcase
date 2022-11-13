@@ -229,8 +229,6 @@ spec:
               value: "6"
             - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
               value: "2"
-            - name: SW_STORAGE_ES_INDEX_REPLICAS_NUMBER
-              value: "0"
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
