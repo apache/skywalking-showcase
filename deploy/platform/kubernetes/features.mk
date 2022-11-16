@@ -75,7 +75,6 @@ deploy.feature-mesh-with-agent: prerequisites install-cert-manager
 
 .PHONY: undeploy.feature-mesh-with-agent
 undeploy.feature-mesh-with-agent: istioctl
-	$(eval TAG := $(TAG)-agentless)
 	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete --ignore-not-found -f -
 	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 	$(MAKE) undeploy FEATURE_FLAGS=agent TAG=$(TAG) NAMESPACE=$(NAMESPACE) AGENTLESS=true
