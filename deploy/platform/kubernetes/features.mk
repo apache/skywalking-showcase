@@ -62,6 +62,25 @@ undeploy.feature-als: istioctl
 	$(MAKE) undeploy FEATURE_FLAGS=agent TAG=$(TAG)-agentless NAMESPACE=$(NAMESPACE)-agentless AGENTLESS=true
 	istioctl x uninstall --purge -y
 
+.PHONY: feature-mesh-with-agent
+feature-mesh-with-agent:
+
+.PHONY: deploy.feature-mesh-with-agent
+deploy.feature-mesh-with-agent: prerequisites install-cert-manager
+	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl apply -f -
+	@kubectl label namespace --overwrite $(NAMESPACE) swck-injection=enabled
+	@kubectl get configmap skywalking-swck-java-agent-configmap -n skywalking-swck-system -oyaml | sed "s/127.0.0.1/$(NAMESPACE)-$(BACKEND_SERVICE).$(NAMESPACE)/" | kubectl apply -f -
+	@kubectl label namespace --overwrite $(NAMESPACE) istio-injection=enabled
+	$(MAKE) deploy FEATURE_FLAGS=agent TAG=$(TAG) NAMESPACE=$(NAMESPACE) AGENTLESS=true SHOW_TIPS=false
+
+.PHONY: undeploy.feature-mesh-with-agent
+undeploy.feature-mesh-with-agent: istioctl
+	$(eval TAG := $(TAG)-agentless)
+	@curl -Ls https://archive.apache.org/dist/skywalking/swck/${SWCK_OPERATOR_VERSION}/skywalking-swck-${SWCK_OPERATOR_VERSION}-bin.tgz | tar -zxf - -O ./config/operator-bundle.yaml | kubectl delete --ignore-not-found -f -
+	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
+	$(MAKE) undeploy FEATURE_FLAGS=agent TAG=$(TAG) NAMESPACE=$(NAMESPACE) AGENTLESS=true
+	istioctl x uninstall --purge -y
+
 # @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
 .PHONY: feature-kubernetes-monitor
 feature-kubernetes-monitor:
