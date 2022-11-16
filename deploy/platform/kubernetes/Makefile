@@ -26,10 +26,6 @@ ifneq (,$(findstring satellite,$(features)))
 	BACKEND_SERVICE := satellite
 endif
 
-ifneq (,$(findstring mesh-with-agent,$(features)))
-	MESH_SERVICE_GROUP := mesh-svr
-endif
-
 # Deploy
 deploy_features := $(foreach r,$(features),deploy.$(r))
 .PHONY: $(deploy_features)

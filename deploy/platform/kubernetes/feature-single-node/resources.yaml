@@ -19,7 +19,7 @@
 apiVersion: v1
 data:
   metadata-service-mapping.yaml: |
-    serviceName: ${MESH_SERVICE_GROUP}::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
+    serviceName: mesh-svr::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
     serviceInstanceName: ${NAME,NAME} # Just to skip the "envsubst" replacement
   alarm-settings.yml: |
     rules:
@@ -139,7 +139,7 @@ spec:
             - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
               value: "k8s-mesh,persistence" # @feature: als; enable mesh analyzer (k8s-mesh) to analyze ALS logs
             - name: K8S_SERVICE_NAME_RULE
-              value: "${MESH_SERVICE_GROUP}::${service.metadata.name}"
+              value: "mesh-svr::${service.metadata.name}"
             - name: SW_CONFIGURATION
               value: k8s-configmap
             - name: SW_ENABLE_ON_DEMAND_POD_LOG
