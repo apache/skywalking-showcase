@@ -103,7 +103,8 @@ Currently, the features supported are:
 | `rover`               | Deploy SkyWalking Rover and detect the processes in the Kubernetes environment.                                                            | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 | `mysql`               | Start a MySQL server and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                        |                                                                                                                                       |
 | `postgresql`          | Start a PostgreSQL server, and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking.                                  |                                                                                                                                       |
-| `apisix-monitor`          | Deploy OpenTelemetry and export APISIX metrics to SkyWalking for analysis and display on UI                               |                                                                                                                                       |
+| `apisix-monitor`      | Deploy OpenTelemetry and export APISIX metrics to SkyWalking for analysis and display on UI                               |                                                                                                                                       |
+| `mesh-with-agent`     | Deploy services with java agent in the service mesh environment. | Only support deployment in the Kubernetes environment, docker is not supported.|
 
 ### Kubernetes
 
