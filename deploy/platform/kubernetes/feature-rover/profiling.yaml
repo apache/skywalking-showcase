@@ -39,19 +39,19 @@ spec:
                 - -c
                 - >
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::recommendation --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name ${MESH_SERVICE_GROUP}::recommendation --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::app --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name ${MESH_SERVICE_GROUP}::app --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::songs --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name ${MESH_SERVICE_GROUP}::songs --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::gateway --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name ${MESH_SERVICE_GROUP}::gateway --labels mesh-envoy --duration=9m --target-type ON_CPU;
 
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create fixed \
-                    --service-name agentless::songs --labels mesh-envoy --duration=9m --target-type OFF_CPU;
+                    --service-name ${MESH_SERVICE_GROUP}::songs --labels mesh-envoy --duration=9m --target-type OFF_CPU;
 
                   apk update && apk add yq;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create network \
-                    --service-name=agentless::recommendation \
-                    --instance-name=$(/swctl --base-url=http://oap:12800/graphql instance ls --service-name agentless::recommendation|yq e '.[0].name' -);
+                    --service-name=${MESH_SERVICE_GROUP}::recommendation \
+                    --instance-name=$(/swctl --base-url=http://oap:12800/graphql instance ls --service-name ${MESH_SERVICE_GROUP}::recommendation|yq e '.[0].name' -);
           restartPolicy: Never

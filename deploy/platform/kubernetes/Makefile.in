@@ -21,5 +21,6 @@
 NAMESPACE ?= default
 AGENTLESS ?= false
 BACKEND_SERVICE ?= oap
+MESH_SERVICE_GROUP ?= agentless
 
 FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql,apisix-monitor
