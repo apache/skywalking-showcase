@@ -20,7 +20,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"github.com/OpenFunction/functions-framework-go/framework"
 	"github.com/OpenFunction/functions-framework-go/plugin"
@@ -29,6 +31,7 @@ import (
 )
 
 func HelloWorld(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(time.Millisecond * time.Duration(rand.Intn(60)))
 	fmt.Fprintf(w, "Hello, %s!\n", r.URL.Path[1:])
 }
 

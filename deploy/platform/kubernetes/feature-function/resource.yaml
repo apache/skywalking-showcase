@@ -40,7 +40,7 @@ spec:
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
               value: ${BACKEND_SERVICE}:11800
             - name: URL
-              value: http://openfunction.io.svc.cluster.local/${NAMESPACE}/function/World
+              value: http://function.default.svc.cluster.local/World
             - name: SW_AGENT_LAYER
               value: FAAS
 ---
