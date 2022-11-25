@@ -126,14 +126,23 @@ undeploy.feature-java-agent-injector:
 	@kubectl delete --ignore-not-found -f https://github.com/jetstack/cert-manager/releases/download/${CERT_MANAGER_VERSION}/cert-manager.yaml
 	$(MAKE) undeploy FEATURE_FLAGS=agent AGENTLESS=false SHOW_TIPS=false BACKEND_SERVICE=$(BACKEND_SERVICE)
 
-.PHONY: ofn
-ofn:
-	@ofn version >/dev/null 2>&1 || (echo "No ofn in PATH, please make sure ofn is available in PATH."; exit 1)
+.PHONY: helm
+helm:
+	@helm version >/dev/null 2>&1 || (echo "No helm in PATH, please make sure helm is available in PATH."; exit 1)
 
 .PHONY: open-function
-open-function: ofn install-cert-manager
-	@ofn install --knative --ingress --region-cn --version ${OPEN_FUNCTION_VERSION} -y
-	@kubectl patch configmap/config-deployment -n knative-serving --type merge -p '{"data":{"registriesSkippingTagResolving":"ghcr.io"}}'
+open-function: helm
+	@helm repo add openfunction https://openfunction.github.io/charts/
+	@helm repo update
+	@helm upgrade openfunction openfunction/openfunction -n openfunction --version 0.3.1 --install --create-namespace \
+		--set global.ShipwrightBuild.enabled=false \
+		--set global.TektonPipelines.enabled=false \
+		--set global.Keda.enabled=false \
+		--set global.Dapr.enabled=false \
+		--set contour.envoy.useHostPort=false \
+		--set contour.envoy.service.type=ClusterIP \
+		--set contour.envoy.service.externalTrafficPolicy="" \
+		--wait
 
 # @feature: function; install open function resources
 .PHONY: deploy.feature-function
@@ -144,5 +153,5 @@ deploy.feature-function: open-function
 feature-function:
 
 .PHONY: undeploy.feature-function
-undeploy.feature-function: ofn
-	@ofn uninstall --all --region-cn -y
+undeploy.feature-function: helm
+	@helm uninstall openfunction -n openfunction
