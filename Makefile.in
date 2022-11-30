@@ -26,17 +26,17 @@ TAG ?= $(shell git rev-parse --short HEAD)
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
 
-SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:a7922d6fd988277c31e9bc94ddb6c6b72d2b2160
-SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui:a7922d6fd988277c31e9bc94ddb6c6b72d2b2160
-SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:ec85225f3fc0d0d7e8a9513b828d305c7cb399ad
+SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c91f7e3952954a299227dbab77662ec6de517803
+SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui:c91f7e3952954a299227dbab77662ec6de517803
+SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:0883266bfaa36612927b69e35781b64ea181758d
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
 SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:51161ae6a5b8e266eef39162cc4e23440d36ab38-java8
 
 SW_AGENT_NODEJS_BACKEND_VERSION ?= 59ef1aed6a404e2e8afffbb4b81ea849ae4f3026
 SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 
-SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v4cc254c38898ec8ce5171b07e411427de2a07371
-SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:159e9cdc211bb3846c93e6fdb244a898ae86b9f6
+SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v672ec32414c38f3589124c6131b0b4473cda0de5
+SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:2a4396158474efdf22566067e15c449ad2e83b4e
 
 SWCK_OPERATOR_VERSION ?= 0.7.0
 CERT_MANAGER_VERSION ?= v1.9.1
