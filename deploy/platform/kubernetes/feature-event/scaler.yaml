@@ -74,7 +74,7 @@ spec:
               command:
                 - sh
                 - -c
-                - kubectl -n ${NAMESPACE} scale deployment songs-deployment recommendation-deployment gateway-deployment app-deployment --replicas=2
+                - kubectl -n ${NAMESPACE} scale deployment songs-deployment gateway-deployment app-deployment --replicas=2
           restartPolicy: Never
 
 ---
@@ -100,5 +100,5 @@ spec:
               command:
                 - sh
                 - -c
-                - kubectl -n ${NAMESPACE} scale deployment songs-deployment recommendation-deployment gateway-deployment app-deployment --replicas=1
+                - kubectl -n ${NAMESPACE} scale deployment songs-deployment gateway-deployment app-deployment --replicas=1
           restartPolicy: Never

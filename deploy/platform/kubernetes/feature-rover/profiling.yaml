@@ -70,8 +70,8 @@ spec:
                   apk update && apk add yq;
                   /swctl --base-url=http://oap:12800/graphql profiling ebpf create network \
                     --sampling-config=/profiling/network-profiling-sampling.yaml \
-                    --service-name=mesh-svr::songs \
-                    --instance-name=$(/swctl --base-url=http://oap:12800/graphql instance ls --service-name mesh-svr::songs|yq e '.[0].name' -);
+                    --service-name=mesh-svr::recommendation \
+                    --instance-name=$(/swctl --base-url=http://oap:12800/graphql instance ls --service-name mesh-svr::recommendation|yq e '.[0].name' -);
               volumeMounts:
                 - name: profiling-config
                   mountPath: /profiling
