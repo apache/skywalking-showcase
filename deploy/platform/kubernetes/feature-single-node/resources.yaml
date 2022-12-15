@@ -29,6 +29,7 @@ data:
         op: ">"
         period: 5
         count: 1
+        message: Response time of service {name} is more than 20ms.
 kind: ConfigMap
 metadata:
   name: oap-static-config
