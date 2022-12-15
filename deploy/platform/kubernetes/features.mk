@@ -154,4 +154,4 @@ feature-function:
 
 .PHONY: undeploy.feature-function
 undeploy.feature-function: helm
-	@helm uninstall openfunction -n openfunction
+	@helm uninstall openfunction -n openfunction --timeout 20m || kubectl delete namespace openfunction --ignore-not-found --timeout 20m || true
