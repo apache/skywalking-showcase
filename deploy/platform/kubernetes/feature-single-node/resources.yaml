@@ -74,6 +74,8 @@ spec:
       port: 11800
     - name: http
       port: 12800
+    - name: zipkin
+      port: 9412
 
 ---
 apiVersion: apps/v1
@@ -149,6 +151,10 @@ spec:
               value: datasource,threadpool,satellite,network-profiling,spring-sleuth
             - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
               value: "50000"
+            - name: SW_RECEIVER_ZIPKIN
+              value: default
+            - name: SW_QUERY_ZIPKIN
+              value: default
           volumeMounts:
             - name: config-volume
               mountPath: /skywalking/ext-config
@@ -205,3 +211,5 @@ spec:
           env:
             - name: SW_OAP_ADDRESS
               value: http://oap:12800
+            - name: SW_ZIPKIN_ADDRESS
+              value: http://oap:9412
