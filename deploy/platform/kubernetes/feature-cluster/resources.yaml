@@ -75,7 +75,9 @@ spec:
       port: 11800
     - name: http
       port: 12800
-    - name: zipkin
+    - name: zipkin-receiver
+      port: 9411
+    - name: zipkin-query
       port: 9412
 
 ---
@@ -189,6 +191,10 @@ spec:
               containerPort: 11800
             - name: http
               containerPort: 12800
+            - name: zipkin-receiver
+              containerPort: 9411
+            - name: zipkin-query
+              containerPort: 9412
           env:
             - name: JAVA_OPTS
               value: "-Dmode=no-init"

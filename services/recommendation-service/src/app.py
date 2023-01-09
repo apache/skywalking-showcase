@@ -19,7 +19,7 @@ import os
 import requests
 
 if __name__ == '__main__':
-    from flask import Flask, jsonify
+    from flask import Flask, jsonify, request
 
     app = Flask(__name__)
 
@@ -31,7 +31,19 @@ if __name__ == '__main__':
 
     @app.route('/rcmd', methods=['GET'])
     def application():
-        r = requests.get('http://songs/songs')
+        headers = {}
+        for key in [
+            'x-b3-traceid',
+            'x-b3-spanid',
+            'x-b3-parentspanid',
+            'x-b3-sampled',
+            'x-b3-flags',
+        ]:
+            val = request.headers.get(key)
+            if val is not None:
+                headers[key] = request.headers[key]
+
+        r = requests.get('http://songs/songs', headers=headers)
         recommendations = r.json()
         return jsonify(recommendations)
 

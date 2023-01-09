@@ -26,8 +26,15 @@ const GATEWAY = process.env.GATEWAY || 'gateway';
 const app = express();
 
 app.get('/homepage', async (req, res) => {
-    const top = await axios.get(`http://${GATEWAY}/songs/top`);
-    const rcmd = await axios.get(`http://${GATEWAY}/rcmd`);
+    const headers = {};
+    for (const header in ['x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 'x-b3-sampled', 'x-b3-flags']) {
+        if (req.headers[header]) {
+            headers[header] = req.headers[header];
+        }
+    }
+
+    const top = await axios.get(`http://${GATEWAY}/songs/top`, { headers });
+    const rcmd = await axios.get(`http://${GATEWAY}/rcmd`, { headers });
 
     res.json({
         top: top.data,
