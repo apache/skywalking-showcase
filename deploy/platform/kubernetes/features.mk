@@ -42,7 +42,7 @@ istio: istioctl
 		--set meshConfig.defaultConfig.envoyMetricsService.address=$(BACKEND_SERVICE).$(NAMESPACE):11800 `# @feature: als; set MetricsService address to Backend Service so Envoy emits metrics to Backend Service` \
 		--set meshConfig.defaultConfig.envoyAccessLogService.address=$(BACKEND_SERVICE).$(NAMESPACE):11800 `# @feature: als; set AccessLogService address to Backend Service so Envoy emits logs to Backend Service` \
 		--set meshConfig.defaultConfig.tracing.sampling=100 \
-		--set meshConfig.defaultConfig.tracing.zipkin.address=$(BACKEND_SERVICE).$(NAMESPACE).svc.cluster.local:9411 \
+		--set meshConfig.defaultConfig.tracing.zipkin.address=oap.$(NAMESPACE).svc.cluster.local:9411 \
 		--set meshConfig.enableTracing=true
 
 .PHONY: namespace
