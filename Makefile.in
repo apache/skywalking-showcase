@@ -26,8 +26,8 @@ TAG ?= $(shell git rev-parse --short HEAD)
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
 
-SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:c484e3ec057f5fbaa34755ab750020acd5138449
-SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui:c484e3ec057f5fbaa34755ab750020acd5138449
+SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:61975da194992cc55c6cce2a1ea3b8f0eb8fb077
+SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui:61975da194992cc55c6cce2a1ea3b8f0eb8fb077
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:0883266bfaa36612927b69e35781b64ea181758d
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
 SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:51161ae6a5b8e266eef39162cc4e23440d36ab38-java8
