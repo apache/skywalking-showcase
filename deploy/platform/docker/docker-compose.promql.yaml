@@ -15,6 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+version: '2.1'
 
-.EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm,event,mysql,apisix-monitor,promql
+services:
+  grafana:
+    image: grafana/grafana:9.1.0
+    networks: [ sw ]
+    volumes:
+      - ./config/promql/grafana.ini:/etc/grafana/grafana.ini
+      - ./config/promql/providers.yaml:/etc/grafana/provisioning/dashboards/providers.yaml
+      - ./config/promql/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../config/promql/dashboards:/var/lib/grafana/dashboards/skywalking
+    ports:
+      - "3000:3000"
+networks:
+  sw:

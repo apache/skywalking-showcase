@@ -16,6 +16,7 @@
 # under the License.
 #
 
+#This config is for the showcase, when deploy own free to modify it.
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -23,22 +24,24 @@ metadata:
   name: grafana-config
 data:
   grafana.ini: |
+    [security]
+    disable_initial_admin_creation = true
     [auth.anonymous]
     enabled = true
     org_name = Main Org.
     # `Viewer`, `Editor` and `Admin`
-    org_role = Editor
+    org_role = Viewer
     [auth.basic]
     enabled = false
     [auth]
     disable_login_form = true
+    disable_signout_menu = true
     [paths]
-    data = /var/lib/grafana/
-    logs = /var/log/grafana
-    plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
     [dashboards]
-    default_home_dashboard_path = /var/lib/grafana/dashboards/general-service.json
+    default_home_dashboard_path = /var/lib/grafana/dashboards/skywalking/general-service.json
+    [users]
+    viewers_can_edit = true
   providers.yaml: |
     apiVersion: 1
     providers:
@@ -47,15 +50,16 @@ data:
       allowUiUpdates: false
       orgId: 1
       type: file
-      folder: ''
+      folder: 'skywalking'
       options:
         path: /var/lib/grafana/dashboards
+        foldersFromFilesStructure: true
 
   datasources.yaml: |
     apiVersion: 1
     datasources:
     - access: proxy
-      editable: true
+      editable: false
       isDefault: true
       name: SkyWalking
       orgId: 1
@@ -96,15 +100,15 @@ spec:
               mountPath: /etc/grafana/provisioning/dashboards/providers.yaml
               subPath: providers.yaml
             - name: dashboards-general-service
-              mountPath: /var/lib/grafana/dashboards/general-service.json
+              mountPath: /var/lib/grafana/dashboards/skywalking/general-service.json
               subPath: general-service.json
             - name: dashboards-service-mesh
-              mountPath: /var/lib/grafana/dashboards/service-mesh.json
+              mountPath: /var/lib/grafana/dashboards/skywalking/service-mesh.json
               subPath: service-mesh.json
             - name: dashboards-virtual-database
-              mountPath: /var/lib/grafana/dashboards/virtual-database.json
+              mountPath: /var/lib/grafana/dashboards/skywalking/virtual-database.json
               subPath: virtual-database.json
-      volumes:
+      volumes: # require create configmap from deploy/platform/config/promql/dashboards
         - name: grafana-config
           configMap:
             name: grafana-config

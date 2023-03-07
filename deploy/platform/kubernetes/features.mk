@@ -162,7 +162,7 @@ undeploy.feature-function: helm
 # @feature: promql; extra configmaps to create for grafana dashboards
 .PHONY: feature-promql
 feature-promql:
-dashboards := $(wildcard ./feature-promql/dashboards/*.json)
+dashboards := $(wildcard ../config/promql/dashboards/*.json)
 
 .PHONY: deploy.feature-promql
 deploy.feature-promql:

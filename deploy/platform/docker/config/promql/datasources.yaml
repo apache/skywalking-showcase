@@ -16,5 +16,12 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm,event,mysql,apisix-monitor,promql
+apiVersion: 1
+datasources:
+  - access: proxy
+    editable: true
+    isDefault: true
+    name: SkyWalking
+    orgId: 1
+    type: prometheus
+    url: http://oap:9090

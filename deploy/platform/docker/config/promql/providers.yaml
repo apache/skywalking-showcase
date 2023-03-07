@@ -16,5 +16,11 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm,event,mysql,apisix-monitor,promql
+apiVersion: 1
+providers:
+  - name: skywalking
+    orgId: 1
+    type: file
+    folder: 'skywalking'
+    options:
+      path: /var/lib/grafana/dashboards
