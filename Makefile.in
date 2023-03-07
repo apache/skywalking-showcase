@@ -43,5 +43,6 @@ CERT_MANAGER_VERSION ?= v1.9.1
 
 OPEN_FUNCTION_VERSION ?= v0.6.0
 
+GRAFANA_IMAGE ?= grafana/grafana:9.1.0
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))

@@ -15,11 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+version: '2.1'
 
-.EXPORT_ALL_VARIABLES:
-
-NAMESPACE ?= default
-AGENTLESS ?= false
-BACKEND_SERVICE ?= oap
-
-FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql,apisix-monitor,promql
+services:
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    networks: [ sw ]
+    volumes:
+      - ./config/promql/grafana.ini:/etc/grafana/grafana.ini
+      - ./config/promql/providers.yaml:/etc/grafana/provisioning/dashboards/providers.yaml
+      - ./config/promql/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../config/promql/dashboards:/var/lib/grafana/dashboards/skywalking
+    ports:
+      - "3000:3000"
+networks:
+  sw:

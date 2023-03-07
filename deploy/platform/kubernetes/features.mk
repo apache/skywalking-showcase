@@ -158,3 +158,16 @@ feature-function:
 .PHONY: undeploy.feature-function
 undeploy.feature-function: helm
 	@helm uninstall openfunction -n openfunction --timeout 20m || kubectl delete namespace openfunction --ignore-not-found --timeout 20m || true
+
+# @feature: promql; extra configmaps to create for grafana dashboards
+.PHONY: feature-promql
+feature-promql:
+dashboards := $(wildcard ../config/promql/dashboards/*.json)
+
+.PHONY: deploy.feature-promql
+deploy.feature-promql:
+	@$(foreach d, $(dashboards), kubectl create configmap grafana-dashboards-$(basename $(notdir $d)) --from-file=$d;)
+
+.PHONY: undeploy.feature-promql
+undeploy.feature-promql:
+	@$(foreach d, $(dashboards), kubectl delete configmap grafana-dashboards-$(basename $(notdir $d)) --ignore-not-found;)

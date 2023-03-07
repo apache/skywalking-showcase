@@ -79,6 +79,8 @@ spec:
       port: 9411
     - name: zipkin-query
       port: 9412
+    - name: promql
+      port: 9090
 
 ---
 apiVersion: batch/v1
@@ -195,6 +197,8 @@ spec:
               containerPort: 9411
             - name: zipkin-query
               containerPort: 9412
+            - name: promql
+              containerPort: 9090
           env:
             - name: JAVA_OPTS
               value: "-Dmode=no-init"

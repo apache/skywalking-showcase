@@ -105,6 +105,7 @@ Currently, the features supported are:
 | `postgresql`          | Start a PostgreSQL server, and load generator to execute the sample SQLs periodically, set up fluent bit to fetch slow logs and export to OAP, and export their metrics to SkyWalking. |                                                                                                                                       |
 | `apisix-monitor`      | Deploy OpenTelemetry and export APISIX metrics to SkyWalking for analysis and display on UI                                                                                            |                                                                                                                                       |
 | `mesh-with-agent`     | Deploy services with java agent in the service mesh environment.                                                                                                                       | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
+| `promql`              | Deploy a Grafana to use promql service and show SkyWalking UI on the Grafana.                                                                                                          | Feel free to modify the Grafana config when deploy your own environment.                                                                                    |
 
 ### Kubernetes
 
