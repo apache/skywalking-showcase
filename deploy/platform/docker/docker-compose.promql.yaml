@@ -19,7 +19,7 @@ version: '2.1'
 
 services:
   grafana:
-    image: grafana/grafana:9.1.0
+    image: ${GRAFANA_IMAGE}
     networks: [ sw ]
     volumes:
       - ./config/promql/grafana.ini:/etc/grafana/grafana.ini

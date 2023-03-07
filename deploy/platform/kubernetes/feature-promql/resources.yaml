@@ -16,7 +16,7 @@
 # under the License.
 #
 
-#This config is for the showcase, when deploy own free to modify it.
+#This config is for the showcase, when deploy your own environment fell free to modify it.
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -84,7 +84,7 @@ spec:
     spec:
       containers:
         - name: grafana
-          image: grafana/grafana:9.1.0
+          image: ${GRAFANA_IMAGE}
           imagePullPolicy: IfNotPresent
           ports:
             - name: http-grafana
