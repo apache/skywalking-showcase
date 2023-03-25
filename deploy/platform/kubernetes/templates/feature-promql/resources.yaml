@@ -1,0 +1,133 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.promql.enabled }}
+
+#This config is for the showcase, when deploy your own environment fell free to modify it.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+data:
+  grafana.ini: |
+    [security]
+    disable_initial_admin_creation = true
+    [auth.anonymous]
+    enabled = true
+    org_name = Main Org.
+    # `Viewer`, `Editor` and `Admin`
+    org_role = Viewer
+    [auth.basic]
+    enabled = false
+    [auth]
+    disable_login_form = true
+    disable_signout_menu = true
+    [paths]
+    provisioning = /etc/grafana/provisioning
+    [dashboards]
+    default_home_dashboard_path = /var/lib/grafana/dashboards/skywalking/general-service.json
+    [users]
+    viewers_can_edit = true
+  providers.yaml: |
+    apiVersion: 1
+    providers:
+    - name: skywalking
+      disableDeletion: true
+      allowUiUpdates: false
+      orgId: 1
+      type: file
+      folder: 'skywalking'
+      options:
+        path: /var/lib/grafana/dashboards
+        foldersFromFilesStructure: true
+
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - access: proxy
+      editable: false
+      isDefault: true
+      name: SkyWalking
+      orgId: 1
+      type: prometheus
+      url: http://oap:9090
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      name: grafana
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: {{ .Values.features.promql.grafana.image }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-grafana
+              containerPort: 3000
+          volumeMounts:
+            - name: grafana-config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+            - name: grafana-config
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              subPath: datasources.yaml
+            - name: grafana-config
+              mountPath: /etc/grafana/provisioning/dashboards/providers.yaml
+              subPath: providers.yaml
+            - name: promql-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/general-service.json
+              subPath: general-service.json
+            - name: promql-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/service-mesh.json
+              subPath: service-mesh.json
+            - name: promql-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/virtual-database.json
+              subPath: virtual-database.json
+      volumes: # require create configmap from deploy/platform/config/promql/dashboards
+        - name: grafana-config
+          configMap:
+            name: grafana-config
+        - name: promql-configs
+          configMap:
+            name: promql-configs
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: http-grafana
+
+{{- end }}

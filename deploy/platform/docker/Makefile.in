@@ -17,4 +17,4 @@
 #
 
 .EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm,event,mysql,apisix-monitor,promql
+FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,apisix-monitor,promql

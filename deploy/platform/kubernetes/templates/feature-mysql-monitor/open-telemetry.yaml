@@ -1,0 +1,104 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.mysqlMonitor.enabled }}
+
+# @feature: mysql; set OpenTelemetry config to scrape the mysql metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf-mysql
+  labels:
+    app: otel-mysql
+data:
+  otel-collector-config: |
+    receivers:
+      prometheus:
+        config:
+         scrape_configs:
+            # @feature: mysql; set up the scrape configs according to your mysql instances
+            - job_name: 'mysql-monitoring'
+              metrics_path: '/metrics'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: mysqld-exporter;metrics # @feature: mysql; reference the name of the metrics port
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: host_name
+                  regex: (.+)
+                  replacement: $$1
+
+    processors:
+      batch:
+    exporters:
+      otlp:
+        endpoint: oap:11800
+        tls:
+          insecure: true
+      logging:
+        logLevel: debug
+    service:
+      pipelines:
+        metrics:
+          receivers:
+          - prometheus
+          processors:
+          - batch
+          exporters:
+          - otlp
+          - logging
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-deployment-mysql
+  labels:
+    app: otel-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-mysql
+  template:
+    metadata:
+      labels:
+        app: otel-mysql
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: otel-sa-mysql
+      containers:
+        - name: otel-mysql
+          image: otel/opentelemetry-collector:0.50.0
+          command:
+            - "/otelcol"
+            - "--config=/conf/otel-collector-config.yaml"
+          volumeMounts:
+            - name: otel-collector-config-vol-mysql
+              mountPath: /conf
+      volumes:
+        - name: otel-collector-config-vol-mysql
+          configMap:
+            name: otel-collector-conf-mysql
+            items:
+              - key: otel-collector-config
+                path: otel-collector-config.yaml
+{{- end }}

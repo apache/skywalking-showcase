@@ -1,0 +1,99 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.vmMonitor.enabled }}
+
+# @feature: vm; set OpenTelemetry config to scrape the VM metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf-vm
+  labels:
+    app: otel-vm
+data:
+  otel-collector-config: |
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            # @feature: vm; this is only for demo, in real scenarios the VM addresses should be static, not via service discovery
+            - job_name: 'vm-monitoring'
+              metrics_path: '/metrics'
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [__meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name]
+                  action: keep
+                  regex: vm;metrics # @feature: vm; reference the name of the metrics port
+                - source_labels: [__meta_kubernetes_pod_name]
+                  target_label: host_name
+                  regex: (.+)
+                  replacement: $$1
+
+    exporters:
+      otlp:
+        endpoint: "oap:11800"
+        tls:
+          insecure: true
+      logging:
+        logLevel: debug
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [ prometheus ]
+          exporters: [ otlp,logging ]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-deployment-vm
+  labels:
+    app: otel-vm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-vm
+  template:
+    metadata:
+      labels:
+        app: otel-vm
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      serviceAccountName: otel-sa-vm
+      containers:
+        - name: otel-vm
+          image: otel/opentelemetry-collector:0.50.0
+          command:
+            - "/otelcol"
+            - "--config=/conf/otel-collector-config.yaml"
+          volumeMounts:
+            - name: otel-collector-config-vol-vm
+              mountPath: /conf
+      volumes:
+        - name: otel-collector-config-vol-vm
+          configMap:
+            name: otel-collector-conf-vm
+            items:
+              - key: otel-collector-config
+                path: otel-collector-config.yaml
+
+{{- end }}

@@ -19,7 +19,7 @@ version: '2.1'
 
 services:
   elasticsearch:
-    image: ${ES_IMAGE}
+    image: ${ES_IMAGE}:{ES_IMAGE_TAG}
     networks: [ sw ]
     ports:
       - "9200:9200"
@@ -38,7 +38,7 @@ services:
         hard: -1
 
   oap:
-    image: ${SW_OAP_IMAGE}
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
     networks: [ sw ]
     environment:
       SW_HEALTH_CHECKER: default # @feature: health-check;

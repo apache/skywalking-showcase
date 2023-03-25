@@ -1,0 +1,71 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if .Values.features.function.enabled }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: function-load-gen
+  labels:
+    app: function-load-gen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: function-load-gen
+  template:
+    metadata:
+      labels:
+        app: function-load-gen
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.sampleServices.hub }}/function-load-gen:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+            - name: URL
+              value: http://function.default.svc.cluster.local/World
+            - name: SW_AGENT_LAYER
+              value: FAAS
+---
+apiVersion: core.openfunction.io/v1beta1
+kind: Function
+metadata:
+  name: function
+  annotations:
+    plugins.tracing: |
+      enabled: true
+      provider:
+        name: "skywalking"
+        oapServer: {{ template "skywalking.collector.address" . }}
+spec:
+  version: "v2.0.0"
+  image: {{ .Values.sampleServices.hub }}/function:{{ .Values.sampleServices.tag }}
+  port: 8080
+  serving:
+    template:
+      containers:
+        - name: function
+          imagePullPolicy: IfNotPresent
+    runtime: "knative"
+
+{{- end }}

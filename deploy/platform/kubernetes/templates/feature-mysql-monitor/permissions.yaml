@@ -15,24 +15,37 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
+{{- if .Values.features.mysqlMonitor.enabled }}
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-sa-mysql
 
-networks:
-  sw:
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: otel-role-mysql
+rules:
+  - apiGroups: [ "" ]
+    resources:
+      - "pods"
+    verbs: [ "get", "watch", "list" ]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-role-binding-mysql
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-role-mysql
+subjects:
+  - kind: ServiceAccount
+    name: otel-sa-mysql
+    namespace: {{ .Release.Namespace }}
+
+{{- end }}

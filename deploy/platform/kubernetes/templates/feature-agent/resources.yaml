@@ -1,0 +1,454 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.sampleServices.namespace }}
+  labels:
+  {{- if .Values.features.javaAgentInjector.enabled }}
+    swck-injection: enabled
+  {{- end }}
+  {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
+    istio-injection: enabled
+  {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: gateway
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "gateway"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::gateway"
+        optional.skywalking.apache.org: "spring-cloud-gateway-3.x"
+        sidecar.skywalking.apache.org/initcontainer.Image: "{{ .Values.features.javaAgentInjector.agentImage }}"
+    spec:
+      containers:
+        - name: gateway
+          image: "{{ .Values.sampleServices.hub }}/gateway-service:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::gateway
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: songs
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: songs
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: songs-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: songs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: songs
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: songs
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "songs"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::songs"
+        optional.skywalking.apache.org: "guava-cache-plugin"
+        sidecar.skywalking.apache.org/initcontainer.Image: "{{ .Values.features.javaAgentInjector.agentImage }}"
+    spec:
+      containers:
+        - name: songs
+          image: "{{ .Values.sampleServices.hub }}/songs-service:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::songs
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+            - name: ACTIVE_MQ_URL
+              value: tcp://activemq:61616
+            - name: ACTIVE_MQ_QUEUE
+              value: queue-songs-ping
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rcmd
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+    spec:
+      containers:
+        - name: recommendation
+          image: "{{ .Values.sampleServices.hub }}/recommendation-service:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::recommendation
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.sampleServices.hub }}/app:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME_SERVER
+              value: agent::app
+            - name: REACT_APP_SW_AGENT_NAME_UI
+              value: agent::ui
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.sampleServices.hub }}/load-gen:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-config
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: apisix-config
+data:
+  apisix: |
+      routes:
+      - uri: /browser/*
+        service_id: 1
+      - uri: /v3/*
+        service_id: 1
+      - uri: /homepage
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{ "{{" }}}SW_AGENT_SERVICE{{ "}}" }}
+            service_instance_name: ${{ "{{" }}SW_AGENT_SERVICE_INSTANCE{{ "}}" }}
+            endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+      - uri: /test
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{"{{"}}SW_AGENT_SERVICE{{"}}"}}
+            service_instance_name: ${{"{{"}}SW_AGENT_SERVICE_INSTANCE{{"}}"}}
+            endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+      services:
+      - id: 1
+        upstream_id: 1
+      - id: 2
+        upstream_id: 2
+
+      upstreams:
+      - id: 1
+        nodes:
+          "oap:12800": 1
+        type: roundrobin
+      - id: 2
+        nodes:
+          "app:80": 1
+        type: roundrobin
+
+      global_rules:
+      - id: 1
+        plugins:
+          prometheus:
+            export_addr:
+              ip: "0.0.0.0"
+              port: 9091
+      #END
+  config: |
+    apisix:
+      node_listen: 80
+      enable_ipv6: false
+      enable_admin: false
+      config_center: yaml
+    plugin_attr:
+      prometheus:
+        export_addr:
+          ip: "0.0.0.0"
+          port: 9091
+      skywalking:
+        service_name: ${{"{{"}}SW_AGENT_SERVICE{{"}}"}}
+        service_instance_name: ${{"{{"}}SW_AGENT_SERVICE_INSTANCE{{"}}"}}
+        endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+    plugins:
+      - prometheus
+      - skywalking
+    nginx_config:
+      http_server_configuration_snippet: |
+        location ~ \.(gif|jpg|png|js|css|html)$ {
+          root /app/build;
+          index index.html;
+        }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.sampleServices.hub }}/frontend:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 500m
+              memory: "256Mi"
+            requests:
+              cpu: 500m
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 9091 # APISIX Prometheus pulgin port
+              name: metrics
+          env:
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+            - name: SW_SERVICE_INSTANCE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/config.yaml
+              subPath: config
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/apisix.yaml
+              subPath: apisix
+      volumes:
+        - name: apisix-config
+          configMap:
+            name: apisix-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:5.15.9
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 100m
+              memory: "256Mi"
+            requests:
+              cpu: 100m
+              memory: "128Mi"
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: activemq
+  ports:
+    - protocol: TCP
+      port: 61616
+      targetPort: 61616              
