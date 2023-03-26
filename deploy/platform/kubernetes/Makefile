@@ -25,7 +25,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.ui.image.repository=$(SW_U
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.ui.env.SW_ZIPKIN_ADDRESS=http://$(RELEASE)-oap.$(NAMESPACE).svc:9412
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.satellite.image.repository=$(SW_SATELLITE_IMAGE) --set skywalking-helm.satellite.image.tag=$(SW_SATELLITE_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm-swck-operator.image.repository=$(SWCK_OPERATOR_IMAGE) --set skywalking-helm-swck-operator.image.tag=$(SWCK_OPERATOR_IMAGE_TAG)
-HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.hub=$(HUB) --set sampleServices.tag=$(TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.hub=$(HUB) --set sampleServices.tag=$(TAG) --set sampleServices.namespace=$(SAMPLE_SERVICES_NAMESPACE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry-collector.image.repository=$(OTEL_COLLECTOR_IMAGE) --set opentelemetry-collector.image.tag=$(OTEL_COLLECTOR_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.swctl.image=$(SW_CLI_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.traceProfiling.swctl.image=$(SW_CLI_IMAGE)
@@ -153,6 +153,9 @@ feature-mesh-with-agent:
 deploy: $(features)
 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace $(HELM_OPTIONS)
+
+	$(info rollout restart to allow the new sidecar to be injected.)
+	kubectl -n $(SAMPLE_SERVICES_NAMESPACE) get deployments -o name | xargs kubectl -n $(SAMPLE_SERVICES_NAMESPACE) rollout restart
 
 .PHONY: undeploy
 undeploy:

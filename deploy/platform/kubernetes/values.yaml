@@ -27,7 +27,8 @@ skywalking-helm:
       grpc: 11800
       rest: 12800
       promql: 9090
-      zipkin: 9412
+      zipkin: 9411
+      zipkin-query: 9412
       metrics: 1234
     env:
       SW_HEALTH_CHECKER: default
@@ -180,8 +181,8 @@ istiod:
   global:
     istioNamespace: demo
   meshConfig:
-    enableEnvoyAccessLogService: false
-    enableTracing: false
+    enableEnvoyAccessLogService: true
+    enableTracing: true
     defaultConfig:
       tracing:
         sampling: 100

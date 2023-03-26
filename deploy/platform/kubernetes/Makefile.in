@@ -19,6 +19,7 @@
 .EXPORT_ALL_VARIABLES:
 
 NAMESPACE ?= skywalking-showcase
+SAMPLE_SERVICES_NAMESPACE ?= sample-services
 RELEASE ?= demo
 AGENTLESS ?= false
 
