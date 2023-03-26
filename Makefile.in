@@ -19,13 +19,14 @@
 comma := ,
 
 .EXPORT_ALL_VARIABLES:
+DEBUG ?= false
 
 DOCKER_BUILDKIT ?= 1
 HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
-ES_IMAGE_TAG ?= 7.17.3
+ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 SW_OAP_IMAGE_TAG ?= af657356ed61c2595d70dd18eae5a6e5dbc39a82

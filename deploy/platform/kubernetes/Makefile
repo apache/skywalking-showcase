@@ -38,7 +38,6 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.grafana.image=$(GRAFANA_IM
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
 
-DEBUG ?= false
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run
 endif

@@ -19,7 +19,7 @@ version: '2.1'
 
 services:
   elasticsearch:
-    image: ${ES_IMAGE}:{ES_IMAGE_TAG}
+    image: ${ES_IMAGE}:${ES_IMAGE_TAG}
     networks: [ sw ]
     ports:
       - "9200:9200"

@@ -162,3 +162,15 @@ graph LR;
   agent["business app(agent)"] --> satellite("satellite") --> oap("oap");
   envoy["sidecar(envoy)"] --> satellite;
 ```
+
+## Troubleshooting
+
+If you encounter any problems, please add `DEBUG=true` to the command line to get the output of the resources that will be applied.
+
+```shell
+make deploy.kubernetes DEBUG=true # this will print the resources that will be applied to Kubernetes
+```
+
+```shell
+make deploy.docker DEBUG=true # this will print the merged docker-compose.yaml content that will be used to run in Docker Compose
+```
