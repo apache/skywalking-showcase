@@ -186,11 +186,11 @@ istiod:
       tracing:
         sampling: 100
         zipkin:
-          address: ~
+          address: ""
       envoyMetricsService:
-        address: ~
+        address: ""
       envoyAccessLogService:
-        address: ~
+        address: ""
       proxyStatsMatcher:
         inclusionRegexps:
           - ".*membership_healthy.*"
