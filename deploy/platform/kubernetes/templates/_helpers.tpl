@@ -26,6 +26,10 @@ The collector address, might be OAP or Satellite
 {{- end -}}
 {{- end -}}
 
+{{- define "skywalking.oap.address.host" -}}
+{{- printf "%s-oap.%s.svc.cluster.local" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace }}
+{{- end -}}
+
 {{- define "skywalking.oap.address.grpc" -}}
 {{- printf "%s-oap.%s.svc.cluster.local:%d" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace 11800 }}
 {{- end -}}

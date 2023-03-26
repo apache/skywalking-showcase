@@ -53,7 +53,7 @@ services:
       - sw
 
   otel-collector:
-    image: otel/opentelemetry-collector:0.50.0
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     networks:
       - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]

@@ -15,37 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Values.features.so11y.enabled }}
 
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: otel-sa-so11y
+{{- define "opentelemetry-config-vm" }}
+{{- if .Values.features.vmMonitor.enabled }}
 
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: otel-role-so11y
-rules:
-  - apiGroups: [ "" ]
-    resources:
-      - "pods" # @feature: so11y; OpenTelemetry needs to read OAP Pods information to get OAP details
-    verbs: [ "get", "watch", "list" ]
+# @feature: vm; set OpenTelemetry config to scrape the VM metrics, this is only for demo, in real scenarios the VM addresses should be static, not via service discovery
+- job_name: 'vm-monitoring'
+  metrics_path: '/metrics'
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: vm;metrics # @feature: vm; reference the name of the metrics port
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: host_name
+      regex: (.+)
+      replacement: $$1
 
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: otel-role-binding-so11y
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: otel-role-so11y
-subjects:
-  - kind: ServiceAccount
-    name: otel-sa-so11y
-    namespace: {{ .Release.Namespace }}
-
+{{- end }}
 {{- end }}

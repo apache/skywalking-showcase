@@ -15,37 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Values.features.vmMonitor.enabled }}
 
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: otel-sa-vm
+{{- define "opentelemetry-config-apisix" }}
+{{- if .Values.features.apisixMonitor.enabled }}
 
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: otel-role-vm
-rules:
-  - apiGroups: [ "" ]
-    resources:
-      - "pods"
-    verbs: [ "get", "watch", "list" ]
+- job_name: 'apisix-monitoring'
+  scrape_interval: 5s
+  metrics_path: "/apisix/prometheus/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: frontend;metrics # @feature: apisix-monitor; reference the name of the metrics port
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - target_label: skywalking_service
+      replacement: frontend
 
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: otel-role-binding-vm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: otel-role-vm
-subjects:
-  - kind: ServiceAccount
-    name: otel-sa-vm
-    namespace: {{ .Release.Namespace }}
-
+{{- end }}
 {{- end }}

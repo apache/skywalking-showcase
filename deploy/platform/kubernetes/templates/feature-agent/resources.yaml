@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+{{- if or .Values.features.agent.enabled .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
 
 ---
 apiVersion: v1
@@ -73,7 +74,12 @@ spec:
     spec:
       containers:
         - name: gateway
+          {{- if .Values.features.javaAgentInjector.enabled }}
+          # @feature: java-agent-injector; if the java agent injector is enabled, we use the agentless image and let the injector inject the agent.
+          image: "{{ .Values.sampleServices.hub }}/gateway-service:{{ .Values.sampleServices.tag }}-agentless"
+          {{- else }}
           image: "{{ .Values.sampleServices.hub }}/gateway-service:{{ .Values.sampleServices.tag }}"
+          {{- end }}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -128,11 +134,16 @@ spec:
     spec:
       containers:
         - name: songs
+          {{- if .Values.features.javaAgentInjector.enabled }}
+          # @feature: java-agent-injector; if the java agent injector is enabled, we use the agentless image and let the injector inject the agent.
+          image: "{{ .Values.sampleServices.hub }}/songs-service:{{ .Values.sampleServices.tag }}-agentless"
+          {{- else }}
           image: "{{ .Values.sampleServices.hub }}/songs-service:{{ .Values.sampleServices.tag }}"
+          {{- end }}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
-          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only need to configure java agent through annotation
           env:
             - name: SW_AGENT_NAME
               value: agent::songs
@@ -281,7 +292,7 @@ data:
         service_id: 2
         plugins:
           skywalking:
-            service_name: ${{ "{{" }}}SW_AGENT_SERVICE{{ "}}" }}
+            service_name: ${{ "{{" }}SW_AGENT_SERVICE{{ "}}" }}
             service_instance_name: ${{ "{{" }}SW_AGENT_SERVICE_INSTANCE{{ "}}" }}
             endpoint_addr: {{ template "skywalking.oap.address.http" . }}
       - uri: /test
@@ -300,7 +311,7 @@ data:
       upstreams:
       - id: 1
         nodes:
-          "oap:12800": 1
+          "{{ template "skywalking.oap.address.host" . }}:12800": 1
         type: roundrobin
       - id: 2
         nodes:
@@ -373,7 +384,7 @@ spec:
           ports:
             - containerPort: 80
               name: http
-            - containerPort: 9091 # APISIX Prometheus pulgin port
+            - containerPort: 9091 # APISIX Prometheus plugin port
               name: metrics
           env:
             - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
@@ -451,4 +462,6 @@ spec:
   ports:
     - protocol: TCP
       port: 61616
-      targetPort: 61616              
+      targetPort: 61616
+
+{{- end }}

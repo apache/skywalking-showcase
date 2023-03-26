@@ -23,6 +23,12 @@ skywalking-helm:
       pullPolicy: IfNotPresent
     replicas: 1
     storageType: ~
+    ports:
+      grpc: 11800
+      rest: 12800
+      promql: 9090
+      zipkin: 9412
+      metrics: 1234
     env:
       SW_HEALTH_CHECKER: default
       SW_OTEL_RECEIVER: default # @feature: so11y;,mysql;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
@@ -85,6 +91,8 @@ skywalking-helm:
       repository: ~
       tag: ~
       pullPolicy: IfNotPresent
+    env:
+      SW_ZIPKIN_ADDRESS: ""
 
   elasticsearch:
     enabled: false
@@ -197,6 +205,48 @@ istiod:
 # @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
 kube-state-metrics:
   enabled: false
+
+opentelemetry:
+  enabled: false
+
+opentelemetry-collector:
+  mode: deployment
+  clusterRole:
+    create: true
+    rules:
+    - apiGroups: [ "" ]
+      resources:
+        # @feature: kubernetes-monitor; permissions to read resources
+        - "endpoints"
+        - "pods"
+        - "services"
+        - "nodes"
+        - "nodes/metrics"
+        - "nodes/proxy"
+      verbs: [ "get", "watch", "list" ]
+  resources:
+    limits:
+      cpu: 100m
+      memory: 200M
+  image:
+    repository: ~
+    tag: ~
+
+  configMap:
+    create: false
+
+  command:
+    name: otelcol
+    extraArgs: [ "--config=/conf/config.yaml" ]
+
+  extraVolumes:
+    - name: otelcol-configmap
+      configMap:
+        name: otel-collector-config
+        defaultMode: 420
+  extraVolumeMounts:
+    - name: otelcol-configmap
+      mountPath: /conf
 
 features:
   kubernetesMonitor:

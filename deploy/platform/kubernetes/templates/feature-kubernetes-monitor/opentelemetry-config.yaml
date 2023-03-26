@@ -1,0 +1,65 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- define "opentelemetry-config-kubernetes-monitor" }}
+{{- if .Values.features.kubernetesMonitor.enabled }}
+
+# @feature: kubernetes-monitor; set OpenTelemetry config to scrape the Kubernetes metrics
+# @feature: kubernetes-monitor; configuration to scrape Kubernetes Nodes metrics
+- job_name: 'kubernetes-cadvisor'
+  scheme: https
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  kubernetes_sd_configs:
+    - role: node
+  relabel_configs:
+    - action: labelmap
+      regex: __meta_kubernetes_node_label_(.+)
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: skywalking-showcase
+    - target_label: __address__
+      replacement: kubernetes.default.svc:443
+    - source_labels: [ __meta_kubernetes_node_name ]
+      regex: (.+)
+      target_label: __metrics_path__
+      replacement: /api/v1/nodes/$${1}/proxy/metrics/cadvisor
+    - source_labels: [ instance ]
+      separator: ;
+      regex: (.+)
+      target_label: node
+      replacement: $$1
+      action: replace
+# @feature: kubernetes-monitor; configuration to scrape Kubernetes Endpoints metrics
+- job_name: kube-state-metrics
+  metrics_path: /metrics
+  kubernetes_sd_configs:
+    - role: endpoints
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_service_label_app_kubernetes_io_name ]
+      regex: kube-state-metrics
+      replacement: $$1
+      action: keep
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: skywalking-showcase
+
+{{- end }}
+{{- end }}

@@ -23,12 +23,12 @@ sources:
   - https://github.com/apache/skywalking-showcase
 dependencies:
   - name: skywalking-helm
-    version: 0.0.0-8cf4be873ca693340408b854d128d97fd088614e
+    version: 0.0.0-8c143d7203ef3ed0e067646390609d0db06a2cc9
     repository: oci://ghcr.io/apache/skywalking-kubernetes
 
     # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
   - name: skywalking-helm-swck-operator
-    version: 0.0.0-8cf4be873ca693340408b854d128d97fd088614e
+    version: 0.0.0-8c143d7203ef3ed0e067646390609d0db06a2cc9
     repository: oci://ghcr.io/apache/skywalking-kubernetes
     condition: features.javaAgentInjector.enabled
 
@@ -52,3 +52,8 @@ dependencies:
     version: 1.14.4
     repository: https://istio-release.storage.googleapis.com/charts
     condition: istio.enabled
+
+  - name: opentelemetry-collector
+    version: 0.51.1
+    repository: https://open-telemetry.github.io/opentelemetry-helm-charts
+    condition: opentelemetry.enabled

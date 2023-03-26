@@ -22,14 +22,18 @@ include Makefile.in
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.fullnameOverride=$(RELEASE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.oap.image.repository=$(SW_OAP_IMAGE) --set skywalking-helm.oap.image.tag=$(SW_OAP_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.ui.image.repository=$(SW_UI_IMAGE) --set skywalking-helm.ui.image.tag=$(SW_UI_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.ui.env.SW_ZIPKIN_ADDRESS=http://$(RELEASE)-oap.$(NAMESPACE).svc:9412
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm.satellite.image.repository=$(SW_SATELLITE_IMAGE) --set skywalking-helm.satellite.image.tag=$(SW_SATELLITE_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking-helm-swck-operator.image.repository=$(SWCK_OPERATOR_IMAGE) --set skywalking-helm-swck-operator.image.tag=$(SWCK_OPERATOR_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.hub=$(HUB) --set sampleServices.tag=$(TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry-collector.image.repository=$(OTEL_COLLECTOR_IMAGE) --set opentelemetry-collector.image.tag=$(OTEL_COLLECTOR_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.swctl.image=$(SW_CLI_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.traceProfiling.swctl.image=$(SW_CLI_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.event.exporter.image=$(SW_EVENT_EXPORTER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.agentImage=$(SW_AGENT_JAVA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.grafana.image=$(GRAFANA_IMAGE)
+
 
 features := $(subst $(comma), ,$(FEATURE_FLAGS))
 features := $(foreach f,$(features),feature-$(f))
@@ -46,7 +50,7 @@ helm:
 # @feature: java-agent-injector; use the java agent injector to inject the java agent more natively
 .PHONY: feature-java-agent-injector
 feature-java-agent-injector:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set feature.javaAgentInjector.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.enabled=true)
 
 .PHONY: feature-single-node
 feature-single-node:
@@ -71,10 +75,12 @@ feature-postgresql:
 .PHONY: feature-so11y
 feature-so11y:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.so11y.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-vm-monitor
 feature-vm-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.vmMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-event
 feature-event:
@@ -84,6 +90,7 @@ feature-event:
 feature-istiod-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.istiodMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true --set istiod.global.istioNamespace=$(NAMESPACE) --set base.global.istioNamespace=$(NAMESPACE))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-als
 feature-als:
@@ -108,20 +115,24 @@ feature-trace-profiling:
 .PHONY: feature-mysql-monitor
 feature-mysql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.mysqlMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-postgresql-monitor
 feature-postgresql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.postgresqlMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-apisix-monitor
 feature-apisix-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.apisixMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 # @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
 .PHONY: feature-kubernetes-monitor
 feature-kubernetes-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.kubernetesMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set kube-state-metrics.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-function
 feature-function:
@@ -141,9 +152,7 @@ feature-mesh-with-agent:
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .
-	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace $(HELM_OPTIONS) \
-	--set sampleServices.hub=ghcr.io/apache/skywalking-showcase \
-	--set sampleServices.tag=f36d4b4
+	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace $(HELM_OPTIONS)
 
 .PHONY: undeploy
 undeploy:

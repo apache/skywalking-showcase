@@ -49,5 +49,9 @@ SWCK_OPERATOR_IMAGE ?= docker.io/apache/skywalking-swck
 SWCK_OPERATOR_IMAGE_TAG ?= v0.7.0
 
 GRAFANA_IMAGE ?= grafana/grafana:9.1.0
+
+OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
+OTEL_COLLECTOR_IMAGE_TAG ?= 0.72.0
+
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))

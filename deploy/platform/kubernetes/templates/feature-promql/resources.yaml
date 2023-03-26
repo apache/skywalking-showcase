@@ -65,7 +65,7 @@ data:
       name: SkyWalking
       orgId: 1
       type: prometheus
-      url: http://oap:9090
+      url: http://{{ include "skywalking.oap.address.host" . }}:9090
 
 ---
 apiVersion: apps/v1

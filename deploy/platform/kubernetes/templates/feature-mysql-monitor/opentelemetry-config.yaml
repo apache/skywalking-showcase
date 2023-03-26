@@ -15,37 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Values.features.postgresqlMonitor.enabled }}
+{{- define "opentelemetry-config-mysql-monitor" }}
+{{- if .Values.features.mysqlMonitor.enabled }}
 
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: otel-sa-psql
+# @feature: mysql; set OpenTelemetry config to scrape the mysql metrics
+# @feature: mysql; set up the scrape configs according to your mysql instances
+- job_name: 'mysql-monitoring'
+  metrics_path: '/metrics'
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: mysqld-exporter;metrics # @feature: mysql; reference the name of the metrics port
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: host_name
+      regex: (.+)
+      replacement: $$1
 
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: otel-role-psql
-rules:
-  - apiGroups: [""]
-    resources:
-      - "pods"
-    verbs: ["get", "watch", "list"]
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: otel-role-binding-psql
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: otel-role-psql
-subjects:
-  - kind: ServiceAccount
-    name: otel-sa-psql
-    namespace: {{ .Release.Namespace }}
-
+{{- end }}
 {{- end }}

@@ -23,7 +23,7 @@ version: '2.1'
 services:
  # frontend metrics collector
   apisix-otel-collector:
-    image: otel/opentelemetry-collector:0.50.0
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./config/apisix/otel-collector-config.yaml:/etc/otel-collector-config.yaml
