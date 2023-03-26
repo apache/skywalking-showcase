@@ -29,7 +29,11 @@ endif
 
 .PHONY: deploy
 deploy:
+ifeq ($(DEBUG),true)
+	docker compose $(features) config
+else
 	docker compose $(features) up -d
+endif
 
 .PHONY: undeploy
 undeploy:

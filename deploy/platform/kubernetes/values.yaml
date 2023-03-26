@@ -1,0 +1,309 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+skywalking-helm:
+  fullnameOverride: "sw-demo"
+  oap:
+    name: oap
+    image:
+      repository: ~
+      tag: ~
+      pullPolicy: IfNotPresent
+    replicas: 1
+    storageType: ~
+    ports:
+      grpc: 11800
+      rest: 12800
+      promql: 9090
+      zipkin: 9411
+      zipkin-query: 9412
+      metrics: 1234
+    env:
+      SW_HEALTH_CHECKER: default
+      SW_OTEL_RECEIVER: default # @feature: so11y;,mysql;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
+      # @feature: vm; enable vm rules to analyze VM metrics
+      # @feature: so11y; enable oap rules to analyze OAP metrics
+      # @feature: kubernetes-monitor; enable rules to analyze Kubernetes Cluster/Node/Service metrics
+      # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
+      # @feature: mysql; enable mysql rules to analyze MySQL metrics
+      # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix
+      SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+      SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS: "mx-mesh,persistence" # @feature: als; enable mesh analyzer (mx-mesh) to analyze ALS logs
+      K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}"
+      SW_CONFIGURATION: k8s-configmap
+      SW_ENVOY_METRIC_ALS_TCP_ANALYSIS: "mx-mesh"
+      SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
+      SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
+      SW_ENABLE_ON_DEMAND_POD_LOG: "true"
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,spring-sleuth
+      SW_STORAGE_ES_RESPONSE_TIMEOUT: "50000"
+      SW_STORAGE_ES_INDEX_SHARDS_NUMBER: "6"
+      SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
+      SW_RECEIVER_ZIPKIN: default
+      SW_QUERY_ZIPKIN: default
+
+    config:
+      metadata-service-mapping.yaml: |
+        serviceName: mesh-svr::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}
+        serviceInstanceName: ${NAME}
+      alarm-settings.yml: |
+        rules:
+          service_resp_time_rule:
+            metrics-name: service_resp_time
+            threshold: 20 # 20ms is just for demo
+            op: ">"
+            period: 5
+            count: 1
+            message: Response time of service {name} is more than 20ms.
+      core.default.log4j-xml: |-
+        <Configuration status="WARN">
+           <Appenders>
+             <Console name="Console" target="SYSTEM_OUT">
+               <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+             </Console>
+           </Appenders>
+           <Loggers>
+             <logger name="io.grpc.netty" level="INFO"/>
+             <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
+             <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
+             <Root level="INFO">
+               <AppenderRef ref="Console"/>
+             </Root>
+            </Loggers>
+        </Configuration>
+  ui:
+    name: ui
+    replicas: 1
+    image:
+      repository: ~
+      tag: ~
+      pullPolicy: IfNotPresent
+    env:
+      SW_ZIPKIN_ADDRESS: ""
+
+  elasticsearch:
+    enabled: false
+    image: ~
+    imageTag: ~
+    imagePullPolicy: "IfNotPresent"
+
+  postgresql:
+    enabled: false # Whether to start a demo postgresql deployment, don't use this for production.
+    config:
+      # The hostname of your own postgresql service, this only takes effect when postgresql.enabled is false.
+      host: postgresql-service.your-awesome-company.com
+    auth:
+      username: postgres
+      password: "123456"
+      postgresPassword: "123456"
+      database: skywalking
+    containerPorts:
+      postgresql: 5432
+    primary:
+      persistence:
+        enabled: false
+    readReplicas:
+      persistence:
+        enabled: false
+
+  satellite:
+    name: satellite
+    replicas: 1
+    enabled: true
+    image:
+      repository: ~
+      tag: ~
+      pullPolicy: IfNotPresent
+    ports:
+      grpc: 11800
+      prometheus: 1234
+    env:
+      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+
+sampleServices:
+  hub: ~
+  tag: ~
+  namespace: sample-services
+
+# @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
+skywalking-helm-swck-operator:
+  image:
+    repository: ~
+    tag: ~
+  # @feature: java-agent-injector; the swck operator depends on the certificate management of the cert-manager
+  cert-manager:
+    enabled: true
+  fullnameOverride: "swck-demo"
+
+# @feature: function; install open function resources
+openfunction:
+  enabled: false
+  global:
+    ShipwrightBuild:
+      enabled: false
+    TektonPipelines:
+      enabled: false
+    Keda:
+      enabled: false
+    Dapr:
+      enabled: false
+  contour:
+    envoy:
+      useHostPort: false
+      service:
+        type: ClusterIP
+        externalTrafficPolicy: ""
+
+istio:
+  enabled: false
+
+base:
+  global:
+    istioNamespace: demo
+
+istiod:
+  global:
+    istioNamespace: demo
+  meshConfig:
+    enableEnvoyAccessLogService: true
+    enableTracing: true
+    defaultConfig:
+      tracing:
+        sampling: 100
+        zipkin:
+          address: ~
+      envoyMetricsService:
+        address: ~
+      envoyAccessLogService:
+        address: ~
+      proxyStatsMatcher:
+        inclusionRegexps:
+          - ".*membership_healthy.*"
+          - ".*upstream_cx_active.*"
+          - ".*upstream_cx_total.*"
+          - ".*upstream_rq_active.*"
+          - ".*upstream_rq_total.*"
+          - ".*upstream_rq_pending_active.*"
+          - ".*lb_healthy_panic.*"
+          - ".*upstream_cx_none_healthy.*"
+
+# @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
+kube-state-metrics:
+  enabled: false
+
+opentelemetry:
+  enabled: false
+
+opentelemetry-collector:
+  mode: deployment
+  clusterRole:
+    create: true
+    rules:
+    - apiGroups: [ "" ]
+      resources:
+        # @feature: kubernetes-monitor; permissions to read resources
+        - "endpoints"
+        - "pods"
+        - "services"
+        - "nodes"
+        - "nodes/metrics"
+        - "nodes/proxy"
+      verbs: [ "get", "watch", "list" ]
+  resources:
+    limits:
+      cpu: 100m
+      memory: 200M
+  image:
+    repository: ~
+    tag: ~
+
+  configMap:
+    create: false
+
+  command:
+    name: otelcol
+    extraArgs: [ "--config=/conf/config.yaml" ]
+
+  extraVolumes:
+    - name: otelcol-configmap
+      configMap:
+        name: otel-collector-config
+        defaultMode: 420
+  extraVolumeMounts:
+    - name: otelcol-configmap
+      mountPath: /conf
+
+features:
+  kubernetesMonitor:
+    enabled: false
+
+  mysqlMonitor:
+    enabled: false
+
+  postgresqlMonitor:
+    enabled: false
+
+  event:
+    enabled: false
+    exporter:
+      image: ~
+
+  istiodMonitor:
+    enabled: false
+
+  apisixMonitor:
+    enabled: false
+
+  traceProfiling:
+    enabled: false
+    swctl:
+      image: ~
+
+  rover:
+    enabled: false
+    image: ~
+    swctl:
+      image: ~
+
+  vmMonitor:
+    enabled: false
+
+  promql:
+    enabled: false
+    grafana:
+      image: ~
+
+  function:
+    enabled: false
+
+  so11y:
+    enabled: false
+
+  als:
+    enabled: false
+
+  meshWithAgent:
+    enabled: false
+
+  agent:
+    enabled: false
+
+  # @feature: java-agent-injector; enable java agent injector and set the java agent image
+  javaAgentInjector:
+    enabled: false
+    agentImage: ~

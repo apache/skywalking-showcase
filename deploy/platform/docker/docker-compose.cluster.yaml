@@ -35,7 +35,7 @@ services:
       retries: 120
 
   oap-init: # @feature: cluster; set up an init container to initialize the storage templates and indices
-    image: ${SW_OAP_IMAGE}
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
     networks: [ sw ]
     environment:
       SW_STORAGE: elasticsearch
@@ -46,7 +46,7 @@ services:
         condition: service_healthy
 
   oap1: &oap
-    image: ${SW_OAP_IMAGE}
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
     networks: [ sw ]
     environment:
       SW_CLUSTER: zookeeper # @feature: cluster; set up a cluster coordinator
@@ -75,7 +75,7 @@ services:
     <<: *oap
 
   ui:
-    image: ${SW_UI_IMAGE}
+    image: ${SW_UI_IMAGE}:${SW_UI_IMAGE_TAG}
     networks: [ sw ]
     ports:
       - "9999:8080"

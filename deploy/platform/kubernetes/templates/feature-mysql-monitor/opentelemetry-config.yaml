@@ -15,24 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
+{{- define "opentelemetry-config-mysql-monitor" }}
+{{- if .Values.features.mysqlMonitor.enabled }}
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+# @feature: mysql; set OpenTelemetry config to scrape the mysql metrics
+# @feature: mysql; set up the scrape configs according to your mysql instances
+- job_name: 'mysql-monitoring'
+  metrics_path: '/metrics'
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: mysqld-exporter;metrics # @feature: mysql; reference the name of the metrics port
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: host_name
+      regex: (.+)
+      replacement: $$1
 
-networks:
-  sw:
+{{- end }}
+{{- end }}

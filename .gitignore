@@ -60,3 +60,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+deploy/platform/kubernetes/Chart.lock
+deploy/platform/kubernetes/charts/
+deploy/platform/kubernetes/tmpcharts/
+
+deploy/platform/kubernetes/generated

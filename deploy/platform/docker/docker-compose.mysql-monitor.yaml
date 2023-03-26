@@ -21,19 +21,52 @@
 version: '2.1'
 
 services:
- # frontend metrics collector
-  apisix-otel-collector:
+  mysql:
+    image: mysql:8.0.30
+    networks:
+      - sw
+    ports:
+      - 3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+
+  mysql-load:
+    image: mysql:8.0.30
+    depends_on:
+      - otel-collector
+    networks:
+      - sw
+    entrypoint: bash
+    volumes:
+     - ../docker/resource:/docker
+    command:
+      - -c
+      - "mysql -h mysql -uroot -ppassword < /docker/mock.sql"
+
+  mysql-service:
+    image: prom/mysqld-exporter:v0.14.0
+    ports:
+      - 9104
+    environment:
+      - DATA_SOURCE_NAME=root:password@(mysql:3306)/
+    networks:
+      - sw
+    depends_on:
+      - mysql
+
+
+  otel-collector:
     image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
+    networks:
+      - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
-      - ./config/apisix/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    environment:
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
-      OTEL_TARGET_ADDREESS: frontend:9091
+      - ./config/otel-collector-config-mysql.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - 55678
     depends_on:
       oap:
         condition: service_healthy
-    networks: [ sw ]
 
 networks:
   sw:

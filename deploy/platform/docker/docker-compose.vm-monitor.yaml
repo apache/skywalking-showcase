@@ -16,24 +16,52 @@
 # under the License.
 #
 
-# @feature: mysql; set up mysqld_exporter and OpenTelemetry collector
+# @feature: vm; set up VM node exporter and OpenTelemetry collector
 
 version: '2.1'
 
 services:
- # frontend metrics collector
-  apisix-otel-collector:
-    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
-    command: [ "--config=/etc/otel-collector-config.yaml" ]
-    volumes:
-      - ./config/apisix/otel-collector-config.yaml:/etc/otel-collector-config.yaml
-    environment:
-      SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
-      OTEL_TARGET_ADDREESS: frontend:9091
+  # Pretend this is a virtual machine
+  vm1:
+    image: quay.io/prometheus/node-exporter:v1.2.2
+    networks: [ sw ]
+    expose:
+      - 9100
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
     depends_on:
       oap:
         condition: service_healthy
+
+  # Pretend this is a virtual machine
+  vm2:
+    image: quay.io/prometheus/node-exporter:v1.2.2
     networks: [ sw ]
+    expose:
+      - 9100
+    deploy:
+      resources:
+        limits:
+          cpus: "0.2"
+          memory: 256M
+    depends_on:
+      oap:
+        condition: service_healthy
+
+  otel-collector:
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
+    networks: [ sw ]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - 55678
+    depends_on:
+      oap:
+        condition: service_healthy
 
 networks:
   sw:

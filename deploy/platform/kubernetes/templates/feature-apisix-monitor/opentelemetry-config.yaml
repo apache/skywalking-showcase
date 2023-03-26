@@ -15,24 +15,25 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+{{- define "opentelemetry-config-apisix" }}
+{{- if .Values.features.apisixMonitor.enabled }}
 
-networks:
-  sw:
+- job_name: 'apisix-monitoring'
+  scrape_interval: 5s
+  metrics_path: "/apisix/prometheus/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: frontend;metrics # @feature: apisix-monitor; reference the name of the metrics port
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - target_label: skywalking_service
+      replacement: frontend
+
+{{- end }}
+{{- end }}

@@ -18,8 +18,9 @@
 
 .EXPORT_ALL_VARIABLES:
 
-NAMESPACE ?= default
+NAMESPACE ?= skywalking-showcase
+SAMPLE_SERVICES_NAMESPACE ?= sample-services
+RELEASE ?= demo
 AGENTLESS ?= false
-BACKEND_SERVICE ?= oap
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql,apisix-monitor,promql
+FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,apisix-monitor,promql

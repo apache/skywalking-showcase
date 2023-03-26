@@ -15,24 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
+{{- define "opentelemetry-config-istiod-monitor" -}}
+{{- if .Values.features.istiodMonitor.enabled }}
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+# @feature: istiod-monitor; configuration to scrape Istio control plane metrics
+- job_name: 'istiod-monitor'
+  kubernetes_sd_configs:
+    - role: endpoints
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name ]
+      action: keep
+      regex: istiod;http-monitoring
+    - action: labelmap
+      regex: __meta_kubernetes_service_label_(.+)
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: skywalking-showcase
 
-networks:
-  sw:
+{{- end }}
+{{- end }}

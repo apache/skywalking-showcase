@@ -15,24 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
+{{- if .Values.features.promql.enabled }}
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promql-configs
+data:
+{{ range $path, $bytes := .Files.Glob "generated/promql-configs/*.json" }}
+{{- $path | replace "generated/promql-configs/" "" | indent 2 }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{ end }}
 
-networks:
-  sw:
+{{- end }}

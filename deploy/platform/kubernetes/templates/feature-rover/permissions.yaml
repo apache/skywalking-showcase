@@ -15,24 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-version: '2.1'
+{{- if .Values.features.rover.enabled}}
 
-services:
-  satellite:
-    image: ${SW_SATELLITE_IMAGE}:${SW_SATELLITE_IMAGE_TAG}
-    networks: [ sw ]
-    healthcheck:
-      test: [ "CMD-SHELL", "sh", "-c", "nc -zn 127.0.0.1 11800" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    environment:
-      SATELLITE_GRPC_CLIENT_FINDER: static
-      SATELLITE_GRPC_CLIENT: oap:11800
-      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
-    depends_on:
-      oap:
-        condition: service_healthy
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: skywalking-rover-sa
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: skywalking-rover-sa-role
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "services"]
+    verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: skywalking-rover-sa-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: skywalking-rover-sa-role
+subjects:
+  - kind: ServiceAccount
+    name: skywalking-rover-sa
+    namespace: {{ .Release.Namespace }}
 
-networks:
-  sw:
+{{- end }}

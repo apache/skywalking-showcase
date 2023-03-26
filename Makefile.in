@@ -19,15 +19,21 @@
 comma := ,
 
 .EXPORT_ALL_VARIABLES:
+DEBUG ?= false
 
 DOCKER_BUILDKIT ?= 1
 HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
-ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss:7.10.0
+ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
+ES_IMAGE_TAG ?= 7.10.2
 
-SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap:e16d294bd815e78e5f1ca9d9fe3682465db3903d
-SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui:e16d294bd815e78e5f1ca9d9fe3682465db3903d
+SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
+SW_OAP_IMAGE_TAG ?= af657356ed61c2595d70dd18eae5a6e5dbc39a82
+
+SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
+SW_UI_IMAGE_TAG ?= af657356ed61c2595d70dd18eae5a6e5dbc39a82
+
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:0883266bfaa36612927b69e35781b64ea181758d
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
 SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:51161ae6a5b8e266eef39162cc4e23440d36ab38-java8
@@ -35,14 +41,18 @@ SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:51161ae6a5
 SW_AGENT_NODEJS_BACKEND_VERSION ?= 59ef1aed6a404e2e8afffbb4b81ea849ae4f3026
 SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 
-SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite:v672ec32414c38f3589124c6131b0b4473cda0de5
+SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite
+SW_SATELLITE_IMAGE_TAG ?= v672ec32414c38f3589124c6131b0b4473cda0de5
+
 SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:668abb2fbc38250d2bd825e62ec5678bb8017864
 
-SWCK_OPERATOR_VERSION ?= 0.7.0
-CERT_MANAGER_VERSION ?= v1.9.1
-
-OPEN_FUNCTION_VERSION ?= v0.6.0
+SWCK_OPERATOR_IMAGE ?= docker.io/apache/skywalking-swck
+SWCK_OPERATOR_IMAGE_TAG ?= v0.7.0
 
 GRAFANA_IMAGE ?= grafana/grafana:9.1.0
+
+OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
+OTEL_COLLECTOR_IMAGE_TAG ?= 0.72.0
+
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))
