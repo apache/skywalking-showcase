@@ -42,6 +42,11 @@ ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run
 endif
 
+BACKEND_SERVICE := $(RELEASE)-oap.$(NAMESPACE).svc:11800
+ifneq (,$(findstring satellite,$(features)))
+	BACKEND_SERVICE := $(RELEASE)-satellite.$(NAMESPACE).svc:11800
+endif
+
 .PHONY: helm
 helm:
 	@helm version >/dev/null 2>&1 || (echo "No helm in PATH, please make sure helm is available in PATH."; exit 1)
@@ -94,8 +99,8 @@ feature-als:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.als.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.tracing.zipkin.address=$(RELEASE)-oap.$(NAMESPACE).svc:9411)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyMetricsService.address=$(RELEASE)-oap.$(NAMESPACE).svc:11800)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyAccessLogService.address=$(RELEASE)-oap.$(NAMESPACE).svc:11800)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyMetricsService.address=$(BACKEND_SERVICE))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyAccessLogService.address=$(BACKEND_SERVICE))
 
 .PHONY: feature-satellite
 feature-satellite:
