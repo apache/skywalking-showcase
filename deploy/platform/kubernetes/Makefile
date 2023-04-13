@@ -156,7 +156,7 @@ deploy: $(features)
 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace --timeout=20m $(HELM_OPTIONS)
 
-	$(shell echo rollout restart to allow the new sidecar to be injected.)
+	$(info rollout restart to allow the new sidecar to be injected.)
 	kubectl -n $(SAMPLE_SERVICES_NAMESPACE) get deployments -o name | xargs kubectl -n $(SAMPLE_SERVICES_NAMESPACE) rollout restart
 
 .PHONY: undeploy
