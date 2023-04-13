@@ -26,26 +26,26 @@ Thank you for installing {{ .Chart.Name }}.
 Your release is named {{ .Release.Name }}.
 
 Get the UI URL by running these commands:
-{{- if index .Values "skywalking-helm" "ui" "ingress" "enabled" }}
-{{- range index .Values "skywalking-helm" "ui" "ingress" "hosts" }}
-  http{{ if index $.Values "ui" "ingress" "tls" }}s{{ end }}://{{ . }}{{ index $.Values "ui" "ingress" "path" }}
+{{- if .Values.skywalking.ui.ingress.enabled }}
+{{- range .Values.skywalking.ui.ingress.hosts }}
+  http{{ if $.Values.skywalking.ui.ingress.tls }}s{{ end }}://{{ . }}{{ $.Values.skywalking.ui.ingress.path }}
 {{- end }}
-{{- else if contains "NodePort" (index .Values "skywalking-helm" "ui" "service" "type") }}
+{{- else if contains "NodePort" .Values.skywalking.ui.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "skywalking.ui.fullname" . }})
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
   echo http://$NODE_IP:$NODE_PORT
-{{- else if contains "LoadBalancer" (index .Values "skywalking-helm" "ui" "service" "type") }}
+{{- else if contains "LoadBalancer" .Values.skywalking.ui.service.type }}
      NOTE: It may take a few minutes for the LoadBalancer IP to be available.
            You can watch the status of by running 'kubectl get svc -w {{ include "skywalking.ui.fullname" . }} -n {{ .Release.Namespace }}'
   export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "skywalking.ui.fullname" . }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-  echo http://$SERVICE_IP:{{ index .Values "skywalking-helm" "ui" "service" "externalPort" }}
-{{- else if contains "ClusterIP" (index .Values "skywalking-helm" "ui" "service" "type") }}
+  echo http://$SERVICE_IP:{{ .Values.skywalking.ui.service.externalPort }}
+{{- else if contains "ClusterIP" .Values.skywalking.ui.service.type }}
   echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl port-forward svc/{{ printf "%s-ui" .Release.Name }} 8080:{{ index .Values "skywalking-helm" "ui" "service" "externalPort" }} --namespace {{ .Release.Namespace }}
+  kubectl port-forward svc/{{ printf "%s-ui" .Release.Name }} 8080:{{ .Values.skywalking.ui.service.externalPort }} --namespace {{ .Release.Namespace }}
 {{- end }}
 
-{{- if index .Values "skywalking-helm" "elasticsearch" "enabled" }}
-{{- if index .Values "skywalking-helm" "elasticsearch" "persistence" "enabled" }}
+{{- if .Values.skywalking.elasticsearch.enabled }}
+{{- if .Values.skywalking.elasticsearch.persistence.enabled }}
 {{- else }}
 #################################################################################
 ######   WARNING: Persistence is disabled!!! You will lose your data when   #####

@@ -37,7 +37,7 @@ data:
             serviceInstance: "{{"{{"}} .Pod.Name {{"}}"}}"
             endpoint: ""
           message: "{{"{{"}} .Event.Message {{"}}"}}"
-        address: "{{ .Release.Name }}-skywalking-helm:11800"
+        address: "{{ .Release.Name }}-oap:11800"
 
 ---
 apiVersion: apps/v1

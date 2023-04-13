@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-skywalking-helm:
+skywalking:
   fullnameOverride: "sw-demo"
   oap:
     name: oap
@@ -141,7 +141,7 @@ sampleServices:
   namespace: sample-services
 
 # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
-skywalking-helm-swck-operator:
+swck:
   image:
     repository: ~
     tag: ~

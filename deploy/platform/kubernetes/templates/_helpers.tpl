@@ -19,21 +19,21 @@ limitations under the License.
 The collector address, might be OAP or Satellite
 */}}
 {{- define "skywalking.collector.address" -}}
-{{- if index .Values "skywalking-helm" "satellite" "enabled" }}
-{{- printf "%s-satellite.%s.svc.cluster.local:%d" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace 11800 }}
+{{- if .Values.skywalking.satellite.enabled }}
+{{- printf "%s-satellite.%s.svc.cluster.local:%d" .Values.skywalking.fullnameOverride .Release.Namespace 11800 }}
 {{- else }}
-{{- printf "%s-oap.%s.svc.cluster.local:%d" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace 11800 }}
+{{- printf "%s-oap.%s.svc.cluster.local:%d" .Values.skywalking.fullnameOverride .Release.Namespace 11800 }}
 {{- end -}}
 {{- end -}}
 
 {{- define "skywalking.oap.address.host" -}}
-{{- printf "%s-oap.%s.svc.cluster.local" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace }}
+{{- printf "%s-oap.%s.svc.cluster.local" .Values.skywalking.fullnameOverride .Release.Namespace }}
 {{- end -}}
 
 {{- define "skywalking.oap.address.grpc" -}}
-{{- printf "%s-oap.%s.svc.cluster.local:%d" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace 11800 }}
+{{- printf "%s-oap.%s.svc.cluster.local:%d" .Values.skywalking.fullnameOverride .Release.Namespace 11800 }}
 {{- end -}}
 
 {{- define "skywalking.oap.address.http" -}}
-{{- printf "http://%s-oap.%s.svc.cluster.local:%d" (index .Values "skywalking-helm" "fullnameOverride") .Release.Namespace 12800 }}
+{{- printf "http://%s-oap.%s.svc.cluster.local:%d" .Values.skywalking.fullnameOverride .Release.Namespace 12800 }}
 {{- end -}}
