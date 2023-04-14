@@ -3320,8 +3320,8 @@
       {
         "current": {
           "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "text": "SkyWalking",
+          "value": "SkyWalking"
         },
         "hide": 2,
         "includeAll": false,
@@ -3330,7 +3330,7 @@
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "",
+        "regex": "SkyWalking",
         "skipUrlSync": false,
         "type": "datasource"
       }
