@@ -209,9 +209,6 @@ kube-state-metrics:
 prometheus-elasticsearch-exporter:
   enabled: false
 
-elasticsearch:
-  enabled: false
-
 opentelemetry:
   enabled: false
 
