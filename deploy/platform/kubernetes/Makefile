@@ -140,6 +140,8 @@ feature-kubernetes-monitor:
 feature-elasticsearch-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.elasticsearchMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.fullnameOverride=prometheus-elasticsearch-exporter)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.service.httpPort=9114)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.es.uri=http://elasticsearch-master:9200)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
