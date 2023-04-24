@@ -16,5 +16,18 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,apisix-monitor,promql,elasticsearch-monitor
+{{- define "opentelemetry-config-elasticsearch-monitor" }}
+{{- if .Values.features.elasticsearchMonitor.enabled }}
+
+- job_name: 'elasticsearch-monitoring'
+  scrape_interval: 30s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: service
+  relabel_configs:
+    - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_service_port_name]
+      action: keep
+      regex: prometheus-elasticsearch-exporter;http
+
+{{- end }}
+{{- end }}

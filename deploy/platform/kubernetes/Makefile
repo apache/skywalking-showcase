@@ -40,7 +40,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.grafana.image=$(GRAFANA_IMAGE)
 
 ifeq ($(DEBUG),true)
-	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run
+	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
 endif
 
 BACKEND_SERVICE := $(RELEASE)-oap.$(NAMESPACE).svc:11800
@@ -135,6 +135,15 @@ feature-apisix-monitor:
 feature-kubernetes-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.kubernetesMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set kube-state-metrics.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
+.PHONY: feature-elasticsearch-monitor
+feature-elasticsearch-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.elasticsearchMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.fullnameOverride=prometheus-elasticsearch-exporter)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.service.httpPort=9114)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.es.uri=http://elasticsearch-master:9200)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
 .PHONY: feature-function

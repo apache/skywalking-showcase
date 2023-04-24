@@ -35,6 +35,7 @@ data:
             {{- include "opentelemetry-config-postgresql-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-so11y" . | indent 12 }}
             {{- include "opentelemetry-config-vm" . | indent 12 }}
+            {{- include "opentelemetry-config-elasticsearch-monitor" . | indent 12 }}
 
     exporters:
       otlp:

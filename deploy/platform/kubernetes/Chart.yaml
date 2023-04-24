@@ -45,6 +45,11 @@ dependencies:
     repository: https://prometheus-community.github.io/helm-charts
     condition: kube-state-metrics.enabled
 
+  - name: prometheus-elasticsearch-exporter
+    version: 5.1.1
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus-elasticsearch-exporter.enabled
+
   - name: base
     version: 1.14.4
     repository: https://istio-release.storage.googleapis.com/charts
