@@ -19,6 +19,11 @@
 include ../../../Makefile.in
 include Makefile.in
 
+features := $(subst $(comma), ,$(FEATURE_FLAGS))
+features := $(foreach f,$(features),feature-$(f))
+
+include check.mak
+
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.image.repository=$(SW_OAP_IMAGE) --set skywalking.oap.image.tag=$(SW_OAP_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.image.repository=$(SW_UI_IMAGE) --set skywalking.ui.image.tag=$(SW_UI_IMAGE_TAG)
@@ -33,10 +38,6 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.event.exporter.image=$(SW_EVENT_E
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.agentImage=$(SW_AGENT_JAVA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.grafana.image=$(GRAFANA_IMAGE)
-
-
-features := $(subst $(comma), ,$(FEATURE_FLAGS))
-features := $(foreach f,$(features),feature-$(f))
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run
@@ -155,9 +156,10 @@ feature-mesh-with-agent:
 deploy: $(features)
 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace --timeout=20m $(HELM_OPTIONS)
-
+ifneq ($(DEBUG),true)
 	$(info rollout restart to allow the new sidecar to be injected.)
 	kubectl -n $(SAMPLE_SERVICES_NAMESPACE) get deployments -o name | xargs kubectl -n $(SAMPLE_SERVICES_NAMESPACE) rollout restart
+endif
 
 .PHONY: undeploy
 undeploy:
