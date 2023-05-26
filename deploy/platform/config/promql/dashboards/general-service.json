@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -35,6 +35,47 @@
         "w": 24,
         "x": 0,
         "y": 0
+      },
+      "id": 68,
+      "panels": [],
+      "title": "Service Topology",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "skywalking-datasource",
+        "uid": "${Plugin_SkyWalking}"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 15,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 70,
+      "targets": [
+        {
+          "datasource": {
+            "type": "skywalking-datasource",
+            "uid": "${Plugin_SkyWalking}"
+          },
+          "edgeMetrics": "[{\"name\":\"service_relation_server_cpm\",\"label\":\"Client Load\",\"unit\":\"cpm\",\"type\":\"SERVER\"}]",
+          "layer": "$layer",
+          "nodeMetrics": "[   { \t\t\"name\": \"service_cpm\",     \"label\": \"Load\",     \"unit\": \"cpm\" \t},   { \t\t\"name\": \"service_sla\",     \"calculation\": \"percentage\",     \"label\": \"Success Rate\",     \"unit\": \"%\" \t},   { \t\t\"name\": \"service_resp_time\",     \"label\": \"Latency\",     \"unit\": \"ms\" \t},   { \t\t\"name\": \"service_apdex\",     \"label\": \"Apdex\",     \"calculation\": \"apdex\" \t}   ],   edgeServerMetrics: [   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },{     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   }, {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
+          "refId": "A",
+          "service": ""
+        }
+      ],
+      "type": "nodeGraph"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 16
       },
       "id": 34,
       "panels": [],
@@ -73,7 +114,7 @@
         "h": 5,
         "w": 8,
         "x": 0,
-        "y": 1
+        "y": 17
       },
       "id": 6,
       "options": {
@@ -90,7 +131,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -139,7 +180,7 @@
         "h": 5,
         "w": 8,
         "x": 8,
-        "y": 1
+        "y": 17
       },
       "id": 8,
       "options": {
@@ -156,7 +197,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -205,7 +246,7 @@
         "h": 5,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 17
       },
       "id": 18,
       "options": {
@@ -222,7 +263,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -301,7 +342,7 @@
         "h": 7,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 22
       },
       "id": 19,
       "interval": "1m",
@@ -396,7 +437,7 @@
         "h": 7,
         "w": 6,
         "x": 6,
-        "y": 6
+        "y": 22
       },
       "id": 22,
       "interval": "1m",
@@ -491,7 +532,7 @@
         "h": 7,
         "w": 6,
         "x": 12,
-        "y": 6
+        "y": 22
       },
       "id": 10,
       "interval": "1m",
@@ -587,7 +628,7 @@
         "h": 7,
         "w": 6,
         "x": 18,
-        "y": 6
+        "y": 22
       },
       "id": 21,
       "interval": "1m",
@@ -667,8 +708,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -684,7 +724,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 13
+        "y": 29
       },
       "id": 20,
       "interval": "1m",
@@ -763,8 +803,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -780,7 +819,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 13
+        "y": 29
       },
       "id": 23,
       "interval": "1m",
@@ -859,8 +898,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -876,7 +914,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 13
+        "y": 29
       },
       "id": 24,
       "interval": "1m",
@@ -924,8 +962,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -941,7 +978,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 20
+        "y": 36
       },
       "id": 16,
       "interval": "1m",
@@ -994,8 +1031,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1007,7 +1043,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 20
+        "y": 36
       },
       "id": 26,
       "interval": "1m",
@@ -1060,8 +1096,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1073,7 +1108,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 20
+        "y": 36
       },
       "id": 27,
       "interval": "1m",
@@ -1126,8 +1161,7 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1143,7 +1177,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 28
+        "y": 44
       },
       "id": 28,
       "interval": "1m",
@@ -1196,8 +1230,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1213,7 +1246,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 28
+        "y": 44
       },
       "id": 31,
       "interval": "1m",
@@ -1266,8 +1299,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1279,7 +1311,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 28
+        "y": 44
       },
       "id": 32,
       "interval": "1m",
@@ -1318,517 +1350,513 @@
       "type": "bargauge"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 52
       },
       "id": 36,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_SkyWalking}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "cpm"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 18
+          },
+          "id": 40,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_SkyWalking}"
+              },
+              "editorMode": "code",
+              "expr": "service_instance_cpm{service='$service', service_instance='$service_instance', layer='$layer'}",
+              "format": "time_series",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Load ",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_SkyWalking}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 18
+          },
+          "id": 42,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_SkyWalking}"
+              },
+              "editorMode": "code",
+              "expr": "service_instance_sla{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
+              "format": "time_series",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Success Rate",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_SkyWalking}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "ms"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 25
+          },
+          "id": 44,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_SkyWalking}"
+              },
+              "editorMode": "code",
+              "expr": "service_instance_resp_time{service='$service', service_instance='$service_instance', layer='$layer'}",
+              "format": "time_series",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Service Instance Latency",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_SkyWalking}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 12,
+            "y": 25
+          },
+          "id": 57,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_SkyWalking}"
+              },
+              "editorMode": "code",
+              "expr": "meter_datasource{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
+              "format": "time_series",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Database Connection Pool",
+          "transformations": [
+            {
+              "id": "labelsToFields",
+              "options": {
+                "keepLabels": [
+                  "label"
+                ],
+                "valueLabel": "label"
+              }
+            }
+          ],
+          "type": "timeseries"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_SkyWalking}"
+          },
+          "description": "",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "always",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 12,
+            "x": 0,
+            "y": 32
+          },
+          "id": 56,
+          "interval": "1m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "prometheus",
+                "uid": "${DS_SkyWalking}"
+              },
+              "editorMode": "code",
+              "expr": "meter_thread_pool{service='$service', service_instance='$service_instance', layer='$layer'}",
+              "format": "time_series",
+              "legendFormat": "__auto",
+              "range": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Thread Pool",
+          "type": "timeseries"
+        }
+      ],
       "title": "Service Instance",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "cpm"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 37
-      },
-      "id": 40,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
-          },
-          "editorMode": "code",
-          "expr": "service_instance_cpm{service='$service', service_instance='$service_instance', layer='$layer'}",
-          "format": "time_series",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Service Instance Load ",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "max": 100,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 37
-      },
-      "id": 42,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
-          },
-          "editorMode": "code",
-          "expr": "service_instance_sla{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
-          "format": "time_series",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Service Instance Success Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 44
-      },
-      "id": 44,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
-          },
-          "editorMode": "code",
-          "expr": "service_instance_resp_time{service='$service', service_instance='$service_instance', layer='$layer'}",
-          "format": "time_series",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Service Instance Latency",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 44
-      },
-      "id": 57,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
-          },
-          "editorMode": "code",
-          "expr": "meter_datasource{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
-          "format": "time_series",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Database Connection Pool",
-      "transformations": [
-        {
-          "id": "labelsToFields",
-          "options": {
-            "keepLabels": [
-              "label"
-            ],
-            "valueLabel": "label"
-          }
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "always",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 51
-      },
-      "id": 56,
-      "interval": "1m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
-          },
-          "editorMode": "code",
-          "expr": "meter_thread_pool{service='$service', service_instance='$service_instance', layer='$layer'}",
-          "format": "time_series",
-          "legendFormat": "__auto",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Thread Pool",
-      "type": "timeseries"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 53
       },
       "id": 59,
       "panels": [],
@@ -1881,8 +1909,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1898,7 +1925,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 59
+        "y": 54
       },
       "id": 55,
       "interval": "1m",
@@ -1977,8 +2004,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1994,7 +2020,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 59
+        "y": 54
       },
       "id": 60,
       "interval": "1m",
@@ -2109,8 +2135,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2126,7 +2151,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 59
+        "y": 54
       },
       "id": 62,
       "interval": "1m",
@@ -2216,8 +2241,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2233,7 +2257,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 66
+        "y": 61
       },
       "id": 63,
       "interval": "1m",
@@ -2345,8 +2369,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2362,7 +2385,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 66
+        "y": 61
       },
       "id": 64,
       "interval": "1m",
@@ -2453,8 +2476,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2470,7 +2492,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 66
+        "y": 61
       },
       "id": 65,
       "interval": "1m",
@@ -2597,8 +2619,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2614,7 +2635,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 73
+        "y": 68
       },
       "id": 66,
       "interval": "1m",
@@ -2678,7 +2699,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 80
+        "y": 75
       },
       "id": 38,
       "panels": [],
@@ -2731,8 +2752,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2748,7 +2768,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 81
+        "y": 76
       },
       "id": 46,
       "interval": "1m",
@@ -2827,8 +2847,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2844,7 +2863,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 81
+        "y": 76
       },
       "id": 48,
       "interval": "1m",
@@ -2924,8 +2943,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2941,7 +2959,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 81
+        "y": 76
       },
       "id": 50,
       "interval": "1m",
@@ -3022,8 +3040,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3039,7 +3056,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 88
+        "y": 83
       },
       "id": 52,
       "interval": "1m",
@@ -3118,8 +3135,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -3135,7 +3151,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 88
+        "y": 83
       },
       "id": 54,
       "interval": "1m",
@@ -3169,7 +3185,8 @@
       "type": "timeseries"
     }
   ],
-  "schemaVersion": 37,
+  "refresh": "",
+  "schemaVersion": 38,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -3185,8 +3202,8 @@
       {
         "current": {
           "selected": false,
-          "text": "agent::songs",
-          "value": "agent::songs"
+          "text": "agent::frontend",
+          "value": "agent::frontend"
         },
         "datasource": {
           "type": "prometheus",
@@ -3212,8 +3229,8 @@
       {
         "current": {
           "selected": false,
-          "text": "651db53c0e3843d8b9c4c53a90b4992a@10.4.0.28",
-          "value": "651db53c0e3843d8b9c4c53a90b4992a@10.4.0.28"
+          "text": "agent::frontend-instance",
+          "value": "agent::frontend-instance"
         },
         "datasource": {
           "type": "prometheus",
@@ -3239,8 +3256,8 @@
       {
         "current": {
           "selected": false,
-          "text": "GET:/songs/top",
-          "value": "GET:/songs/top"
+          "text": "/homepage",
+          "value": "/homepage"
         },
         "datasource": {
           "type": "prometheus",
@@ -3333,6 +3350,23 @@
         "regex": "SkyWalking",
         "skipUrlSync": false,
         "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "SkyWalking-Plugin",
+          "value": "SkyWalking-Plugin"
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "Plugin_SkyWalking",
+        "options": [],
+        "query": "skywalking-datasource",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
       }
     ]
   },
@@ -3343,7 +3377,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "General Service",
-  "uid": "tZ7YdF0Vz",
-  "version": 11,
+  "uid": "GeneralService",
+  "version": 1,
   "weekStart": ""
 }
