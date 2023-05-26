@@ -25,6 +25,8 @@ metadata:
   name: grafana-config
 data:
   grafana.ini: |
+    # Notice: `development` mode only used for develop plugin, please change to `production` mode in production environment
+    app_mode = development
     [security]
     disable_initial_admin_creation = true
     [auth.anonymous]
@@ -66,7 +68,15 @@ data:
       orgId: 1
       type: prometheus
       url: http://{{ include "skywalking.oap.address.host" . }}:9090
-
+    - access: proxy
+      editable: false
+      isDefault: false
+      name: SkyWalking-Plugin
+      orgId: 1
+      type: skywalking-datasource
+      url: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
+      jsonData:
+        URL: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -87,6 +97,9 @@ spec:
         - name: grafana
           image: {{ .Values.features.promql.grafana.image }}
           imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: {{ .Values.skywalking.plugin.url }};skywalking-datasource
           ports:
             - name: http-grafana
               containerPort: 3000
