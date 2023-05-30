@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 2,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -58,9 +58,9 @@
             "type": "skywalking-datasource",
             "uid": "${Plugin_SkyWalking}"
           },
-          "edgeMetrics": "[{\"name\":\"service_relation_server_cpm\",\"label\":\"Client Load\",\"unit\":\"cpm\",\"type\":\"SERVER\"}",
+          "edgeMetrics": "[   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   },   {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
           "layer": "$layer",
-          "nodeMetrics": "[{\"name\": \"service_cpm\",  \"label\": \"Load\", \"unit\": \"cpm\"}, {\"name\": \"service_sla\", \"calculation\": \"percentage\", \"label\": \"Success Rate\", \"unit\": \"%\"}, { \"name\": \"service_resp_time\", \"label\": \"Latency\", \"unit\": \"ms\" }, { \"name\": \"service_apdex\",     \"label\": \"Apdex\",     \"calculation\": \"apdex\" \t}   ],   edgeServerMetrics: [   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },{     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   }, {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
+          "nodeMetrics": "[   {     \"name\": \"service_cpm\",     \"label\": \"Load\",     \"unit\": \"cpm\"   },   {     \"name\": \"service_sla\",     \"calculation\": \"percentage\",     \"label\": \"Success Rate\",     \"unit\": \"%\"   },   {     \"name\": \"service_resp_time\",     \"label\": \"Latency\",     \"unit\": \"ms\"   },   {     \"name\": \"service_apdex\",     \"label\": \"Apdex\",     \"calculation\": \"apdex\"   } ]",
           "refId": "A"
         }
       ],
@@ -1515,7 +1515,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1610,7 +1611,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1718,7 +1720,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1813,7 +1816,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -3770,7 +3774,7 @@
       },
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "mesh-svr::app",
           "value": "mesh-svr::app"
         },
@@ -3797,9 +3801,9 @@
       },
       {
         "current": {
-          "selected": true,
-          "text": "app-deployment-7884cc5775-2ppdb",
-          "value": "app-deployment-7884cc5775-2ppdb"
+          "selected": false,
+          "text": "app-deployment-97cfbb5f7-gmw7j",
+          "value": "app-deployment-97cfbb5f7-gmw7j"
         },
         "datasource": {
           "type": "prometheus",

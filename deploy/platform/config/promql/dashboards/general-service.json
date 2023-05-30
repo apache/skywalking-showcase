@@ -24,7 +24,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 4,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -60,9 +60,9 @@
             "type": "skywalking-datasource",
             "uid": "${Plugin_SkyWalking}"
           },
-          "edgeMetrics": "[{\"name\":\"service_relation_server_cpm\",\"label\":\"Client Load\",\"unit\":\"cpm\",\"type\":\"SERVER\"}]",
+          "edgeMetrics": "[   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   },   {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
           "layer": "$layer",
-          "nodeMetrics": "[   { \t\t\"name\": \"service_cpm\",     \"label\": \"Load\",     \"unit\": \"cpm\" \t},   { \t\t\"name\": \"service_sla\",     \"calculation\": \"percentage\",     \"label\": \"Success Rate\",     \"unit\": \"%\" \t},   { \t\t\"name\": \"service_resp_time\",     \"label\": \"Latency\",     \"unit\": \"ms\" \t},   { \t\t\"name\": \"service_apdex\",     \"label\": \"Apdex\",     \"calculation\": \"apdex\" \t}   ],   edgeServerMetrics: [   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },{     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   }, {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
+          "nodeMetrics": "[   {     \"name\": \"service_cpm\",     \"label\": \"Load\",     \"unit\": \"cpm\"   },   {     \"name\": \"service_sla\",     \"calculation\": \"percentage\",     \"label\": \"Success Rate\",     \"unit\": \"%\"   },   {     \"name\": \"service_resp_time\",     \"label\": \"Latency\",     \"unit\": \"ms\"   },   {     \"name\": \"service_apdex\",     \"label\": \"Apdex\",     \"calculation\": \"apdex\"   } ]",
           "refId": "A",
           "service": ""
         }
@@ -708,7 +708,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -803,7 +804,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -898,7 +900,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -962,7 +965,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -994,9 +998,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1031,7 +1036,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1059,9 +1065,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1096,7 +1103,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1124,9 +1132,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1161,7 +1170,8 @@
             "mode": "percentage",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1193,9 +1203,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1230,7 +1241,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1262,9 +1274,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1299,7 +1312,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1327,9 +1341,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "valueMode": "color"
       },
-      "pluginVersion": "9.1.0",
+      "pluginVersion": "9.5.2",
       "targets": [
         {
           "datasource": {
@@ -1909,7 +1924,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2004,7 +2020,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2135,7 +2152,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2234,6 +2252,9 @@
             "lineWidth": 1,
             "scaleDistribution": {
               "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
           },
           "mappings": [],
@@ -2241,7 +2262,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2264,6 +2286,7 @@
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
+        "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
@@ -2369,7 +2392,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2469,6 +2493,9 @@
             "lineWidth": 1,
             "scaleDistribution": {
               "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
             }
           },
           "mappings": [],
@@ -2476,7 +2503,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2499,6 +2527,7 @@
       "options": {
         "barRadius": 0,
         "barWidth": 0.97,
+        "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
@@ -2619,7 +2648,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2752,7 +2782,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2847,7 +2878,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -2943,7 +2975,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -3040,7 +3073,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -3135,7 +3169,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -3201,9 +3236,9 @@
       },
       {
         "current": {
-          "selected": false,
-          "text": "agent::frontend",
-          "value": "agent::frontend"
+          "selected": true,
+          "text": "agent::songs",
+          "value": "agent::songs"
         },
         "datasource": {
           "type": "prometheus",
@@ -3229,8 +3264,8 @@
       {
         "current": {
           "selected": false,
-          "text": "agent::frontend-instance",
-          "value": "agent::frontend-instance"
+          "text": "ab50ec9c520043d38935d28060ad4f03@10.52.2.112",
+          "value": "ab50ec9c520043d38935d28060ad4f03@10.52.2.112"
         },
         "datasource": {
           "type": "prometheus",
@@ -3256,8 +3291,8 @@
       {
         "current": {
           "selected": false,
-          "text": "/homepage",
-          "value": "/homepage"
+          "text": "GET:/songs/top",
+          "value": "GET:/songs/top"
         },
         "datasource": {
           "type": "prometheus",
