@@ -25,3 +25,12 @@ datasources:
     orgId: 1
     type: prometheus
     url: http://oap:9090
+  - access: proxy
+    editable: false
+    isDefault: false
+    name: SkyWalking-Plugin
+    orgId: 1
+    type: skywalking-datasource
+    url: http://oap:12800/graphql
+    jsonData:
+      URL: http://oap:12800/graphql

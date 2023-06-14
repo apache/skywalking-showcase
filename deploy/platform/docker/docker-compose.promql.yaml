@@ -20,6 +20,10 @@ version: '2.1'
 services:
   grafana:
     image: ${GRAFANA_IMAGE}
+    environment:
+      # Notice: `development` mode only used for develop plugin, please change to `production` mode in production environment
+      - GF_DEFAULT_APP_MODE=development
+      - GF_INSTALL_PLUGINS=${SW_PLUGIN_URL};skywalking-datasource
     networks: [ sw ]
     volumes:
       - ./config/promql/grafana.ini:/etc/grafana/grafana.ini
