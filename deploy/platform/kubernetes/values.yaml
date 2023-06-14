@@ -48,7 +48,7 @@ skywalking:
       SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
       SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
       SW_ENABLE_ON_DEMAND_POD_LOG: "true"
-      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,spring-sleuth
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,spring-sleuth,continuous-profiling
       SW_STORAGE_ES_RESPONSE_TIMEOUT: "50000"
       SW_STORAGE_ES_INDEX_SHARDS_NUMBER: "6"
       SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
