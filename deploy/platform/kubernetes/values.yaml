@@ -214,6 +214,7 @@ opentelemetry:
 
 opentelemetry-collector:
   mode: deployment
+  replicaCount: 2
   clusterRole:
     create: true
     rules:
