@@ -230,8 +230,8 @@ opentelemetry-collector:
       verbs: [ "get", "watch", "list" ]
   resources:
     limits:
-      cpu: 100m
-      memory: 200M
+      cpu: 1024m
+      memory: 2Gi
   image:
     repository: ~
     tag: ~
