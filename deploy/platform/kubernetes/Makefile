@@ -147,6 +147,14 @@ feature-elasticsearch-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set prometheus-elasticsearch-exporter.es.uri=http://elasticsearch-master:9200)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-rabbitmq-monitor
+feature-rabbitmq-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.rabbitmqMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set rabbitmq.replicaCount=1)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set rabbitmq.persistence.enabled=false)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set rabbitmq.metrics.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: feature-function
 feature-function:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.function.enabled=true)
