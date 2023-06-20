@@ -20,7 +20,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mock-client
+  name: rabbitmq-mock-client
 spec:
   replicas: 1
   strategy:
