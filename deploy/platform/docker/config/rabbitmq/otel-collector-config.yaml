@@ -22,8 +22,6 @@ receivers:
           static_configs:
             - targets:
                 - rmq0:15692
-                - rmq1:15692
-                - rmq2:15692
           relabel_configs:
             - source_labels: [ ]
               target_label: cluster
@@ -32,30 +30,6 @@ receivers:
               regex: (.+)
               target_label: node
               replacement: $$1
-
-########################################################################################
-# If you want to use kubernetes_sd_configs, please reference to the following cases.   #
-########################################################################################
-
-#        - job_name: rabbitmq-monitoring
-#          scrape_interval: 30s
-#          kubernetes_sd_configs:
-#            - role: pod
-#              namespaces:
-#                names:
-#                  - default
-#          relabel_configs:
-#            - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
-#              action: keep
-#              regex: rabbitmq;metrics
-#            - source_labels: [ ]
-#              target_label: cluster
-#              replacement: rabbitmq-cluster
-#            - source_labels: [ __address__ ]
-#              target_label: node
-#              regex: (.+)
-#              replacement: $$1
-#              action: replace
 
 processors:
   batch:

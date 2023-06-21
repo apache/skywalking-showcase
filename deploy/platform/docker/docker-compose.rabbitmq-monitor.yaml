@@ -40,18 +40,6 @@ services:
       nofile:
         soft: 2000
         hard: 2000
-  rmq1:
-    <<: *rabbitmq
-    hostname: rmq1
-    ports:
-      - "15674:15672"
-      - "15694:15692"
-  rmq2:
-    <<: *rabbitmq
-    hostname: rmq2
-    ports:
-      - "15675:15672"
-      - "15695:15692"
 
   # The following services are used for mocking test data
   basic-get:
@@ -101,7 +89,7 @@ services:
     networks:
       - "e2e"
     environment:
-      URI: "amqp://guest:guest@rmq1:5672/%2f"
+      URI: "amqp://guest:guest@rmq0:5672/%2f"
       QUEUE: publisher-confirms
       ROUTING_KEY: publisher-confirms
       AUTOACK: "true"
@@ -115,7 +103,7 @@ services:
     networks:
       - "e2e"
     environment:
-      URI: "amqp://guest:guest@rmq1:5672/%2f"
+      URI: "amqp://guest:guest@rmq0:5672/%2f"
       QUEUE: ha3-slow-consumer-persistent
       ROUTING_KEY: slow-consumer-persistent
       QUEUE_ARGS: x-max-length=10000
@@ -136,7 +124,7 @@ services:
     command: /bin/bash -c "while true; do bin/runjava com.rabbitmq.perf.PerfTest; sleep 10; done"
     environment:
       TIME: 60
-      URI: "amqp://guest:guest@rmq2:5672/%2f"
+      URI: "amqp://guest:guest@rmq0:5672/%2f"
       VARIABLE_RATE: "1:10,0:20"
       QUEUE: nack
       QUEUE_ARGS: x-max-length=100
@@ -152,7 +140,7 @@ services:
     networks:
       - "e2e"
     environment:
-      URI: "amqp://guest:guest@rmq2:5672/%2f"
+      URI: "amqp://guest:guest@rmq0:5672/%2f"
       VARIABLE_RATE: "2:30,4:30,10:30"
       VARIABLE_SIZE: "100:30,200:30"
       CONSUMERS: 0
@@ -164,7 +152,7 @@ services:
     networks:
       - "e2e"
     environment:
-      URI: "amqp://guest:guest@rmq2:5672/%2f"
+      URI: "amqp://guest:guest@rmq0:5672/%2f"
       VARIABLE_RATE: "5:30,10:30,20:30"
       VARIABLE_SIZE: "100:30,200:30"
       CONSUMERS: 0
