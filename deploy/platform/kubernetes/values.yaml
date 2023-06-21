@@ -206,8 +206,22 @@ istiod:
 kube-state-metrics:
   enabled: false
 
+rabbitmq:
+  enabled: false
+  replicaCount: 1
+  persistence:
+    enabled: false
+  metrics:
+    enabled: true
+
 prometheus-elasticsearch-exporter:
   enabled: false
+  fullnameOverride: prometheus-elasticsearch-exporter
+  service:
+    httpPort: 9114
+  es:
+    uri: "http://elasticsearch-master:9200"
+
 
 opentelemetry:
   enabled: false
