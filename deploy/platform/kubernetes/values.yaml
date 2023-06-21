@@ -213,6 +213,9 @@ rabbitmq:
     enabled: false
   metrics:
     enabled: true
+  auth:
+    username: guest
+    password: guest
 
 prometheus-elasticsearch-exporter:
   enabled: false
