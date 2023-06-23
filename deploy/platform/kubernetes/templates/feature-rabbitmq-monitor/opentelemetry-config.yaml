@@ -16,11 +16,25 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+{{- define "opentelemetry-config-rabbitmq-monitor" }}
+{{- if .Values.features.rabbitmqMonitor.enabled }}
 
-NAMESPACE ?= skywalking-showcase
-SAMPLE_SERVICES_NAMESPACE ?= sample-services
-RELEASE ?= demo
-AGENTLESS ?= false
+- job_name: rabbitmq-monitoring
+  scrape_interval: 30s
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: rabbitmq;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: rabbitmq-cluster
+    - source_labels: [ __address__ ]
+      target_label: node
+      regex: (.+)
+      replacement: $$1
+      action: replace
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,apisix-monitor,promql,elasticsearch-monitor,rabbitmq-monitor
+{{- end }}
+{{- end }}
