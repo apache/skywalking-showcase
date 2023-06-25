@@ -134,6 +134,13 @@ skywalking:
       SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
     podAnnotations:
       sidecar.istio.io/inject: "false"
+    resources:
+      limits:
+        cpu: 2
+        memory: 4Gi
+      requests:
+        cpu: 2
+        memory: 4Gi
 
 sampleServices:
   hub: ~
@@ -236,16 +243,16 @@ opentelemetry-collector:
   clusterRole:
     create: true
     rules:
-    - apiGroups: [ "" ]
-      resources:
-        # @feature: kubernetes-monitor; permissions to read resources
-        - "endpoints"
-        - "pods"
-        - "services"
-        - "nodes"
-        - "nodes/metrics"
-        - "nodes/proxy"
-      verbs: [ "get", "watch", "list" ]
+      - apiGroups: [ "" ]
+        resources:
+          # @feature: kubernetes-monitor; permissions to read resources
+          - "endpoints"
+          - "pods"
+          - "services"
+          - "nodes"
+          - "nodes/metrics"
+          - "nodes/proxy"
+        verbs: [ "get", "watch", "list" ]
   resources:
     limits:
       cpu: 1024m
