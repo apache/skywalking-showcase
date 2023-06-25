@@ -216,6 +216,7 @@ rabbitmq:
   auth:
     username: guest
     password: guest
+    erlangCookie: skywalking-showcase
 
 prometheus-elasticsearch-exporter:
   enabled: false
