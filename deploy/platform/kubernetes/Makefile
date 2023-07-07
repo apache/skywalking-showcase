@@ -106,7 +106,7 @@ feature-als:
 
 .PHONY: feature-satellite
 feature-satellite:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.satellite.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.satellite.enabled=true)
 
 .PHONY: feature-rover
 feature-rover:
