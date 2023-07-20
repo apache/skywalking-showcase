@@ -20,6 +20,7 @@ github:
   homepage: https://skywalking.apache.org/docs/skywalking-showcase/latest/readme/
   labels:
     - skywalking
+  dependabot_updates: false
   enabled_merge_buttons:
     squash:  true
     merge:   false
