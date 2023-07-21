@@ -39,7 +39,7 @@ skywalking:
       # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
       # @feature: mysql; enable mysql rules to analyze MySQL metrics
       # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*
+      SW_OTEL_RECEIVER_ENABLED_OTEL_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS: "mx-mesh,persistence" # @feature: als; enable mesh analyzer (mx-mesh) to analyze ALS logs
       K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}"
@@ -225,6 +225,22 @@ rabbitmq:
     password: guest
     erlangCookie: skywalking-showcase
 
+mongodb:
+  enabled: false
+  architecture: replicaset
+  replicaCount: 2
+  auth:
+    enabled: false
+  persistence:
+    enabled: false
+  metrics:
+    enabled: true
+    compatibleMode: true
+    collector:
+      dbstats: true
+      diagnosticdata: true
+      replicasetstatus: true
+
 prometheus-elasticsearch-exporter:
   enabled: false
   fullnameOverride: prometheus-elasticsearch-exporter
@@ -285,6 +301,9 @@ features:
     enabled: false
 
   rabbitmqMonitor:
+    enabled: false
+
+  mongodbMonitor:
     enabled: false
 
   mysqlMonitor:
