@@ -24,9 +24,9 @@
   kubernetes_sd_configs:
     - role: pod
   relabel_configs:
-    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+    - source_labels: [ __meta_kubernetes_pod_controller_name, __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
       action: keep
-      regex: metrics;metrics
+      regex: .+mongodb;metrics;metrics
     - source_labels: [ ]
       target_label: cluster
       replacement: replset
