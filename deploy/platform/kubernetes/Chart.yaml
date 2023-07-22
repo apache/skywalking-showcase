@@ -55,6 +55,11 @@ dependencies:
     repository: https://charts.bitnami.com/bitnami
     condition: rabbitmq.enabled
 
+  - name: mongodb
+    version: 13.16.0
+    repository: https://charts.bitnami.com/bitnami
+    condition: mongodb.enabled
+
   - name: base
     version: 1.14.4
     repository: https://istio-release.storage.googleapis.com/charts

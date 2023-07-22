@@ -16,11 +16,24 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+{{- define "opentelemetry-config-mongodb-monitor" }}
+{{- if .Values.features.mongodbMonitor.enabled }}
 
-NAMESPACE ?= skywalking-showcase
-SAMPLE_SERVICES_NAMESPACE ?= sample-services
-RELEASE ?= demo
-AGENTLESS ?= false
+- job_name: mongodb-monitoring
+  scrape_interval: 10s
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_controller_name, __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: .+mongodb;metrics;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: replset
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,apisix-monitor,promql,elasticsearch-monitor,rabbitmq-monitor,mongodb-monitor
+{{- end }}
+{{- end }}
