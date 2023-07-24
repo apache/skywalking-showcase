@@ -47,4 +47,4 @@ jobs:
           distribution: 'temurin'
           java-version: '8'
       - name: Build and push Docker image
-        run: make push -j 6 || make push -j 6
+        run: make push -j 7 || make push -j 7
