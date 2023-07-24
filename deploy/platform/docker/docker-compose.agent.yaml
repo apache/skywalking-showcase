@@ -116,5 +116,21 @@ services:
       timeout: 10s
       retries: 3    
 
+  # Go agent
+  rating:
+    image: ${HUB}/rating-service:${TAG}
+    networks: [ sw ]
+    environment:
+      SW_AGENT_NAME: rating
+      SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE: ${BACKEND_SERVICE}:11800
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost/rating" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      oap:
+        condition: service_healthy
+
 networks:
   sw:

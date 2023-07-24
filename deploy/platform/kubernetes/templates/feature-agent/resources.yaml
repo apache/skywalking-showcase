@@ -465,3 +465,49 @@ spec:
       targetPort: 61616
 
 {{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-deployment
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: rating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating
+  template:
+    metadata:
+      labels:
+        app: rating
+      annotations:
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+    spec:
+      containers:
+        - name: rating
+          image: "{{ .Values.sampleServices.hub }}/rating-service:{{ .Values.sampleServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::rating
+            - name: SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating
+  namespace: {{ .Values.sampleServices.namespace }}
+spec:
+  selector:
+    app: rating
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

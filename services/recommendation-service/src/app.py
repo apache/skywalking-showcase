@@ -43,9 +43,23 @@ if __name__ == '__main__':
             if val is not None:
                 headers[key] = request.headers[key]
 
-        r = requests.get('http://songs/songs', headers=headers)
-        recommendations = r.json()
-        return jsonify(recommendations)
+        songsResponse = requests.get('http://songs/songs', headers=headers)
+        songs = songsResponse.json()
+        ratingResponse = requests.get('http://rating/rating', headers=headers)
+        ratings = ratingResponse.json()
+
+        # combine ratings to songs
+        ratings_dict = {}
+        for rating_data in ratings:
+            song_id = rating_data['id']
+            ratings_dict[song_id] = rating_data['rating']
+        for song_data in songs:
+            song_id = song_data['id']
+            rating = ratings_dict.get(song_id)
+            if rating is not None:
+                song_data['rating'] = rating
+
+        return jsonify(songs)
 
 
     PORT = os.getenv('PORT', 80)
