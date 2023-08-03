@@ -37,7 +37,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.traceProfiling.swctl.image=$(SW_C
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.event.exporter.image=$(SW_EVENT_EXPORTER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.agentImage=$(SW_AGENT_JAVA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
-HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.grafana.image=$(GRAFANA_IMAGE)
+HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.plugin.url=$(SW_PLUGIN_URL)
 
 ifeq ($(DEBUG),true)
@@ -161,11 +161,11 @@ feature-function:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.function.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set openfunction.enabled=true)
 
-.PHONY: feature-promql
-feature-promql:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.promql.enabled=true)
-	@mkdir -p ./generated/promql-configs/
-	@cp ../config/promql/dashboards/*.json ./generated/promql-configs/
+.PHONY: feature-grafana
+feature-grafana:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.enabled=true)
+	@mkdir -p ./generated/dashboard-configs/
+	@cp ../config/grafana/dashboards/*.json ./generated/dashboard-configs/
 
 .PHONY: feature-mesh-with-agent
 feature-mesh-with-agent:

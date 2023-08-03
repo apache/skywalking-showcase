@@ -21,7 +21,7 @@ datasources:
   - access: proxy
     editable: true
     isDefault: true
-    name: SkyWalking
+    name: SkyWalkingPromQL
     orgId: 1
     type: prometheus
     url: http://oap:9090
@@ -34,3 +34,10 @@ datasources:
     url: http://oap:12800/graphql
     jsonData:
       URL: http://oap:12800/graphql
+  - access: proxy
+    editable: false
+    isDefault: false
+    name: SkyWalkingLogQL
+    orgId: 1
+    type: loki
+    url: http://oap:3100

@@ -528,8 +528,8 @@
       {
         "current": {
           "selected": false,
-          "text": "SkyWalking",
-          "value": "SkyWalking"
+          "text": "SkyWalkingPromQL",
+          "value": "SkyWalkingPromQL"
         },
         "hide": 2,
         "includeAll": false,
@@ -538,7 +538,7 @@
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "SkyWalking",
+        "regex": "SkyWalkingPromQL",
         "skipUrlSync": false,
         "type": "datasource"
       }
