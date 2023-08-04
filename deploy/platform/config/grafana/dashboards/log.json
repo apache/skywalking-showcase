@@ -31,7 +31,7 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "${DS_Loki}"
+        "uid": "${DS_SW_Loki}"
       },
       "gridPos": {
         "h": 18,
@@ -54,7 +54,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "${DS_Loki}"
+            "uid": "${DS_SW_Loki}"
           },
           "editorMode": "code",
           "expr": "{service='$service', service_instance='${service_instance:raw}', endpoint='${endpoint:raw}', trace_id='$trace_id'} |= `$keyword_of_content` != `$excluding_keyword_of_content`",
@@ -86,7 +86,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_Prometheus}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(service_traffic{layer='$layer'},service)",
         "hide": 0,
@@ -114,7 +114,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_Prometheus}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(instance_traffic{layer='$layer', service='$service'},service_instance)",
         "hide": 0,
@@ -142,7 +142,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_Prometheus}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(endpoint_traffic{layer='$layer', service='$service', keyword='$endpoint_keyword', limit='$endpoint_limit'},endpoint)",
         "hide": 0,
@@ -234,7 +234,7 @@
       {
         "datasource": {
           "type": "loki",
-          "uid": "${DS_Loki}"
+          "uid": "${DS_SW_Loki}"
         },
         "filters": [],
         "hide": 0,
@@ -280,7 +280,7 @@
         "hide": 2,
         "includeAll": false,
         "multi": false,
-        "name": "DS_Loki",
+        "name": "DS_SW_Loki",
         "options": [],
         "query": "loki",
         "refresh": 1,
@@ -295,7 +295,7 @@
         "hide": 2,
         "includeAll": false,
         "multi": false,
-        "name": "DS_Prometheus",
+        "name": "DS_SW_Prometheus",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
