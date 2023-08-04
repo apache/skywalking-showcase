@@ -15,15 +15,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Values.features.promql.enabled }}
+{{- if .Values.features.grafana.enabled }}
 
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: promql-configs
+  name: dashboard-configs
 data:
-{{ range $path, $bytes := .Files.Glob "generated/promql-configs/*.json" }}
-{{- $path | replace "generated/promql-configs/" "" | indent 2 }}: |
+{{ range $path, $bytes := .Files.Glob "generated/dashboard-configs/*.json" }}
+{{- $path | replace "generated/dashboard-configs/" "" | indent 2 }}: |
 {{ $.Files.Get $path | indent 4 }}
 {{ end }}
 

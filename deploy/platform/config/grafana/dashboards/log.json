@@ -1,0 +1,318 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_SW_Loki}"
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": false,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_SW_Loki}"
+          },
+          "editorMode": "code",
+          "expr": "{service='$service', service_instance='${service_instance:raw}', endpoint='${endpoint:raw}', trace_id='$trace_id'} |= `$keyword_of_content` != `$excluding_keyword_of_content`",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Logs",
+      "type": "logs"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "hide": 2,
+        "label": "Layer",
+        "name": "layer",
+        "query": "GENERAL",
+        "skipUrlSync": false,
+        "type": "constant"
+      },
+      {
+        "current": {
+          "selected": false
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(service_traffic{layer='$layer'},service)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Service",
+        "multi": false,
+        "name": "service",
+        "options": [],
+        "query": {
+          "query": "label_values(service_traffic{layer='$layer'},service)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(instance_traffic{layer='$layer', service='$service'},service_instance)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Service Instance",
+        "multi": false,
+        "name": "service_instance",
+        "options": [],
+        "query": {
+          "query": "label_values(instance_traffic{layer='$layer', service='$service'},service_instance)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(endpoint_traffic{layer='$layer', service='$service', keyword='$endpoint_keyword', limit='$endpoint_limit'},endpoint)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Endpoint",
+        "multi": false,
+        "name": "endpoint",
+        "options": [],
+        "query": {
+          "query": "label_values(endpoint_traffic{layer='$layer', service='$service', keyword='$endpoint_keyword', limit='$endpoint_limit'},endpoint)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": "Endpoint Keyword",
+        "name": "endpoint_keyword",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "allValue": "",
+        "current": {
+          "selected": true,
+          "text": "100",
+          "value": "100"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Endpoint Limit",
+        "multi": false,
+        "name": "endpoint_limit",
+        "options": [
+          {
+            "selected": false,
+            "text": "20",
+            "value": "20"
+          },
+          {
+            "selected": false,
+            "text": "50",
+            "value": "50"
+          },
+          {
+            "selected": true,
+            "text": "100",
+            "value": "100"
+          }
+        ],
+        "query": "20,50,100",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "Trace Id",
+        "name": "trace_id",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_SW_Loki}"
+        },
+        "filters": [],
+        "hide": 0,
+        "label": "Tags",
+        "name": "tags",
+        "skipUrlSync": false,
+        "type": "adhoc"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "hide": 0,
+        "label": "KeywordOfContent",
+        "name": "keyword_of_content",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {},
+        "hide": 0,
+        "label": "ExcludingKeywordOfContent",
+        "name": "excluding_keyword_of_content",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "DS_SW_Loki",
+        "options": [],
+        "query": "loki",
+        "refresh": 1,
+        "regex": "SkyWalkingLogQL",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": false
+        },
+        "hide": 2,
+        "includeAll": false,
+        "multi": false,
+        "name": "DS_SW_Prometheus",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "SkyWalkingPromQL",
+        "skipUrlSync": false,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Log",
+  "uid": "Log",
+  "version": 1,
+  "weekStart": ""
+}

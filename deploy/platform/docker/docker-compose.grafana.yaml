@@ -26,10 +26,10 @@ services:
       - GF_INSTALL_PLUGINS=${SW_PLUGIN_URL};skywalking-datasource
     networks: [ sw ]
     volumes:
-      - ./config/promql/grafana.ini:/etc/grafana/grafana.ini
-      - ./config/promql/providers.yaml:/etc/grafana/provisioning/dashboards/providers.yaml
-      - ./config/promql/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
-      - ../config/promql/dashboards:/var/lib/grafana/dashboards/skywalking
+      - ./config/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./config/grafana/providers.yaml:/etc/grafana/provisioning/dashboards/providers.yaml
+      - ./config/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ../config/grafana/dashboards:/var/lib/grafana/dashboards/skywalking
     ports:
       - "3000:3000"
 networks:

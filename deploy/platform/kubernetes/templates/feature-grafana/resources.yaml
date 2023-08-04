@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if .Values.features.promql.enabled }}
+{{- if .Values.features.grafana.enabled }}
 
 #This config is for the showcase, when deploy your own environment fell free to modify it.
 ---
@@ -64,7 +64,7 @@ data:
     - access: proxy
       editable: false
       isDefault: true
-      name: SkyWalking
+      name: SkyWalkingPromQL
       orgId: 1
       type: prometheus
       url: http://{{ include "skywalking.oap.address.host" . }}:9090
@@ -77,6 +77,13 @@ data:
       url: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
       jsonData:
         URL: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
+    - access: proxy
+      editable: false
+      isDefault: false
+      name: SkyWalkingLogQL
+      orgId: 1
+      type: loki
+      url: http://{{ include "skywalking.oap.address.host" . }}:3100
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -95,7 +102,7 @@ spec:
     spec:
       containers:
         - name: grafana
-          image: {{ .Values.features.promql.grafana.image }}
+          image: {{ .Values.features.grafana.image }}
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_INSTALL_PLUGINS
@@ -113,22 +120,25 @@ spec:
             - name: grafana-config
               mountPath: /etc/grafana/provisioning/dashboards/providers.yaml
               subPath: providers.yaml
-            - name: promql-configs
+            - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/general-service.json
               subPath: general-service.json
-            - name: promql-configs
+            - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/service-mesh.json
               subPath: service-mesh.json
-            - name: promql-configs
+            - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/virtual-database.json
               subPath: virtual-database.json
-      volumes: # require create configmap from deploy/platform/config/promql/dashboards
+            - name: dashboard-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/log.json
+              subPath: log.json
+      volumes: # require create configmap from deploy/platform/config/grafana/dashboards
         - name: grafana-config
           configMap:
             name: grafana-config
-        - name: promql-configs
+        - name: dashboard-configs
           configMap:
-            name: promql-configs
+            name: dashboard-configs
 
 ---
 apiVersion: v1

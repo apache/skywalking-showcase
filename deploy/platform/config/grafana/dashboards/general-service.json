@@ -85,7 +85,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -136,7 +136,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_apdex{service='$service', layer='$layer'} / 10000",
@@ -151,7 +151,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -202,7 +202,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_sla{service='$service', layer='$layer'} / 100",
@@ -217,7 +217,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -268,7 +268,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_cpm{service='$service', layer='$layer'}",
@@ -283,7 +283,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -362,7 +362,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_resp_time{service='$service', layer='$layer'}",
@@ -378,7 +378,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -457,7 +457,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_apdex{service='$service', layer='$layer'} / 10000",
@@ -473,7 +473,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -552,7 +552,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_percentile{service='$service', layer='$layer', labels='0,1,2,3,4', relabels='P50,P75,P90,P95,P99'}",
@@ -568,7 +568,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -648,7 +648,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_cpm{service='$service', layer='$layer'}",
@@ -664,7 +664,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -745,7 +745,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_sla{service='$service', layer='$layer'} / 100",
@@ -761,7 +761,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -841,7 +841,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_mq_consume_count{service='$service', layer='$layer'}",
@@ -857,7 +857,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -937,7 +937,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_mq_consume_latency{service='$service', layer='$layer'}",
@@ -953,7 +953,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1006,7 +1006,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1024,7 +1024,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1073,7 +1073,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1091,7 +1091,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1140,7 +1140,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1158,7 +1158,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1211,7 +1211,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1229,7 +1229,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1282,7 +1282,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1300,7 +1300,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1349,7 +1349,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "exemplar": false,
@@ -1377,7 +1377,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "description": "",
           "fieldConfig": {
@@ -1456,7 +1456,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_SkyWalking}"
+                "uid": "${DS_SW_Prometheus}"
               },
               "editorMode": "code",
               "expr": "service_instance_cpm{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -1472,7 +1472,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "description": "",
           "fieldConfig": {
@@ -1552,7 +1552,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_SkyWalking}"
+                "uid": "${DS_SW_Prometheus}"
               },
               "editorMode": "code",
               "expr": "service_instance_sla{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
@@ -1568,7 +1568,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "description": "",
           "fieldConfig": {
@@ -1647,7 +1647,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_SkyWalking}"
+                "uid": "${DS_SW_Prometheus}"
               },
               "editorMode": "code",
               "expr": "service_instance_resp_time{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -1663,7 +1663,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "description": "",
           "fieldConfig": {
@@ -1742,7 +1742,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_SkyWalking}"
+                "uid": "${DS_SW_Prometheus}"
               },
               "editorMode": "code",
               "expr": "meter_datasource{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
@@ -1769,7 +1769,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "description": "",
           "fieldConfig": {
@@ -1848,7 +1848,7 @@
             {
               "datasource": {
                 "type": "prometheus",
-                "uid": "${DS_SkyWalking}"
+                "uid": "${DS_SW_Prometheus}"
               },
               "editorMode": "code",
               "expr": "meter_thread_pool{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -1881,7 +1881,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -1961,7 +1961,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_cpu{service='$service', service_instance='$service_instance',layer='$layer'}",
@@ -1977,7 +1977,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2057,7 +2057,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_memory_noheap_max{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2069,7 +2069,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_memory_noheap{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2081,7 +2081,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_memory_heap{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2093,7 +2093,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_memory_heap_max{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2109,7 +2109,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2189,7 +2189,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_young_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2201,7 +2201,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_old_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2213,7 +2213,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_normal_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2229,7 +2229,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2309,7 +2309,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_young_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2321,7 +2321,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_old_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2333,7 +2333,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_normal_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2349,7 +2349,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2430,7 +2430,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_live_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2442,7 +2442,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_daemon_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2454,7 +2454,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_peak_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2470,7 +2470,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2550,7 +2550,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_timed_waiting_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2562,7 +2562,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_blocked_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2574,7 +2574,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_waiting_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2586,7 +2586,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_thread_runnable_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2602,7 +2602,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2686,7 +2686,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_class_loaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2698,7 +2698,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_class_total_loaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2710,7 +2710,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "instance_jvm_class_total_unloaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
@@ -2739,7 +2739,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2819,7 +2819,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_cpm{service='$service', endpoint='$endpoint', layer='$layer'}",
@@ -2835,7 +2835,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -2916,7 +2916,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_resp_time{endpoint='$endpoint', service='$service', layer='$layer'}",
@@ -2932,7 +2932,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -3013,7 +3013,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_percentile{service='$service', endpoint=\"$endpoint\", layer='$layer', labels='0,1,2,3,4', relabels='P50,P75,P90,P95,P99'}",
@@ -3029,7 +3029,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -3110,7 +3110,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_sla{service='$service', endpoint='$endpoint', layer='$layer'} / 100",
@@ -3126,7 +3126,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${DS_SkyWalking}"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -3206,7 +3206,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "${DS_SkyWalking}"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_mq_consume_latency{service='$service', layer='$layer'}",
@@ -3242,7 +3242,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_SkyWalking}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(service_traffic{layer='$layer'}, service)",
         "hide": 0,
@@ -3269,7 +3269,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_SkyWalking}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(instance_traffic{layer='$layer', service='$service'}, service_instance)",
         "hide": 0,
@@ -3296,7 +3296,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${DS_SkyWalking}"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(endpoint_traffic{layer='$layer', service='$service', keyword='$endpoint_keyword', limit='$endpoint_limit'}, endpoint)",
         "hide": 0,
@@ -3372,17 +3372,17 @@
       {
         "current": {
           "selected": false,
-          "text": "SkyWalking",
-          "value": "SkyWalking"
+          "text": "SkyWalkingPromQL",
+          "value": "SkyWalkingPromQL"
         },
         "hide": 2,
         "includeAll": false,
         "multi": false,
-        "name": "DS_SkyWalking",
+        "name": "DS_SW_Prometheus",
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "SkyWalking",
+        "regex": "SkyWalkingPromQL",
         "skipUrlSync": false,
         "type": "datasource"
       },

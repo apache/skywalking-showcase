@@ -27,6 +27,7 @@ skywalking:
       grpc: 11800
       rest: 12800
       promql: 9090
+      logql: 3100
       zipkin: 9411
       zipkin-query: 9412
       metrics: 1234
@@ -337,10 +338,9 @@ features:
   vmMonitor:
     enabled: false
 
-  promql:
+  grafana:
     enabled: false
-    grafana:
-      image: ~
+    image: ~
 
   function:
     enabled: false
