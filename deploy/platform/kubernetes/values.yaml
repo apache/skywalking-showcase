@@ -63,11 +63,9 @@ skywalking:
       alarm-settings.yml: |
         rules:
           service_resp_time_rule:
-            metrics-name: service_resp_time
-            threshold: 20 # 20ms is just for demo
-            op: ">"
+            # 20ms is just for demo
+            expression: sum(service_resp_time > 20) >= 1 
             period: 5
-            count: 1
             message: Response time of service {name} is more than 20ms.
       core.default.log4j-xml: |-
         <Configuration status="WARN">
