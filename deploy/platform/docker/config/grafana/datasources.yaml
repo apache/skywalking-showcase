@@ -30,7 +30,7 @@ datasources:
     isDefault: false
     name: SkyWalking-Plugin
     orgId: 1
-    type: skywalking-datasource
+    type: apache-skywalking-datasource
     url: http://oap:12800/graphql
     jsonData:
       URL: http://oap:12800/graphql

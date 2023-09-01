@@ -73,7 +73,7 @@ data:
       isDefault: false
       name: SkyWalking-Plugin
       orgId: 1
-      type: skywalking-datasource
+      type: apache-skywalking-datasource
       url: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
       jsonData:
         URL: http://{{ include "skywalking.oap.address.host" . }}:12800/graphql
@@ -106,7 +106,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_INSTALL_PLUGINS
-              value: {{ .Values.skywalking.plugin.url }};skywalking-datasource
+              value: {{ .Values.skywalking.plugin.url }};apache-skywalking-datasource
           ports:
             - name: http-grafana
               containerPort: 3000
