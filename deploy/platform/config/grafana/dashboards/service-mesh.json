@@ -41,7 +41,7 @@
     },
     {
       "datasource": {
-        "type": "skywalking-datasource",
+        "type": "apache-skywalking-datasource",
         "uid": "${Plugin_SkyWalking}"
       },
       "description": "",
@@ -55,7 +55,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "skywalking-datasource",
+            "type": "apache-skywalking-datasource",
             "uid": "${Plugin_SkyWalking}"
           },
           "edgeMetrics": "[   {     \"name\": \"service_relation_server_cpm\",     \"label\": \"Server Load\",     \"unit\": \"cpm\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_server_resp_time\",     \"label\": \"Server Latency\",     \"unit\": \"ms\",     \"type\": \"SERVER\"   },   {     \"name\": \"service_relation_client_cpm\",     \"label\": \"Client Load\",     \"unit\": \"cpm\",     \"type\": \"CLINET\"   },   {     \"name\": \"service_relation_client_resp_time\",     \"label\": \"Client Latency\",     \"unit\": \"ms\",     \"type\": \"CLINET\"   } ]",
@@ -3934,7 +3934,7 @@
         "multi": false,
         "name": "Plugin_SkyWalking",
         "options": [],
-        "query": "skywalking-datasource",
+        "query": "apache-skywalking-datasource",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
