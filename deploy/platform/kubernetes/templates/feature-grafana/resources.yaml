@@ -25,8 +25,6 @@ metadata:
   name: grafana-config
 data:
   grafana.ini: |
-    # Notice: `development` mode only used for develop plugin, please change to `production` mode in production environment
-    app_mode = development
     [security]
     disable_initial_admin_creation = true
     [auth.anonymous]
@@ -106,7 +104,7 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: GF_INSTALL_PLUGINS
-              value: {{ .Values.skywalking.plugin.url }};apache-skywalking-datasource
+              value: apache-skywalking-datasource {{ .Values.skywalking.grafana.plugin.version }}
           ports:
             - name: http-grafana
               containerPort: 3000

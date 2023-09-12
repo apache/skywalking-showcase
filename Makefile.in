@@ -50,7 +50,7 @@ SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:9da447851549b
 SWCK_OPERATOR_IMAGE ?= docker.io/apache/skywalking-swck
 SWCK_OPERATOR_IMAGE_TAG ?= v0.7.0
 
-SW_PLUGIN_URL ?= https://github.com/apache/skywalking-grafana-plugins/releases/download/v0.1.0/apache-skywalking-datasource-0.1.0.zip
+SW_GRAFANA_PLUGIN_VERSION ?= 0.1.0
 GRAFANA_IMAGE ?= grafana/grafana:9.5.2
 
 OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector

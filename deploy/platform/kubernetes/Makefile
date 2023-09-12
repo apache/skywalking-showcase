@@ -38,7 +38,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.event.exporter.image=$(SW_EVENT_E
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.agentImage=$(SW_AGENT_JAVA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.plugin.url=$(SW_PLUGIN_URL)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRAFANA_PLUGIN_VERSION)
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
