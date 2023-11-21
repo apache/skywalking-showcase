@@ -34,12 +34,6 @@ dependencies:
     repository: oci://ghcr.io/apache/skywalking-kubernetes
     condition: features.javaAgentInjector.enabled
 
-    # @feature: function; install open function resources
-  - name: openfunction
-    version: 0.5.0
-    repository: https://openfunction.github.io/charts
-    condition: openfunction.enabled
-
   - name: kube-state-metrics
     version: 5.0.1
     repository: https://prometheus-community.github.io/helm-charts
