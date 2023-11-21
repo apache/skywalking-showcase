@@ -156,11 +156,6 @@ feature-mongodb-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set mongodb.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
-.PHONY: feature-function
-feature-function:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.function.enabled=true)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set openfunction.enabled=true)
-
 .PHONY: feature-grafana
 feature-grafana:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.enabled=true)

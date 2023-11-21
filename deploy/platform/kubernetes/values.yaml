@@ -156,25 +156,6 @@ swck:
     enabled: true
   fullnameOverride: "swck-demo"
 
-# @feature: function; install open function resources
-openfunction:
-  enabled: false
-  global:
-    ShipwrightBuild:
-      enabled: false
-    TektonPipelines:
-      enabled: false
-    Keda:
-      enabled: false
-    Dapr:
-      enabled: false
-  contour:
-    envoy:
-      useHostPort: false
-      service:
-        type: ClusterIP
-        externalTrafficPolicy: ""
-
 istio:
   enabled: false
 
