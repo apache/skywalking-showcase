@@ -16,5 +16,24 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,nginx-monitor,apisix-monitor,grafana,elasticsearch-monitor
+{{- define "opentelemetry-config-nginx" }}
+{{- if .Values.features.nginxMonitor.enabled }}
+
+- job_name: 'nginx-monitoring'
+  scrape_interval: 5s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: nginx;metrics
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - target_label: service
+      replacement: nginx
+
+{{- end }}
+{{- end }}
