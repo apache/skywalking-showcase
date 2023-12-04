@@ -28,6 +28,7 @@ data:
       prometheus:
         config:
           scrape_configs:
+            {{- include "opentelemetry-config-nginx" . | indent 12 }}
             {{- include "opentelemetry-config-apisix" . | indent 12 }}
             {{- include "opentelemetry-config-istiod-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-kubernetes-monitor" . | indent 12 }}

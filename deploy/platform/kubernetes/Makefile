@@ -126,6 +126,11 @@ feature-postgresql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.postgresqlMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-nginx-monitor
+feature-nginx-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.nginxMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: feature-apisix-monitor
 feature-apisix-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.apisixMonitor.enabled=true)

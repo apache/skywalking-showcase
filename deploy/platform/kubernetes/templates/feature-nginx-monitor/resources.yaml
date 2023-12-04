@@ -1,0 +1,228 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.nginxMonitor.enabled }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  nginx.conf: |
+    worker_processes  1;
+    daemon off;
+    error_log  /var/log/nginx/error.log notice;
+    
+    events {
+        worker_connections 1024;
+    }
+    
+    http {
+        log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                          '$status $body_bytes_sent "$http_referer" '
+                          '"$http_user_agent" "$http_x_forwarded_for"';
+    
+        access_log  /var/log/nginx/access.log  main;
+    
+        lua_shared_dict prometheus_metrics 10M;
+        # lua_package_path "/path/to/nginx-lua-prometheus/?.lua;;";
+    
+        init_worker_by_lua_block {
+          prometheus = require("prometheus").init("prometheus_metrics")
+    
+          metric_bytes = prometheus:counter(
+            "nginx_http_size_bytes", "Total size of HTTP", {"type", "route"})
+          metric_requests = prometheus:counter(
+            "nginx_http_requests_total", "Number of HTTP requests", {"status", "route"})
+          metric_latency = prometheus:histogram(
+            "nginx_http_latency", "HTTP request latency", {"route"})
+          metric_connections = prometheus:gauge(
+            "nginx_http_connections", "Number of HTTP connections", {"state"})
+        }
+    
+        server {
+            listen 8080;
+    
+            location /test {
+              default_type application/json;
+              return 200  '{"code": 200, "message": "success"}';
+    
+              log_by_lua_block {
+                metric_bytes:inc(tonumber(ngx.var.request_length), {"request", "/test/**"})
+                metric_bytes:inc(tonumber(ngx.var.bytes_send), {"response", "/test/**"})
+                metric_requests:inc(1, {ngx.var.status, "/test/**"})
+                metric_latency:observe(tonumber(ngx.var.request_time), {"/test/**"})
+              }
+            }
+    
+            location /test_404 {
+              default_type application/json;
+              return 404  '{"code": 404, "message": "404 NOT Found"}';
+    
+              log_by_lua_block {
+                metric_bytes:inc(tonumber(ngx.var.request_length), {"request", "/test_404/**"})
+                metric_bytes:inc(tonumber(ngx.var.bytes_send), {"response", "/test_404/**"})
+                metric_requests:inc(1, {ngx.var.status, "/test_404/**"})
+                metric_latency:observe(tonumber(ngx.var.request_time), {"/test_404/**"})
+              }
+            }
+    
+            location /test_500 {
+              default_type application/json;
+              return 500  '{"code": 500, "message": "500 Internal Server Error"}';
+    
+              log_by_lua_block {
+                metric_bytes:inc(tonumber(ngx.var.request_length), {"request", "/test_500/**"})
+                metric_bytes:inc(tonumber(ngx.var.bytes_send), {"response", "/test_500/**"})
+                metric_requests:inc(1, {ngx.var.status, "/test_500/**"})
+                metric_latency:observe(tonumber(ngx.var.request_time), {"/test_500/**"})
+              }
+            }
+        }
+    
+        server {
+          listen 9145;
+          location /metrics {
+            content_by_lua_block {
+              metric_connections:set(ngx.var.connections_reading, {"reading"})
+              metric_connections:set(ngx.var.connections_waiting, {"waiting"})
+              metric_connections:set(ngx.var.connections_writing, {"writing"})
+              prometheus:collect()
+            }
+          }
+        }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-log-fluent-bit
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush          5
+        Daemon         Off
+        Log_Level      warn
+    [INPUT]
+        Name           tail
+        Tag            access
+        Path           /var/log/nginx/access.log
+    [INPUT]
+        Name           tail
+        Tag            error
+        Path           /var/log/nginx/error.log
+    [FILTER]
+        Name           lua
+        Match          access
+        Script         fluent-bit-script.lua
+        Call           rewrite_access_log
+    [FILTER]
+        Name           lua
+        Match          error
+        Script         fluent-bit-script.lua
+        Call           rewrite_error_log
+    [OUTPUT]
+        Name            stdout
+        Match           *
+        Format          json
+    [OUTPUT]
+        Name            http
+        Match           *
+        Host            {{ template "skywalking.oap.address.host" . }}
+        Port            12800
+        URI             /v3/logs
+        Format          json
+
+  fluent-bit-script.lua: |
+    function rewrite_access_log(tag, timestamp, record)
+        local newRecord = {}
+        newRecord["layer"] = "NGINX"
+        newRecord["service"] = "nginx::nginx"
+        newRecord["serviceInstance"] = os.getenv("SW_SERVICE_INSTANCE")
+        newRecord["body"] = { text = { text = record.log } }
+        newRecord["tags"] = { data = { { key = "LOG_KIND", value = "NGINX_ACCESS_LOG" } } }
+        return 1, timestamp, newRecord
+    end
+    
+    function rewrite_error_log(tag, timestamp, record)
+        local newRecord = {}
+        newRecord["layer"] = "NGINX"
+        newRecord["service"] = "nginx::nginx"
+        newRecord["serviceInstance"] = os.getenv("SW_SERVICE_INSTANCE")
+        newRecord["body"] = { text = { text = record.log } }
+        newRecord["tags"] = { data = { { key = "LOG_KIND", value = "NGINX_ERROR_LOG" } } }
+        return 1, timestamp, newRecord
+    end
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: nginx
+          image: openresty/openresty:1.17.8.2-5-alpine-fat
+          command: ["sh", "-c", "luarocks install nginx-lua-prometheus && openresty -c /var/nginx/conf.d/nginx.conf"]
+          ports:
+            - name: metrics
+              containerPort: 9145
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/nginx/
+            - name: nginx-config
+              mountPath: /var/nginx/conf.d/
+        - name: nginx-caller
+          image: openresty/openresty:1.17.8.2-5-alpine-fat
+          command: ["sh", "-c", "while true; do curl -o /dev/null -s http://localhost:8080/test; curl -o /dev/null -s http://localhost:8080/test_404; curl -o /dev/null -s http://localhost:8080/test_500; sleep 1s; done"]
+        - name: fluent-bit
+          image: fluent/fluent-bit:1.9
+          env:
+            - name: SW_SERVICE_INSTANCE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: logs
+              mountPath: /var/log/nginx/
+            - name: fluent-bit-config
+              mountPath: /fluent-bit/etc/
+      volumes:
+        - name: logs
+          emptyDir: {}
+        - name: nginx-config
+          configMap:
+            name: nginx-config
+        - name: fluent-bit-config
+          configMap:
+            name: nginx-log-fluent-bit
+
+{{- end }}
