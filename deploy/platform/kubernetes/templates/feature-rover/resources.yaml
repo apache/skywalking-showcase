@@ -72,7 +72,7 @@ spec:
             - name: ROVER_ACCESS_LOG_ACTIVE
               value: "true"
             - name: ROVER_ACCESS_LOG_EXCLUDE_NAMESPACES
-              value: gmp-system,kube-system,skywalking-showcase
+              value: gmp-system,kube-system,{{.Release.Namespace}}
             - name: ROVER_ACCESS_LOG_EXCLUDE_CLUSTER
               value: mesh-svr
       hostPID: true
