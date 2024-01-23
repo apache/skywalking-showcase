@@ -1,0 +1,83 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.r3.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: r3
+spec:
+  selector:
+    app: r3
+  ports:
+    - protocol: TCP
+      port: 17128
+      name: r3-port
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: r3-deployment
+  labels:
+    app: r3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: r3
+  template:
+    metadata:
+      labels:
+        app: r3
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: r3
+          image: {{ .Values.features.r3.image }}
+          ports:
+            - containerPort: 17128
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: r3-load
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: r3-load
+spec:
+  schedule: "0,10,20,30,40,50 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          shareProcessNamespace: true
+          containers:
+            - name: r3-load
+              image: curlimages/curl
+              command: ["/bin/sh"]
+              args: ["-c", "for i in $(seq 1 200); do curl http://rating/songs/$i/reviews/$((i+1)); sleep 1; done; curl -X POST http://localhost:15000/quitquitquit;"]
+              securityContext:
+                capabilities:
+                  add:
+                    - SYS_PTRACE
+          restartPolicy: Never
+{{- end }}

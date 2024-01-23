@@ -55,6 +55,10 @@ skywalking:
       SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
       SW_RECEIVER_ZIPKIN: default
       SW_QUERY_ZIPKIN: default
+      # @feature: r3; some basic settings for R3
+      SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
+      SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
+      SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
 
     config:
       metadata-service-mapping.yaml: |
@@ -343,3 +347,7 @@ features:
   javaAgentInjector:
     enabled: false
     agentImage: ~
+
+  r3:
+    enabled: false
+    image: ~
