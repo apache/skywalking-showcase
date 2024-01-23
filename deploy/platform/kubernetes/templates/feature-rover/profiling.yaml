@@ -60,22 +60,22 @@ spec:
                 - -c
                 - >
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create fixed \
-                    --service-name mesh-svr::recommendation --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name mesh-svr::recommendation.{{ .Values.sampleServices.namespace }} --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create fixed \
-                    --service-name mesh-svr::app --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name mesh-svr::app.{{ .Values.sampleServices.namespace }} --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create fixed \
-                    --service-name mesh-svr::songs --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name mesh-svr::songs.{{ .Values.sampleServices.namespace }} --labels mesh-envoy --duration=9m --target-type ON_CPU;
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create fixed \
-                    --service-name mesh-svr::gateway --labels mesh-envoy --duration=9m --target-type ON_CPU;
+                    --service-name mesh-svr::gateway.{{ .Values.sampleServices.namespace }} --labels mesh-envoy --duration=9m --target-type ON_CPU;
 
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create fixed \
-                    --service-name mesh-svr::songs --labels mesh-envoy --duration=9m --target-type OFF_CPU;
+                    --service-name mesh-svr::songs.{{ .Values.sampleServices.namespace }} --labels mesh-envoy --duration=9m --target-type OFF_CPU;
 
                   apk update && apk add yq;
                   /swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql profiling ebpf create network \
                     --sampling-config=/profiling/network-profiling-sampling.yaml \
-                    --service-name=mesh-svr::recommendation \
-                    --instance-name=$(/swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql instance ls --service-name mesh-svr::recommendation|yq e '.[0].name' -);
+                    --service-name=mesh-svr::recommendation.{{ .Values.sampleServices.namespace }} \
+                    --instance-name=$(/swctl --base-url={{ template "skywalking.oap.address.http" . }}/graphql instance ls --service-name mesh-svr::recommendation.{{ .Values.sampleServices.namespace }}|yq e '.[0].name' -);
               volumeMounts:
                 - name: profiling-config
                   mountPath: /profiling
