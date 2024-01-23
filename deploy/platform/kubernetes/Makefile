@@ -39,6 +39,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.agentImage=$(SW
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRAFANA_PLUGIN_VERSION)
+HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.image=$(SW_R3_IMAGE):$(SW_R3_IMAGE_TAG)
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
@@ -99,7 +100,7 @@ feature-istiod-monitor:
 .PHONY: feature-als
 feature-als:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.als.enabled=true)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true --set istiod.global.istioNamespace=$(NAMESPACE) --set base.global.istioNamespace=$(NAMESPACE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.tracing.zipkin.address=$(RELEASE)-oap.$(NAMESPACE).svc:9411)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyMetricsService.address=$(BACKEND_SERVICE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyAccessLogService.address=$(BACKEND_SERVICE))
@@ -170,6 +171,11 @@ feature-grafana:
 .PHONY: feature-mesh-with-agent
 feature-mesh-with-agent:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.meshWithAgent.enabled=true)
+
+.PHONY: feature-r3
+feature-r3:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_AI_PIPELINE_URI_RECOGNITION_SERVER_ADDR=r3)
 
 .PHONY: deploy
 deploy: $(features)
