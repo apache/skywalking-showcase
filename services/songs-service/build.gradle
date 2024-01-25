@@ -45,6 +45,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'com.h2database:h2'
+	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.apache.skywalking:apm-toolkit-logback-1.x:8.11.0'
 	implementation 'org.apache.skywalking:apm-toolkit-micrometer-registry:8.11.0'
 	implementation 'com.google.guava:guava:23.0'

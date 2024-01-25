@@ -20,5 +20,16 @@ server:
   address: 0.0.0.0
 
 spring:
+  sql:
+    init:
+      data-locations: classpath:data.sql
+      mode: always
+  datasource:
+    url: ${DATA_SOURCE_URL:jdbc:h2:mem:mem-db;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=FALSE}
+    username: ${DATA_SOURCE_USER:}
+    password: ${DATA_SOURCE_PASSWORD:}
   jpa:
     defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create
+

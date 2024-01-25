@@ -28,8 +28,11 @@
     - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
       action: keep
       regex: psql-exporter;metrics # @feature: postgresql; reference the name of the metrics port
-    - source_labels: [ __meta_kubernetes_pod_name ]
+    - source_labels: [ ]
       target_label: host_name
+      replacement: psql.{{ .Release.Namespace }}
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
       regex: (.+)
       replacement: $$1
 
