@@ -153,7 +153,14 @@ spec:
               value: tcp://activemq:61616
             - name: ACTIVE_MQ_QUEUE
               value: queue-songs-ping
-
+            {{- if  .Values.features.postgresqlMonitor.enabled }}
+            - name: DATA_SOURCE_URL
+              value: jdbc:postgresql://psql.{{ .Release.Namespace }}.svc.cluster.local:5432/postgres
+            - name: DATA_SOURCE_USER
+              value: postgres
+            - name: DATA_SOURCE_PASSWORD
+              value: password
+            {{- end }}
 ---
 apiVersion: v1
 kind: Service

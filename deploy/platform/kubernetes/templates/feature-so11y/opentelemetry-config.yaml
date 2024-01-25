@@ -28,7 +28,7 @@
       regex: oap;metrics # @feature: so11y; reference the name of the metrics port
     - source_labels: [ ]
       target_label: service
-      replacement: oap-server
+      replacement: {{ include "skywalking.oap.fullname" .Subcharts.skywalking }}.{{ .Release.Namespace }}
     - source_labels: [ __meta_kubernetes_pod_name ]
       target_label: host_name
       regex: (.+)
