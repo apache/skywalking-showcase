@@ -33,7 +33,7 @@
       regex: (.+)
       replacement: $$1
     - target_label: service
-      replacement: nginx
+      replacement: nginx.{{ .Release.Namespace }}
 
 {{- end }}
 {{- end }}

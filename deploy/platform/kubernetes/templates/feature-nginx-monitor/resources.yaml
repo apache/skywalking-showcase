@@ -152,7 +152,7 @@ data:
     function rewrite_access_log(tag, timestamp, record)
         local newRecord = {}
         newRecord["layer"] = "NGINX"
-        newRecord["service"] = "nginx::nginx"
+        newRecord["service"] = "nginx::nginx.{{ .Release.Namespace }}"
         newRecord["serviceInstance"] = os.getenv("SW_SERVICE_INSTANCE")
         newRecord["body"] = { text = { text = record.log } }
         newRecord["tags"] = { data = { { key = "LOG_KIND", value = "NGINX_ACCESS_LOG" } } }
@@ -162,7 +162,7 @@ data:
     function rewrite_error_log(tag, timestamp, record)
         local newRecord = {}
         newRecord["layer"] = "NGINX"
-        newRecord["service"] = "nginx::nginx"
+        newRecord["service"] = "nginx::nginx.{{ .Release.Namespace }}"
         newRecord["serviceInstance"] = os.getenv("SW_SERVICE_INSTANCE")
         newRecord["body"] = { text = { text = record.log } }
         newRecord["tags"] = { data = { { key = "LOG_KIND", value = "NGINX_ERROR_LOG" } } }
@@ -224,5 +224,17 @@ spec:
         - name: fluent-bit-config
           configMap:
             name: nginx-log-fluent-bit
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
 
 {{- end }}
