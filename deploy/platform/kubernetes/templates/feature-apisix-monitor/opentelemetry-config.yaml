@@ -33,7 +33,7 @@
       regex: (.+)
       replacement: $$1
     - target_label: skywalking_service
-      replacement: frontend
+      replacement: frontend.{{ .Values.sampleServices.namespace }}
 
 {{- end }}
 {{- end }}
