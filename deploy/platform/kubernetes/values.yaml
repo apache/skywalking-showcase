@@ -102,6 +102,7 @@ skywalking:
     image: ~
     imageTag: ~
     imagePullPolicy: "IfNotPresent"
+    antiAffinity: "soft"
 
   postgresql:
     enabled: false # Whether to start a demo postgresql deployment, don't use this for production.

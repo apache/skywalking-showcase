@@ -181,7 +181,7 @@ kind: CronJob
 metadata:
   name: psql-load-deployment # @feature: postgresql; set up job to trigger postgresql commands, you don't need this in production env.
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "*/3 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:

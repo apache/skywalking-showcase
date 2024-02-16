@@ -31,7 +31,7 @@ sure you have `make` installed and Docker daemon running.
 
 ### Prerequisites
 
-To deploy the full features of this showcase application, you may need up to 4 CPU cores and 4 GB memory, please
+To deploy the full features of this showcase application, you may need up to 8 CPU cores and 32 GB memory, please
 increase the Docker daemon resources or Kubernetes cluster resources if you find containers / Pods failed to start up.
 Alternatively, you can also only deploy part of the features that interest you if you don't want to increase the
 resources, via the guide in [Customization](#customization).
