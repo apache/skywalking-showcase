@@ -68,3 +68,8 @@ dependencies:
     version: 0.51.1
     repository: https://open-telemetry.github.io/opentelemetry-helm-charts
     condition: opentelemetry.enabled
+
+  - name: rocketmq
+    version: 12.0.1
+    repository: https://charts.bitnami.com/bitnami
+    condition: rocketmq.enabled

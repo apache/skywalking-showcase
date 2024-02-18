@@ -177,6 +177,11 @@ feature-r3:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_AI_PIPELINE_URI_RECOGNITION_SERVER_ADDR=r3)
 
+.PHONY: feature-rocketmq-monitor
+feature-rocketmq-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.rocketmqMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .
