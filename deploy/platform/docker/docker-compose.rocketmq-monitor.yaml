@@ -13,33 +13,105 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-receivers:
-  prometheus:
-    config:
-      scrape_configs:
-        - job_name: "rocketmq-monitoring"
-          scrape_interval: 30s
-          static_configs:
-            - targets: ['rocketmq-exporter:5557']
-          relabel_configs:
-            - source_labels: [ ]
-              target_label: cluster
-              replacement: rocketmq-cluster
+version: "3"
 
-exporters:
-  otlp:
-    endpoint: oap:11800
-    tls:
-      insecure: true
+services:
+  oap:
+    extends:
+      file: ../../script/docker-compose/base-compose.yml
+      service: oap
+    ports:
+      - "12800:12800"
+    networks:
+      - e2e
 
-processors:
-  batch:
-service:
-  pipelines:
-    metrics:
-      receivers:
-        - prometheus
-      processors:
-        - batch
-      exporters:
-        - otlp
+  rocketmq-namesrv-1:
+    image: apache/rocketmq:4.9.4
+    hostname: rocketmq-namesrv-1
+    ports:
+      - "9876:9876"
+    environment:
+      TZ: Asia/Shanghai
+    command: sh mqnamesrv
+    healthcheck:
+      test: [ "CMD", "nc", "-nz", "127.0.0.1", "9876" ]
+      interval: 15s
+      timeout: 10s
+      retries: 120
+    networks:
+      - e2e
+
+  rocketmq-broker-1:
+    image: apache/rocketmq:4.9.4
+    hostname: rocketmq-broker-1
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
+    command: sh mqbroker
+    healthcheck:
+      test: [ "CMD", "nc", "-nz", "127.0.0.1", "10911" ]
+      interval: 15s
+      timeout: 10s
+      retries: 120
+    depends_on:
+      rocketmq-namesrv-1:
+        condition: service_healthy
+    networks:
+      - e2e
+
+  rocketmq-producer-perf-test:
+    image: apache/rocketmq:4.9.4
+    hostname: rocketmq-producer-perf-test
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
+    command: sh tools.sh org.apache.rocketmq.example.quickstart.Producer
+    depends_on:
+      rocketmq-broker-1:
+        condition: service_healthy
+    networks:
+      - e2e
+
+  rocketmq-consumer-perf-test:
+    image: apache/rocketmq:4.9.4
+    hostname: rocketmq-consumer-perf-test
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
+    command: sh tools.sh org.apache.rocketmq.example.quickstart.Consumer
+    depends_on:
+      - rocketmq-producer-perf-test
+    networks:
+      - e2e
+
+  rocketmq-exporter:
+    image: apache/rocketmq-exporter:0.0.2
+    hostname: rocketmq-exporter
+    ports:
+      - "5557:5557"
+    environment:
+      TZ: Asia/Shanghai
+      rocketmq.config.namesrvAddr: "rocketmq-namesrv-1:9876"
+    depends_on:
+      - rocketmq-consumer-perf-test
+    networks:
+      - e2e
+
+  otel-collector:
+    image: otel/opentelemetry-collector:${OTEL_COLLECTOR_VERSION}
+    networks:
+      - e2e
+    command: [ "--config=/etc/otel-collector-rocketmq-config.yaml" ]
+    volumes:
+      - ./config/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - 55678
+    depends_on:
+      oap:
+        condition: service_healthy
+
+networks:
+  e2e:
