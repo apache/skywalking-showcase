@@ -106,7 +106,7 @@ services:
       - e2e
     command: [ "--config=/etc/otel-collector-rocketmq-config.yaml" ]
     volumes:
-      - ./config/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
+      - ./config/rocketmq/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
     expose:
       - 55678
     depends_on:
