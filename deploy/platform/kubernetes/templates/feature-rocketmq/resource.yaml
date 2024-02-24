@@ -34,7 +34,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: rocketmq-export-service
+  name: rocketmq-exporter
 spec:
   type: NodePort
   ports:
