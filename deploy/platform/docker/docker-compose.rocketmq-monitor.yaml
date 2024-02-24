@@ -27,7 +27,7 @@ services:
 
   rocketmq-namesrv-1:
     image: apache/rocketmq:4.9.4
-    hostname: rocketmq-namesrv-1
+    hostname: feature-rocketmq-namesrv-1
     ports:
       - "9876:9876"
     environment:
@@ -43,13 +43,13 @@ services:
 
   rocketmq-broker-1:
     image: apache/rocketmq:4.9.4
-    hostname: rocketmq-broker-1
+    hostname: feature-rocketmq-broker-1
     ports:
       - "10911:10911"
       - "10909:10909"
     environment:
       TZ: Asia/Shanghai
-      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
+      NAMESRV_ADDR: "feature-rocketmq-namesrv-1:9876"
     command: sh mqbroker
     healthcheck:
       test: [ "CMD", "nc", "-nz", "127.0.0.1", "10911" ]
@@ -64,11 +64,11 @@ services:
 
   rocketmq-producer-perf-test:
     image: apache/rocketmq:4.9.4
-    hostname: rocketmq-producer-perf-test
+    hostname: feature-rocketmq-producer-perf-test
     environment:
       TZ: Asia/Shanghai
-      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
-    command: sh tools.sh org.apache.rocketmq.example.quickstart.Producer
+      NAMESRV_ADDR: "feature-rocketmq-namesrv-1:9876"
+    command: sh tools.sh org.apache.feature-rocketmq.example.quickstart.Producer
     depends_on:
       rocketmq-broker-1:
         condition: service_healthy
@@ -77,11 +77,11 @@ services:
 
   rocketmq-consumer-perf-test:
     image: apache/rocketmq:4.9.4
-    hostname: rocketmq-consumer-perf-test
+    hostname: feature-rocketmq-consumer-perf-test
     environment:
       TZ: Asia/Shanghai
-      NAMESRV_ADDR: "rocketmq-namesrv-1:9876"
-    command: sh tools.sh org.apache.rocketmq.example.quickstart.Consumer
+      NAMESRV_ADDR: "feature-rocketmq-namesrv-1:9876"
+    command: sh tools.sh org.apache.feature-rocketmq.example.quickstart.Consumer
     depends_on:
       - rocketmq-producer-perf-test
     networks:
@@ -89,12 +89,12 @@ services:
 
   rocketmq-exporter:
     image: apache/rocketmq-exporter:0.0.2
-    hostname: rocketmq-exporter
+    hostname: feature-rocketmq-exporter
     ports:
       - "5557:5557"
     environment:
       TZ: Asia/Shanghai
-      rocketmq.config.namesrvAddr: "rocketmq-namesrv-1:9876"
+      rocketmq.config.namesrvAddr: "feature-rocketmq-namesrv-1:9876"
     depends_on:
       - rocketmq-consumer-perf-test
     networks:
@@ -104,9 +104,9 @@ services:
     image: otel/opentelemetry-collector:${OTEL_COLLECTOR_VERSION}
     networks:
       - e2e
-    command: [ "--config=/etc/otel-collector-rocketmq-config.yaml" ]
+    command: [ "--config=/etc/otel-collector-feature-rocketmq-config.yaml" ]
     volumes:
-      - ./config/rocketmq/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
+      - ./config/feature-rocketmq/otel-collector-feature-rocketmq-config.yaml:/etc/otel-collector-config.yaml
     expose:
       - 55678
     depends_on:
