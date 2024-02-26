@@ -353,5 +353,5 @@ features:
     enabled: false
     image: ~
 
-  rocketmq:
+  rocketmqMonitor:
     enabled: false
