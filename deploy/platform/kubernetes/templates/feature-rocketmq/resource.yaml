@@ -1,0 +1,137 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- if .Values.features.rocketmqMonitor.enabled }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocketmq
+spec:
+  ports:
+    - protocol: TCP
+      port: 9876
+      targetPort: 9876
+  selector:
+    app: rocketmq
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocketmq-exporter
+spec:
+  ports:
+    - protocol: TCP
+      port: 5557
+      targetPort: 5557
+  selector:
+    app: rocketmq
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocketmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocketmq
+  template:
+    metadata:
+      labels:
+        app: rocketmq
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: mqnamesrv
+          image: apache/rocketmq:4.9.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9876
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: JAVA_OPT_EXT
+              value: "-Xmx128m -Xms128m"
+          command: ["sh", "mqnamesrv"]
+        - name: rocketmq-broker
+          image: apache/rocketmq:4.9.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 10911
+            - containerPort: 10909
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: NAMESRV_ADDR
+              value: "localhost:9876"
+            - name: JAVA_OPT_EXT
+              value: "-Xmx128m -Xms128m"
+          command: [ "sh", "mqbroker" ]
+        - name: rocketmq-consumer-perf-test
+          image: apache/rocketmq:4.9.4
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: NAMESRV_ADDR
+              value: "localhost:9876"
+          command: ["sh", "tools.sh", "org.apache.rocketmq.example.quickstart.Consumer"]
+        - name: rocketmq-exporter
+          image: apache/rocketmq-exporter:0.0.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5557
+              name: metrics
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: rocketmq.config.namesrvAddr
+              value: "localhost:9876"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rocketmq-producer-development
+spec:
+  schedule: "*/10 * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: rocketmq-producer-perf-test
+              image: apache/rocketmq:4.9.4
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: TZ
+                  value: "Asia/Shanghai"
+                - name: NAMESRV_ADDR
+                  value: "rocketmq-service:9876"
+                - name: JAVA_OPT_EXT
+                  value: "-Xmx128m -Xms128m"
+              command: [ "sh", "tools.sh", "org.apache.rocketmq.example.quickstart.Producer" ]
+
+{{- end }}

@@ -39,6 +39,7 @@ data:
             {{- include "opentelemetry-config-elasticsearch-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-rabbitmq-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-mongodb-monitor" . | indent 12 }}
+            {{- include "opentelemetry-config-rocketmq-monitor" . | indent 12 }}
 
     exporters:
       otlp:
