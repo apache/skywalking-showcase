@@ -29,7 +29,7 @@
       regex: rabbitmq;metrics
     - source_labels: [ ]
       target_label: cluster
-      replacement: rabbitmq-cluster
+      replacement: demo-rabbitmq.{{ .Release.Namespace }}
     - source_labels: [ __address__ ]
       target_label: node
       regex: (.+)
