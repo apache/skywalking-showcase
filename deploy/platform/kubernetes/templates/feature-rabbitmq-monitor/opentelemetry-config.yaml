@@ -29,7 +29,8 @@
       regex: rabbitmq;metrics
     - source_labels: [ ]
       target_label: cluster
-      replacement: demo-rabbitmq.{{ .Release.Namespace }}
+      replacement:  {{ include "common.names.fullname" .Subcharts.rabbitmq }}.{{ .Release.Namespace }}
+
     - source_labels: [ __address__ ]
       target_label: node
       regex: (.+)
