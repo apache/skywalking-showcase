@@ -182,9 +182,14 @@ feature-rocketmq-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.rocketmqMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-pulsar-monitor
+feature-pulsar-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.pulsarMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
-	helm dep up .
+# 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace --timeout=20m $(HELM_OPTIONS)
 ifneq ($(DEBUG),true)
 	$(info rollout restart to allow the new sidecar to be injected.)

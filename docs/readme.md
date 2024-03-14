@@ -112,6 +112,8 @@ Currently, the features supported are:
 | `grafana`               | Deploy a Grafana to show SkyWalking metrics and logs on the Grafana UI.                                                                                                                | Feel free to modify the Grafana config when deploy your own environment.                                                              |
 | `r3`                    | Deploy [R3](https://github.com/SkyAPM/R3) as RESTful URL recognition service.                                                                                                          |                                                                                                                                       |
 | `rocketmq-monitor`      | Deploy OpenTelemetry and export RocketMQ monitoring metrics to SkyWalking for analysis and display on UI.                                                                              |                                                                                                                                       |
+| `pulsar-monitor`        | Deploy OpenTelemetry and export Pulsar monitoring metrics to SkyWalking for analysis and display on UI.                                                                                |                                                                                                                                       |
+
 ### Kubernetes
 
 To deploy the example application in Kubernetes, please make sure that you have `kubectl` command available, and it can
