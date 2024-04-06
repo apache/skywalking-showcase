@@ -120,7 +120,7 @@ services:
     command: bash -c "bin/pulsar-perf produce -m 1 sw-topic"
 
   otel-collector:
-    image: otel/opentelemetry-collector:${OTEL_COLLECTOR_VERSION}
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     networks:
       - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]
