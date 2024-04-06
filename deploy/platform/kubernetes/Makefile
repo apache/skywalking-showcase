@@ -182,6 +182,11 @@ feature-rocketmq-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.rocketmqMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-pulsar-monitor
+feature-pulsar-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.pulsarMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .
