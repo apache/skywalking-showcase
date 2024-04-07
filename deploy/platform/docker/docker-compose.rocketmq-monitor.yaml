@@ -101,10 +101,10 @@ services:
       - e2e
 
   otel-collector:
-    image: otel/opentelemetry-collector:${OTEL_COLLECTOR_VERSION}
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     networks:
       - e2e
-    command: [ "--config=/etc/otel-collector-rocketmq-config.yaml" ]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./config/rocketmq/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
     expose:
