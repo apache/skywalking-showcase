@@ -140,7 +140,7 @@
           },
           "editorMode": "code",
           "expr": "service_apdex{service='$service', layer='$layer'} / 10000",
-          "legendFormat": "__auto",
+          "legendFormat": "apdex",
           "range": true,
           "refId": "A"
         }
@@ -206,7 +206,7 @@
           },
           "editorMode": "code",
           "expr": "service_sla{service='$service', layer='$layer'} / 100",
-          "legendFormat": "__auto",
+          "legendFormat": "sla",
           "range": true,
           "refId": "A"
         }
@@ -272,7 +272,7 @@
           },
           "editorMode": "code",
           "expr": "service_cpm{service='$service', layer='$layer'}",
-          "legendFormat": "__auto",
+          "legendFormat": "cpm",
           "range": true,
           "refId": "A"
         }
@@ -367,7 +367,7 @@
           "editorMode": "code",
           "expr": "service_resp_time{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "resp_time",
           "range": true,
           "refId": "A"
         }
@@ -462,7 +462,7 @@
           "editorMode": "code",
           "expr": "service_apdex{service='$service', layer='$layer'} / 10000",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "apdex",
           "range": true,
           "refId": "A"
         }
@@ -555,9 +555,9 @@
             "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
-          "expr": "service_percentile{service='$service', layer='$layer', labels='0,1,2,3,4', relabels='P50,P75,P90,P95,P99'}",
+          "expr": "service_percentile{service='$service', layer='$layer', p='50,75,90,95,99'}",
           "format": "time_series",
-          "legendFormat": "{{label}}",
+          "legendFormat": "{{p}}",
           "range": true,
           "refId": "A"
         }
@@ -653,7 +653,7 @@
           "editorMode": "code",
           "expr": "service_cpm{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "cpm",
           "range": true,
           "refId": "A"
         }
@@ -750,7 +750,7 @@
           "editorMode": "code",
           "expr": "service_sla{service='$service', layer='$layer'} / 100",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "sla",
           "range": true,
           "refId": "A"
         }
@@ -846,7 +846,7 @@
           "editorMode": "code",
           "expr": "service_mq_consume_count{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "count",
           "range": true,
           "refId": "A"
         }
@@ -942,7 +942,7 @@
           "editorMode": "code",
           "expr": "service_mq_consume_latency{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "latency",
           "range": true,
           "refId": "A"
         }
@@ -1461,7 +1461,7 @@
               "editorMode": "code",
               "expr": "service_instance_cpm{service='$service', service_instance='$service_instance', layer='$layer'}",
               "format": "time_series",
-              "legendFormat": "__auto",
+              "legendFormat": "cpm",
               "range": true,
               "refId": "A"
             }
@@ -1557,7 +1557,7 @@
               "editorMode": "code",
               "expr": "service_instance_sla{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
               "format": "time_series",
-              "legendFormat": "__auto",
+              "legendFormat": "sla",
               "range": true,
               "refId": "A"
             }
@@ -1652,7 +1652,7 @@
               "editorMode": "code",
               "expr": "service_instance_resp_time{service='$service', service_instance='$service_instance', layer='$layer'}",
               "format": "time_series",
-              "legendFormat": "__auto",
+              "legendFormat": "resp_time",
               "range": true,
               "refId": "A"
             }
@@ -1747,7 +1747,7 @@
               "editorMode": "code",
               "expr": "meter_datasource{service='$service', service_instance='$service_instance', layer='$layer'} / 100",
               "format": "time_series",
-              "legendFormat": "__auto",
+              "legendFormat": "datasource",
               "range": true,
               "refId": "A"
             }
@@ -1853,7 +1853,7 @@
               "editorMode": "code",
               "expr": "meter_thread_pool{service='$service', service_instance='$service_instance', layer='$layer'}",
               "format": "time_series",
-              "legendFormat": "__auto",
+              "legendFormat": "thread_pool",
               "range": true,
               "refId": "A"
             }
@@ -1966,7 +1966,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_cpu{service='$service', service_instance='$service_instance',layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_cpu",
           "range": true,
           "refId": "A"
         }
@@ -2062,7 +2062,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_memory_noheap_max{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_memory_noheap_max",
           "range": true,
           "refId": "A"
         },
@@ -2074,7 +2074,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_memory_noheap{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_memory_noheap",
           "range": true,
           "refId": "B"
         },
@@ -2086,7 +2086,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_memory_heap{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_memory_heap",
           "range": true,
           "refId": "C"
         },
@@ -2098,7 +2098,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_memory_heap_max{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_memory_heap_max",
           "range": true,
           "refId": "D"
         }
@@ -2194,7 +2194,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_young_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_young_gc_time",
           "range": true,
           "refId": "A"
         },
@@ -2206,7 +2206,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_old_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_old_gc_time",
           "range": true,
           "refId": "B"
         },
@@ -2218,7 +2218,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_normal_gc_time{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_normal_gc_time",
           "range": true,
           "refId": "C"
         }
@@ -2314,7 +2314,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_young_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_young_gc_count",
           "range": true,
           "refId": "A"
         },
@@ -2326,7 +2326,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_old_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_old_gc_count",
           "range": true,
           "refId": "B"
         },
@@ -2338,7 +2338,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_normal_gc_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "_jvm_normal_gc_count",
           "range": true,
           "refId": "C"
         }
@@ -2435,7 +2435,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_live_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_live_count",
           "range": true,
           "refId": "A"
         },
@@ -2447,7 +2447,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_daemon_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_daemon_count",
           "range": true,
           "refId": "B"
         },
@@ -2459,7 +2459,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_peak_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_peak_count",
           "range": true,
           "refId": "C"
         }
@@ -2555,7 +2555,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_timed_waiting_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_timed_waiting_state_thread_count",
           "range": true,
           "refId": "A"
         },
@@ -2567,7 +2567,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_blocked_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_blocked_state_thread_count",
           "range": true,
           "refId": "B"
         },
@@ -2579,7 +2579,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_waiting_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_waiting_state_thread_count",
           "range": true,
           "refId": "C"
         },
@@ -2591,7 +2591,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_thread_runnable_state_thread_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_thread_runnable_state_thread_count",
           "range": true,
           "refId": "D"
         }
@@ -2691,7 +2691,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_class_loaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_class_loaded_class_count",
           "range": true,
           "refId": "A"
         },
@@ -2703,7 +2703,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_class_total_loaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_class_total_loaded_class_count",
           "range": true,
           "refId": "B"
         },
@@ -2715,7 +2715,7 @@
           "editorMode": "code",
           "expr": "instance_jvm_class_total_unloaded_class_count{service='$service', service_instance='$service_instance', layer='$layer'}",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "jvm_class_total_unloaded_class_count",
           "range": true,
           "refId": "C"
         }
@@ -2824,7 +2824,7 @@
           "editorMode": "code",
           "expr": "endpoint_cpm{service='$service', endpoint='$endpoint', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "cpm",
           "range": true,
           "refId": "A"
         }
@@ -2921,7 +2921,7 @@
           "editorMode": "code",
           "expr": "endpoint_resp_time{endpoint='$endpoint', service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "resp_time",
           "range": true,
           "refId": "A"
         }
@@ -3016,9 +3016,9 @@
             "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
-          "expr": "endpoint_percentile{service='$service', endpoint=\"$endpoint\", layer='$layer', labels='0,1,2,3,4', relabels='P50,P75,P90,P95,P99'}",
+          "expr": "endpoint_percentile{service='$service', endpoint=\"$endpoint\", layer='$layer', p='50,75,90,95,99'}",
           "format": "time_series",
-          "legendFormat": "{{label}}",
+          "legendFormat": "{{p}}",
           "range": true,
           "refId": "A"
         }
@@ -3115,7 +3115,7 @@
           "editorMode": "code",
           "expr": "endpoint_sla{service='$service', endpoint='$endpoint', layer='$layer'} / 100",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "sla",
           "range": true,
           "refId": "A"
         }
@@ -3211,7 +3211,7 @@
           "editorMode": "code",
           "expr": "service_mq_consume_latency{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "latency",
           "range": true,
           "refId": "A"
         }

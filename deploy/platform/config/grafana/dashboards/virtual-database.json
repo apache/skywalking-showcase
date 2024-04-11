@@ -115,7 +115,7 @@
           "editorMode": "code",
           "expr": "database_access_resp_time{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "resp_time",
           "range": true,
           "refId": "A"
         }
@@ -212,7 +212,7 @@
           "editorMode": "code",
           "expr": "database_access_sla{service='$service', layer='$layer'} / 100",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "sla",
           "range": true,
           "refId": "A"
         }
@@ -308,7 +308,7 @@
           "editorMode": "code",
           "expr": "database_access_cpm{service='$service', layer='$layer'}",
           "format": "time_series",
-          "legendFormat": "__auto",
+          "legendFormat": "cpm",
           "range": true,
           "refId": "A"
         }
@@ -401,9 +401,9 @@
             "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
-          "expr": "database_access_percentile{service='$service', layer='$layer', labels='0,1,2,3,4', relabels='P50,P75,P90,P95,P99'}",
+          "expr": "database_access_percentile{service='$service', layer='$layer', p='50,75,90,95,99'}",
           "format": "time_series",
-          "legendFormat": "{{label}}",
+          "legendFormat": "{{p}}",
           "range": true,
           "refId": "A"
         }
@@ -466,7 +466,7 @@
           },
           "editorMode": "code",
           "expr": "top_n_database_statement{parent_service='$service', layer='$layer', top_n='10', order='DES'}",
-          "legendFormat": "__auto",
+          "legendFormat": "statement",
           "range": true,
           "refId": "A"
         }
