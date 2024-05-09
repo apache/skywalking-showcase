@@ -109,6 +109,13 @@ services:
       
   activemq:
     image: rmohr/activemq:5.15.9
+    environment:
+      ACTIVEMQ_SUNJMX_START: "-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.rmi.port=1616 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+      ACTIVEMQ_BROKER_NAME: activemq-broker
+    expose:
+      - 1616:1616
+    volumes:
+      - ./config/activemq/activemq.xml:/opt/activemq/conf/activemq.xml
     networks: [ sw ]
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost:8161" ]

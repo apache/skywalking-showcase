@@ -17,4 +17,4 @@
 #
 
 .EXPORT_ALL_VARIABLES:
-FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,nginx-monitor,apisix-monitor,grafana,elasticsearch-monitor,pulsar-monitor
+FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,nginx-monitor,apisix-monitor,grafana,elasticsearch-monitor,pulsar-monitor,activemq-monitor
