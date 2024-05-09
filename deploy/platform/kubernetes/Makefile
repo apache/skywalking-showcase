@@ -187,6 +187,11 @@ feature-pulsar-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.pulsarMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-activemq-monitor
+feature-activemq-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.activemqMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .

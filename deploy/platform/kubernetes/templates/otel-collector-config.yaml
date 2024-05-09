@@ -41,6 +41,7 @@ data:
             {{- include "opentelemetry-config-mongodb-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-rocketmq-monitor" . | indent 12 }}
             {{- include "opentelemetry-config-pulsar-monitor" . | indent 12 }}
+            {{- include "opentelemetry-config-activemq-monitor" . | indent 12 }}
 
     exporters:
       otlp:

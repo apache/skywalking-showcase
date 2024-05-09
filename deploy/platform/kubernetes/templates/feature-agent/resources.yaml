@@ -357,6 +357,89 @@ data:
           root /app/build;
           index index.html;
         }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: activemq-config
+  namespace: {{ .Values.sampleServices.namespace }}
+  labels:
+    app: activemq-config
+data:
+  activemq: |
+    <beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
+    </bean>
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${ACTIVEMQ_BROKER_NAME}" dataDirectory="${activemq.data}">
+        <destinationPolicy>
+            <policyMap>
+              <policyEntries>
+                <policyEntry topic=">" >
+                  <pendingMessageLimitStrategy>
+                    <constantPendingMessageLimitStrategy limit="1000"/>
+                  </pendingMessageLimitStrategy>
+                </policyEntry>
+              </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.data}/kahadb"/>
+        </persistenceAdapter>
+          <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage percentOfJvmHeap="70" />
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="100 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="50 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+      </broker>
+      <import resource="jetty.xml"/>
+    </beans>
+  config: |
+    startDelaySeconds: 10
+    hostPort: localhost:1616
+    ssl: false
+    lowercaseOutputName: false
+    lowercaseOutputLabelNames: false
+    includeObjectNames: ["org.apache.activemq:*","java.lang:type=OperatingSystem","java.lang:type=GarbageCollector,*","java.lang:type=Threading","java.lang:type=Runtime","java.lang:type=Memory","java.lang:name=*"]
+    excludeObjectNames: ["org.apache.activemq:type=ColumnFamily,*"]
+    autoExcludeObjectNameAttributes: true
+    excludeObjectNameAttributes:
+      "java.lang:type=OperatingSystem":
+        - "ObjectName"
+      "java.lang:type=Runtime":
+        - "ClassPath"
+        - "SystemProperties"
+    rules:
+    - pattern: ".*"
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -449,6 +532,13 @@ spec:
         - name: activemq
           image: rmohr/activemq:5.15.9
           imagePullPolicy: IfNotPresent
+          env:
+            - name: ACTIVEMQ_SUNJMX_START
+              value: "-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.rmi.port=1616 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+            - name: ACTIVEMQ_BROKER_NAME
+              value: "activemq-broker"
+            - name: ACTIVEMQ_OPTS
+              value: "-Xmx128m -Xms128m"
           resources:
             limits:
               cpu: 100m
@@ -456,6 +546,33 @@ spec:
             requests:
               cpu: 100m
               memory: "128Mi"
+          volumeMounts:
+            - name: activemq-config
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq
+        {{- if .Values.features.activemqMonitor.enabled }}
+        - name: activemq-exporter
+          image: bitnami/jmx-exporter:0.20.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5556
+              name: metrics
+          resources:
+            limits:
+              cpu: 100m
+              memory: "256Mi"
+            requests:
+              cpu: 100m
+              memory: "128Mi"
+          volumeMounts:
+            - name: activemq-config
+              mountPath: /opt/bitnami/jmx-exporter/example_configs/httpserver_sample_config.yml
+              subPath: config
+        {{- end }}
+      volumes:
+        - name: activemq-config
+          configMap:
+            name: activemq-config
 ---
 
 apiVersion: v1
