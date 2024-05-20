@@ -1,6 +1,6 @@
-# SkyWalking 9.x showcase
+# SkyWalking 10.x showcase
 
-**This showcase would follow the latest changes of SkyWalking 9.x, even before the official release.**
+**This showcase would follow the latest changes of SkyWalking 10.x, even before the official release.**
 
 This showcase repository includes an example music application and other manifests to demonstrate the main features of
 SkyWalking. The music application is composed of several microservices that are written in different programming
