@@ -18,24 +18,17 @@
 version: '2.1'
 
 services:
-  elasticsearch:
-    image: ${ES_IMAGE}:${ES_IMAGE_TAG}
+  banyandb:
+    image: ${BANYANDB_IMAGE}:${BANYANDB_IMAGE_TAG}
     networks: [ sw ]
-    ports:
-      - "9200:9200"
+    expose:
+      - 17912
+    command: standalone
     healthcheck:
-      test: [ "CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health" ]
+      test: ["CMD", "./bydbctl", "health", "--config=-", "--addr=http://banyandb:17913"]
       interval: 30s
       timeout: 10s
       retries: 3
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
 
   oap:
     image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
@@ -44,19 +37,19 @@ services:
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
       SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/* # @feature: vm,mysql,postgresql,elasticsearch; enable the OC rules that analyse the metrics
-      SW_STORAGE: elasticsearch
-      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
       JAVA_OPTS: "-Xms2048m -Xmx2048m"
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth,go-runtime
     healthcheck:
-      test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/11800"]
       interval: 30s
       timeout: 10s
       retries: 3
     depends_on:
-      elasticsearch:
+      banyandb:
         condition: service_healthy
 
   ui:

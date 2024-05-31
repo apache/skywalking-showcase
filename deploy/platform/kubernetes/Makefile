@@ -25,6 +25,20 @@ features := $(foreach f,$(features),feature-$(f))
 include check.mak
 
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=stream-data
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].size=10Gi
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].accessModes[0]=ReadWriteOnce
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].storageClass=$(STORAGE_CLASS)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].volumeMode=Filesystem
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].mountTargets[0]=measure
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=measure-data
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].size=10Gi
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].accessModes[0]=ReadWriteOnce
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].storageClass=$(STORAGE_CLASS)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].volumeMode=Filesystem
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.image.repository=$(SW_OAP_IMAGE) --set skywalking.oap.image.tag=$(SW_OAP_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.image.repository=$(SW_UI_IMAGE) --set skywalking.ui.image.tag=$(SW_UI_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http://$(RELEASE)-oap.$(NAMESPACE).svc:9412
@@ -76,6 +90,11 @@ feature-elasticsearch:
 feature-postgresql:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=postgresql)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.postgresql.enabled=true)
+
+.PHONY: feature-banyandb
+feature-banyandb:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=banyandb)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.enabled=true)
 
 .PHONY: feature-so11y
 feature-so11y:
