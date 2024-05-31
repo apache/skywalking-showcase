@@ -18,10 +18,10 @@
 version: '2.1'
 
 services:
-  elasticsearch:
+  banyandb:
     extends:
       file: docker-compose.single-node.yaml
-      service: elasticsearch
+      service: banyandb
 
   zookeeper:
     image: zookeeper:3.5
@@ -38,11 +38,11 @@ services:
     image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
     networks: [ sw ]
     environment:
-      SW_STORAGE: elasticsearch
-      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       JAVA_OPTS: "-Dmode=init" # @feature: cluster; set the init container to "init" mode to initialize the storage templates and indices
     depends_on:
-      elasticsearch:
+      banyandb:
         condition: service_healthy
 
   oap1: &oap
@@ -54,8 +54,8 @@ services:
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
       SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/* # @feature: vm; enable the OC rules that analyse the VM metrics
-      SW_STORAGE: elasticsearch
-      SW_STORAGE_ES_CLUSTER_NODES: elasticsearch:9200
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
       JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode

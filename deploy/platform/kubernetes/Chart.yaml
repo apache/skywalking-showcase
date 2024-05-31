@@ -24,14 +24,14 @@ sources:
 dependencies:
   - name: skywalking-helm
     alias: skywalking
-    version: 0.0.0-50fc4819a119706e4da9bcff9c55151a729406be
-    repository: oci://ghcr.io/apache/skywalking-kubernetes
+    version: 0.0.0-739dbe570f5ca84b31416ad374640cf2e9cfaa7d
+    repository: oci://ghcr.io/apache/skywalking-helm
 
     # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
   - name: skywalking-helm-swck-operator
     alias: swck
-    version: 0.0.0-50fc4819a119706e4da9bcff9c55151a729406be
-    repository: oci://ghcr.io/apache/skywalking-kubernetes
+    version: 0.0.0-739dbe570f5ca84b31416ad374640cf2e9cfaa7d
+    repository: oci://ghcr.io/apache/skywalking-helm
     condition: features.javaAgentInjector.enabled
 
   - name: kube-state-metrics
@@ -50,7 +50,7 @@ dependencies:
     condition: rabbitmq.enabled
 
   - name: mongodb
-    version: 13.16.0
+    version: 14.10.1
     repository: https://charts.bitnami.com/bitnami
     condition: mongodb.enabled
 

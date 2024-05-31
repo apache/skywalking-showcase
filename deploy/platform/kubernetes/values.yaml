@@ -59,6 +59,12 @@ skywalking:
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
       SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
+    startupProbe:
+      failureThreshold: 10
+      tcpSocket:
+        port: 12800
+      initialDelaySeconds: 120
+      periodSeconds: 10
 
     config:
       metadata-service-mapping.yaml: |
@@ -79,9 +85,7 @@ skywalking:
              </Console>
            </Appenders>
            <Loggers>
-             <logger name="io.grpc.netty" level="INFO"/>
-             <logger name="org.apache.skywalking.oap.server.configuration.api" level="TRACE"/>
-             <logger name="org.apache.skywalking.oap.server.configuration.configmap" level="DEBUG"/>
+             <logger name="org.apache.skywalking.oap.server.storage" level="INFO"/>
              <Root level="INFO">
                <AppenderRef ref="Console"/>
              </Root>
@@ -96,6 +100,65 @@ skywalking:
       pullPolicy: IfNotPresent
     env:
       SW_ZIPKIN_ADDRESS: ""
+  banyandb:
+    enabled: false
+    image:
+      repository: ~
+      tag: ~
+    standalone:
+      enabled: false
+    cluster:
+      enabled: true
+      liaison:
+        replicas: 2
+        httpSvc:
+          type: ClusterIP
+      data:
+        replicas: 2
+    storage:
+      enabled: true
+      persistentVolumeClaims:
+        - mountTargets: ["stream"]
+          claimName: stream-data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+          storageClass: ~
+          volumeMode: Filesystem
+        - mountTargets: ["measure"]
+          claimName: measure-data
+          size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+          storageClass: ~
+          volumeMode: Filesystem 
+    etcd:
+      enabled: true
+      auth:
+        rbac:
+          create: true
+          allowNoneAuthentication: false
+          rootPassword: banyandb 
+      replicaCount: 1
+      persistence:
+        size: 5Gi
+        storageClass: ~
+      startupProbe:
+        enabled: true
+        initialDelaySeconds: 20
+        periodSeconds: 10
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 60
+      livenessProbe:
+        enabled: true
+        initialDelaySeconds: 0
+        periodSeconds: 30
+        timeoutSeconds: 5
+        successThreshold: 1
+        failureThreshold: 5
+      readinessProbe:
+        enabled: false
 
   elasticsearch:
     enabled: false

@@ -20,13 +20,17 @@
 
 ifeq ($(filter feature-elasticsearch,$(features)),feature-elasticsearch)
 ifeq ($(filter feature-postgresql,$(features)),feature-postgresql)
-ERROR := only one of `elasticsearch` and `postgresql` can be enabled
+ifeq ($(filter feature-banyandb,$(features)),feature-banyandb)
+ERROR := only one of `elasticsearch`, `postgresql`, and `banyandb` can be enabled
+endif
 endif
 endif
 
 ifneq ($(filter feature-elasticsearch,$(features)),feature-elasticsearch)
 ifneq ($(filter feature-postgresql,$(features)),feature-postgresql)
-ERROR := either `elasticsearch` or `postgresql` must be enabled
+ifneq ($(filter feature-banyandb,$(features)),feature-banyandb)
+ERROR := either `elasticsearch`, `postgresql`, or `banyandb` must be enabled
+endif
 endif
 endif
 

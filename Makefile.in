@@ -25,8 +25,9 @@ DOCKER_BUILDKIT ?= 1
 HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
-ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
-ES_IMAGE_TAG ?= 7.10.2
+BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
+BANYANDB_IMAGE_TAG ?= 7e65e59d1db9cbf2e464c5c62a4f87b195b23340
+STORAGE_CLASS ?= ""
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 SW_OAP_IMAGE_TAG ?= c25cedaaba031071ea1283af1c5a16f078b97d92
