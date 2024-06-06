@@ -30,10 +30,10 @@ BANYANDB_IMAGE_TAG ?= 7e65e59d1db9cbf2e464c5c62a4f87b195b23340
 STORAGE_CLASS ?= ""
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= 5783812cb51561fd2788f35f6fa7fca152284a30
+SW_OAP_IMAGE_TAG ?= 0b175ffb0ab946bed9b843a12ae8dbeffebf11a4
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
-SW_UI_IMAGE_TAG ?= 5783812cb51561fd2788f35f6fa7fca152284a30
+SW_UI_IMAGE_TAG ?= 0b175ffb0ab946bed9b843a12ae8dbeffebf11a4
 
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:0883266bfaa36612927b69e35781b64ea181758d
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
@@ -46,7 +46,7 @@ SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite
 SW_SATELLITE_IMAGE_TAG ?= v261daa37cfe4abbae6e12ef5706a941b4357b815
 
-SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:fd119ed0c652a5c33b7513b558937615febc6d63
+SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:b5ab4dd4d56edd2b8f6d406a1aa7a58902c46656
 
 SWCK_OPERATOR_IMAGE ?= docker.io/apache/skywalking-swck
 SWCK_OPERATOR_IMAGE_TAG ?= v0.7.0
