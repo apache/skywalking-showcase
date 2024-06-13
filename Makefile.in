@@ -55,7 +55,7 @@ SW_GRAFANA_PLUGIN_VERSION ?= 0.1.0
 GRAFANA_IMAGE ?= grafana/grafana:9.5.2
 
 OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
-OTEL_COLLECTOR_IMAGE_TAG ?= 0.72.0
+OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
 
 SW_R3_IMAGE ?= ghcr.io/skyapm/r3
 SW_R3_IMAGE_TAG ?= 0.1.0
