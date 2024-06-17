@@ -122,8 +122,8 @@ spec:
               mountPath: /var/lib/grafana/dashboards/skywalking/general-service.json
               subPath: general-service.json
             - name: dashboard-configs
-              mountPath: /var/lib/grafana/dashboards/skywalking/relation.json
-              subPath: relation.json
+              mountPath: /var/lib/grafana/dashboards/skywalking/general-relation.json
+              subPath: general-relation.json
             - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/service-mesh.json
               subPath: service-mesh.json

@@ -18,8 +18,9 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 7,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "collapsed": false,
@@ -37,7 +38,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -45,7 +46,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -59,7 +59,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -117,7 +116,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_client_cpm{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'}",
@@ -133,7 +132,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -141,7 +140,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -155,7 +153,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -213,7 +210,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_server_cpm{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'}",
@@ -229,7 +226,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -238,7 +235,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -252,7 +248,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -309,7 +304,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_client_call_sla{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'} / 100",
@@ -325,7 +320,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -334,7 +329,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -348,7 +342,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -405,7 +398,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_server_call_sla{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'} / 100",
@@ -421,7 +414,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -429,7 +422,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -443,7 +435,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -501,7 +492,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_client_resp_time{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'}",
@@ -517,7 +508,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -525,7 +516,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -539,7 +529,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -597,7 +586,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_server_resp_time{service='$service', dest_service='$dest_service', layer='$layer', dest_layer='$dest_layer'}",
@@ -613,7 +602,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -621,7 +610,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -635,7 +623,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -693,7 +680,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_client_percentile{service=\"$service\", dest_service=\"$dest_service\", layer=\"$layer\", dest_layer=\"$dest_layer\",p=\"50,75,90,95,99\"}",
@@ -709,7 +696,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -717,7 +704,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -731,7 +717,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -789,7 +774,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_relation_server_percentile{service=\"$service\", dest_service=\"$dest_service\", layer=\"$layer\", dest_layer=\"$dest_layer\",p=\"50,75,90,95,99\"}",
@@ -818,7 +803,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -826,7 +811,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -840,7 +824,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -898,7 +881,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_client_cpm{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}",
@@ -914,7 +897,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -922,7 +905,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -936,7 +918,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -994,7 +975,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_server_cpm{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}",
@@ -1010,7 +991,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -1019,7 +1000,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1033,7 +1013,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1090,7 +1069,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_client_call_sla{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}/100",
@@ -1106,7 +1085,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -1115,7 +1094,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1129,7 +1107,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1186,7 +1163,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_server_call_sla{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}/100",
@@ -1202,7 +1179,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1210,7 +1187,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1224,7 +1200,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1282,7 +1257,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_client_resp_time{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}",
@@ -1298,7 +1273,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1306,7 +1281,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1320,7 +1294,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1378,7 +1351,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_server_resp_time{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer'}",
@@ -1394,7 +1367,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -1403,7 +1376,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1417,7 +1389,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1474,7 +1445,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_client_percentile{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer',p=\"50,75,90,95,99\"}",
@@ -1490,7 +1461,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "description": "",
       "fieldConfig": {
@@ -1499,7 +1470,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1513,7 +1483,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1570,7 +1539,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "service_instance_relation_server_percentile{service='$service', dest_service='$dest_service', service_instance='$service_instance', dest_service_instance='$dest_service_instance', layer='$layer', dest_layer='$dest_layer',p=\"50,75,90,95,99\"}",
@@ -1599,7 +1568,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1607,7 +1576,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1621,7 +1589,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1679,7 +1646,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_relation_cpm{service='$service', dest_service='$dest_service', endpoint='$endpoint', dest_endpoint='$dest_endpoint', layer='$layer', dest_layer='$dest_layer'}",
@@ -1695,7 +1662,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1703,7 +1670,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1717,7 +1683,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1775,7 +1740,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_relation_sla{service='$service', dest_service='$dest_service', endpoint='$endpoint', dest_endpoint='$dest_endpoint', layer='$layer', dest_layer='$dest_layer'}/100",
@@ -1791,7 +1756,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1799,7 +1764,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1813,7 +1777,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1871,7 +1834,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_relation_resp_time{service='$service', dest_service='$dest_service', endpoint='$endpoint', dest_endpoint='$dest_endpoint', layer='$layer', dest_layer='$dest_layer'}",
@@ -1887,7 +1850,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "fdoqp17pgc9ogc"
+        "uid": "${DS_SW_Prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1895,7 +1858,6 @@
             "mode": "palette-classic"
           },
           "custom": {
-            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1909,7 +1871,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1967,7 +1928,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "fdoqp17pgc9ogc"
+            "uid": "${DS_SW_Prometheus}"
           },
           "editorMode": "code",
           "expr": "endpoint_relation_percentile{service='$service', dest_service='$dest_service', endpoint='$endpoint', dest_endpoint='$dest_endpoint', layer='$layer', dest_layer='$dest_layer',p='50,75,90,95,99'}",
@@ -1982,7 +1943,8 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 39,
+  "schemaVersion": 38,
+  "style": "dark",
   "tags": [],
   "templating": {
     "list": [
@@ -1997,8 +1959,8 @@
       {
         "current": {
           "selected": true,
-          "text": "e2e-service-consumer",
-          "value": "e2e-service-consumer"
+          "text": "recommendation",
+          "value": "recommendation"
         },
         "datasource": {
           "type": "prometheus",
@@ -2023,9 +1985,9 @@
       },
       {
         "current": {
-          "selected": false,
-          "text": "consumer1",
-          "value": "consumer1"
+          "selected": true,
+          "text": "84ced6a62c6c11efb3400242ac17000b",
+          "value": "84ced6a62c6c11efb3400242ac17000b"
         },
         "datasource": {
           "type": "prometheus",
@@ -2051,8 +2013,8 @@
       {
         "current": {
           "selected": false,
-          "text": "POST:/users",
-          "value": "POST:/users"
+          "text": "/health",
+          "value": "/health"
         },
         "datasource": {
           "type": "prometheus",
@@ -2098,7 +2060,7 @@
       {
         "allValue": "",
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "100",
           "value": "100"
         },
@@ -2132,8 +2094,8 @@
       {
         "current": {
           "selected": false,
-          "text": "prometheus",
-          "value": "fdoqp17pgc9ogc"
+          "text": "SkyWalkingPromQL",
+          "value": "SkyWalkingPromQL"
         },
         "hide": 2,
         "includeAll": false,
@@ -2142,7 +2104,7 @@
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "prometheus",
+        "regex": "SkyWalkingPromQL",
         "skipUrlSync": false,
         "type": "datasource"
       },
@@ -2150,8 +2112,8 @@
         "allValue": "*",
         "current": {
           "selected": true,
-          "text": "e2e-service-provider",
-          "value": "e2e-service-provider"
+          "text": "songs",
+          "value": "songs"
         },
         "datasource": {
           "type": "prometheus",
@@ -2179,8 +2141,8 @@
         "allValue": "*",
         "current": {
           "selected": true,
-          "text": "provider1",
-          "value": "provider1"
+          "text": "a2cfcbfc1dcd474cb8f04032108f83e5@172.23.0.9",
+          "value": "a2cfcbfc1dcd474cb8f04032108f83e5@172.23.0.9"
         },
         "datasource": {
           "type": "prometheus",
@@ -2188,7 +2150,7 @@
         },
         "definition": "label_values(instance_traffic{layer=\"$dest_layer\", service=\"$dest_service\"},service_instance)",
         "hide": 0,
-        "includeAll": true,
+        "includeAll": false,
         "label": "Dest Service Instance",
         "multi": false,
         "name": "dest_service_instance",
@@ -2208,8 +2170,8 @@
         "allValue": "*",
         "current": {
           "selected": true,
-          "text": "POST:/users",
-          "value": "POST:/users"
+          "text": "HikariCP/Connection/getConnection",
+          "value": "HikariCP/Connection/getConnection"
         },
         "datasource": {
           "type": "prometheus",
@@ -2249,8 +2211,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Relation Metrics",
-  "uid": "ddor6b031ijggf",
-  "version": 8,
+  "title": "General Relation",
+  "uid": "GeneralRelation",
+  "version": 1,
   "weekStart": ""
 }
