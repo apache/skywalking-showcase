@@ -29,6 +29,9 @@ BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
 BANYANDB_IMAGE_TAG ?= e85aeb5790a10b8a26db628fc15140a034865009
 STORAGE_CLASS ?= ""
 
+ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
+ES_IMAGE_TAG ?= 7.10.2
+
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 SW_OAP_IMAGE_TAG ?= 0b175ffb0ab946bed9b843a12ae8dbeffebf11a4
 
