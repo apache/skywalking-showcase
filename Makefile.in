@@ -26,7 +26,7 @@ HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
 BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
-BANYANDB_IMAGE_TAG ?= a69ec5693ee5bca4a0b65e73b269988a5660999d
+BANYANDB_IMAGE_TAG ?= e85aeb5790a10b8a26db628fc15140a034865009
 STORAGE_CLASS ?= ""
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
