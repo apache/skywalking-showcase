@@ -16,15 +16,6 @@
 version: '3'
 
 services:
-  oap:
-    extends:
-      file: ../../script/docker-compose/base-compose.yml
-      service: oap
-    ports:
-      - "12800:12800"
-    networks:
-      - sw
-
   zookeeper:
     image: zookeeper:3.9.1
     expose:
