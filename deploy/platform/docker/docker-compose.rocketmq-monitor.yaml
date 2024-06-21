@@ -16,15 +16,6 @@
 version: "3"
 
 services:
-  oap:
-    extends:
-      file: ../../script/docker-compose/base-compose.yml
-      service: oap
-    ports:
-      - "12800:12800"
-    networks:
-      - e2e
-
   rocketmq-namesrv-1:
     image: apache/rocketmq:4.9.4
     hostname: rocketmq-namesrv-1
@@ -39,7 +30,7 @@ services:
       timeout: 10s
       retries: 120
     networks:
-      - e2e
+      - sw
 
   rocketmq-broker-1:
     image: apache/rocketmq:4.9.4
@@ -60,7 +51,7 @@ services:
       rocketmq-namesrv-1:
         condition: service_healthy
     networks:
-      - e2e
+      - sw
 
   rocketmq-producer-perf-test:
     image: apache/rocketmq:4.9.4
@@ -73,7 +64,7 @@ services:
       rocketmq-broker-1:
         condition: service_healthy
     networks:
-      - e2e
+      - sw
 
   rocketmq-consumer-perf-test:
     image: apache/rocketmq:4.9.4
@@ -85,7 +76,7 @@ services:
     depends_on:
       - rocketmq-producer-perf-test
     networks:
-      - e2e
+      - sw
 
   rocketmq-exporter:
     image: apache/rocketmq-exporter:0.0.2
@@ -98,12 +89,12 @@ services:
     depends_on:
       - rocketmq-consumer-perf-test
     networks:
-      - e2e
+      - sw
 
   otel-collector:
     image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     networks:
-      - e2e
+      - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./config/rocketmq/otel-collector-rocketmq-config.yaml:/etc/otel-collector-config.yaml
@@ -114,4 +105,4 @@ services:
         condition: service_healthy
 
 networks:
-  e2e:
+  sw:

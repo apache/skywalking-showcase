@@ -21,6 +21,24 @@
 version: '2.1'
 
 services:
+  elasticsearch:
+    image: ${ES_IMAGE}:${ES_IMAGE_TAG}
+    networks: [ sw ]
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
   es-exporter:
     image: quay.io/prometheuscommunity/elasticsearch-exporter:v1.5.0
     expose:
@@ -60,6 +78,19 @@ services:
     depends_on:
       oap:
         condition: service_healthy
-
+  es-mock:
+    image: curlimages/curl:latest
+    networks:
+      - sw
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      es-exporter:
+        condition: service_healthy
+      oap:
+        condition: service_healthy
+    command: "sh /etc/es-e2e-data-mock.sh"
+    volumes:
+      - ./scripts/es-e2e-data-mock.sh:/etc/es-e2e-data-mock.sh
 networks:
   sw:
