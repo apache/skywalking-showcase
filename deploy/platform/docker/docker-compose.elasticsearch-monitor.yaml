@@ -78,6 +78,19 @@ services:
     depends_on:
       oap:
         condition: service_healthy
-
+  es-mock:
+    image: curlimages/curl:latest
+    networks:
+      - sw
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      es-exporter:
+        condition: service_healthy
+      oap:
+        condition: service_healthy
+    command: "sh /etc/es-e2e-data-mock.sh"
+    volumes:
+      - ./scripts/es-e2e-data-mock.sh:/etc/es-e2e-data-mock.sh
 networks:
   sw:
