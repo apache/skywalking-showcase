@@ -63,5 +63,8 @@ OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
 SW_R3_IMAGE ?= ghcr.io/skyapm/r3
 SW_R3_IMAGE_TAG ?= 0.1.0
 
+NACOS_IMAGE ?= nacos/nacos-server
+NACOS_IMAGE_TAG ?= v2.3.2-slim
+
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))

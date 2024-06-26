@@ -1,0 +1,137 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+version: '2.1'
+
+services:
+  banyandb:
+    image: ${BANYANDB_IMAGE}:${BANYANDB_IMAGE_TAG}
+    networks: [ sw ]
+    expose:
+      - 17912
+    command: standalone
+    healthcheck:
+      test: ["CMD", "./bydbctl", "health", "--config=-", "--addr=http://banyandb:17913"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nacos:
+    image: ${NACOS_IMAGE}:${NACOS_IMAGE_TAG}
+    container_name: nacos-standalone
+    environment:
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - NACOS_AUTH_IDENTITY_KEY=serverIdentity
+      - NACOS_AUTH_IDENTITY_VALUE=security
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks: [ sw ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  oap-init: # @feature: cluster; set up an init container to initialize the storage templates and indices
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
+    networks: [ sw ]
+    environment:
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      JAVA_OPTS: "-Dmode=init" # @feature: cluster; set the init container to "init" mode to initialize the storage templates and indices
+    depends_on:
+      banyandb:
+        condition: service_healthy
+
+  oap1:
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
+    networks: [ sw ]
+    environment:
+      SW_CLUSTER: nacos # @feature: cluster; set up a cluster coordinator
+      SW_CLUSTER_NACOS_HOST_PORT: nacos:8848 # @feature: cluster; set up the cluster coordinator address
+      SW_HEALTH_CHECKER: default # @feature: health-check;
+      SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/* # @feature: vm; enable the OC rules that analyse the VM metrics
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+      SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
+      JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth,go-runtime
+      SW_CONFIGURATION: nacos
+      SW_CONFIG_NACOS_SERVER_ADDR: nacos
+      SW_CONFIG_NACOS_SERVER_PORT: 8848
+      SW_CLUSTER_INTERNAL_COM_HOST: oap1
+      SW_CLUSTER_INTERNAL_COM_PORT: 11800
+    healthcheck:
+      test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      oap-init:
+        condition: service_completed_successfully # @feature: cluster; wait for init container to complete
+      nacos:
+        condition: service_healthy
+
+  oap:
+    image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
+    networks: [ sw ]
+    environment:
+      SW_CLUSTER: nacos # @feature: cluster; set up a cluster coordinator
+      SW_CLUSTER_NACOS_HOST_PORT: nacos:8848 # @feature: cluster; set up the cluster coordinator address
+      SW_HEALTH_CHECKER: default # @feature: health-check;
+      SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/* # @feature: vm; enable the OC rules that analyse the VM metrics
+      SW_STORAGE: banyandb
+      SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
+      SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
+      SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
+      JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth,go-runtime
+      SW_CONFIGURATION: nacos
+      SW_CONFIG_NACOS_SERVER_ADDR: nacos
+      SW_CONFIG_NACOS_SERVER_PORT: 8848
+      SW_CLUSTER_INTERNAL_COM_HOST: oap
+      SW_CLUSTER_INTERNAL_COM_PORT: 11800
+    healthcheck:
+      test: [ "CMD-SHELL", "curl http://localhost:12800/internal/l7check" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      oap-init:
+        condition: service_completed_successfully # @feature: cluster; wait for init container to complete
+      nacos:
+        condition: service_healthy
+
+  ui:
+    image: ${SW_UI_IMAGE}:${SW_UI_IMAGE_TAG}
+    networks: [ sw ]
+    ports:
+      - "9999:8080"
+    depends_on:
+      oap:
+        condition: service_healthy
+    environment:
+      SW_OAP_ADDRESS: http://oap:12800,http://oap1:12800
+
+networks:
+  sw:
