@@ -25,7 +25,8 @@ features := $(foreach f,$(features),feature-$(f))
 include check.mak
 
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG) --set skywalking.oap.env.SW_CILIUM_FETCHER=default
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_ENABLE_UPDATE_UI_TEMPLATE=true
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=stream-data
@@ -45,6 +46,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http:/
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.satellite.image.repository=$(SW_SATELLITE_IMAGE) --set skywalking.satellite.image.tag=$(SW_SATELLITE_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set swck.image.repository=$(SWCK_OPERATOR_IMAGE) --set swck.image.tag=$(SWCK_OPERATOR_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.hub=$(HUB) --set sampleServices.tag=$(TAG) --set sampleServices.namespace=$(SAMPLE_SERVICES_NAMESPACE)
+HELM_OPTIONS := $(HELM_OPTIONS) --set ciliumServices.hub=$(HUB) --set ciliumServices.tag=$(TAG) --set ciliumServices.namespace=$(CILIUM_SERVICES_NAMESPACE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry-collector.image.repository=$(OTEL_COLLECTOR_IMAGE) --set opentelemetry-collector.image.tag=$(OTEL_COLLECTOR_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.swctl.image=$(SW_CLI_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.traceProfiling.swctl.image=$(SW_CLI_IMAGE)
@@ -211,6 +213,20 @@ feature-activemq-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.activemqMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: cilium
+cilium:
+ifeq (, $(shell which cilium))
+	$(error "No cilium in PATH, please make sure cilium CLI is available in PATH")
+endif
+	@INSTALL_OR_UPDATE=$$(cilium status 2>&1 | grep -q "daemonsets.apps \"cilium\" not found" && echo "install" || echo "upgrade"); \
+	echo "Cilium will be $$INSTALL_OR_UPDATE"; \
+	cilium $$INSTALL_OR_UPDATE --set cni.exclusive=false --set socketLB.hostNamespaceOnly=true --set hubble.tls.enabled=false
+
+# @feature: function; install open function resources
+.PHONY: feature-cilium
+feature-cilium: cilium
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.cilium.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .
@@ -222,4 +238,7 @@ endif
 
 .PHONY: undeploy
 undeploy:
-	helm -n $(NAMESPACE) delete $(RELEASE)
+	helm -n $(NAMESPACE) delete $(RELEASE) --wait
+ifneq ($(findstring cilium,$(FEATURE_FLAGS)),)
+	cilium uninstall
+endif

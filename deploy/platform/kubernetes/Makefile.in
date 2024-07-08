@@ -20,6 +20,7 @@
 
 NAMESPACE ?= skywalking-showcase
 SAMPLE_SERVICES_NAMESPACE ?= sample-services
+CILIUM_SERVICES_NAMESPACE ?= cilium-services
 RELEASE ?= demo
 AGENTLESS ?= false
 

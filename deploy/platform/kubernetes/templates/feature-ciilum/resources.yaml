@@ -1,0 +1,625 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.cilium.enabled }}
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.ciliumServices.namespace }}
+  labels:
+  {{- if .Values.features.javaAgentInjector.enabled }}
+    swck-injection: enabled
+  {{- end }}
+    istio-injection: disabled
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: gateway
+      annotations:
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "gateway"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::gateway"
+        optional.skywalking.apache.org: "spring-cloud-gateway-3.x"
+        sidecar.skywalking.apache.org/initcontainer.Image: "{{ .Values.features.javaAgentInjector.agentImage }}"
+    spec:
+      containers:
+        - name: gateway
+          {{- if .Values.features.javaAgentInjector.enabled }}
+          # @feature: java-agent-injector; if the java agent injector is enabled, we use the agentless image and let the injector inject the agent.
+          image: "{{ .Values.ciliumServices.hub }}/gateway-service:{{ .Values.ciliumServices.tag }}-agentless"
+          {{- else }}
+          image: "{{ .Values.ciliumServices.hub }}/gateway-service:{{ .Values.ciliumServices.tag }}"
+          {{- end }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::gateway
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: songs
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: songs
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: songs-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: songs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: songs
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: songs
+      annotations:
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "songs"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::songs"
+        optional.skywalking.apache.org: "guava-cache-plugin"
+        sidecar.skywalking.apache.org/initcontainer.Image: "{{ .Values.features.javaAgentInjector.agentImage }}"
+    spec:
+      containers:
+        - name: songs
+          {{- if .Values.features.javaAgentInjector.enabled }}
+          # @feature: java-agent-injector; if the java agent injector is enabled, we use the agentless image and let the injector inject the agent.
+          image: "{{ .Values.ciliumServices.hub }}/songs-service:{{ .Values.ciliumServices.tag }}-agentless"
+          {{- else }}
+          image: "{{ .Values.ciliumServices.hub }}/songs-service:{{ .Values.ciliumServices.tag }}"
+          {{- end }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only need to configure java agent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::songs
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+            - name: ACTIVE_MQ_URL
+              value: tcp://activemq:61616
+            - name: ACTIVE_MQ_QUEUE
+              value: queue-songs-ping
+            {{- if  .Values.features.postgresqlMonitor.enabled }}
+            - name: DATA_SOURCE_URL
+              value: jdbc:postgresql://psql.{{ .Release.Namespace }}.svc.cluster.local:5432/postgres
+            - name: DATA_SOURCE_USER
+              value: postgres
+            - name: DATA_SOURCE_PASSWORD
+              value: password
+            {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rcmd
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+    spec:
+      containers:
+        - name: recommendation
+          image: "{{ .Values.ciliumServices.hub }}/recommendation-service:{{ .Values.ciliumServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::recommendation
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.ciliumServices.hub }}/app:{{ .Values.ciliumServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME_SERVER
+              value: agent::app
+            - name: REACT_APP_SW_AGENT_NAME_UI
+              value: agent::ui
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+    spec:
+      containers:
+        - name: app
+          image: "{{ .Values.ciliumServices.hub }}/load-gen:{{ .Values.ciliumServices.tag }}"
+          imagePullPolicy: IfNotPresent
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-config
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: apisix-config
+data:
+  apisix: |
+      routes:
+      - uri: /browser/*
+        service_id: 1
+      - uri: /v3/*
+        service_id: 1
+      - uri: /homepage
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{ "{{" }}SW_AGENT_SERVICE{{ "}}" }}
+            service_instance_name: ${{ "{{" }}SW_AGENT_SERVICE_INSTANCE{{ "}}" }}
+            endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+      - uri: /test
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{"{{"}}SW_AGENT_SERVICE{{"}}"}}
+            service_instance_name: ${{"{{"}}SW_AGENT_SERVICE_INSTANCE{{"}}"}}
+            endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+      services:
+      - id: 1
+        upstream_id: 1
+      - id: 2
+        upstream_id: 2
+
+      upstreams:
+      - id: 1
+        nodes:
+          "{{ template "skywalking.oap.address.host" . }}:12800": 1
+        type: roundrobin
+      - id: 2
+        nodes:
+          "app:80": 1
+        type: roundrobin
+
+      global_rules:
+      - id: 1
+        plugins:
+          prometheus:
+            export_addr:
+              ip: "0.0.0.0"
+              port: 9091
+      #END
+  config: |
+    apisix:
+      node_listen: 80
+      enable_ipv6: false
+      enable_admin: false
+      config_center: yaml
+    plugin_attr:
+      prometheus:
+        export_addr:
+          ip: "0.0.0.0"
+          port: 9091
+      skywalking:
+        service_name: ${{"{{"}}SW_AGENT_SERVICE{{"}}"}}
+        service_instance_name: ${{"{{"}}SW_AGENT_SERVICE_INSTANCE{{"}}"}}
+        endpoint_addr: {{ template "skywalking.oap.address.http" . }}
+    plugins:
+      - prometheus
+      - skywalking
+    nginx_config:
+      http_server_configuration_snippet: |
+        location ~ \.(gif|jpg|png|js|css|html)$ {
+          root /app/build;
+          index index.html;
+        }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: activemq-config
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: activemq-config
+data:
+  activemq: |
+    <beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
+    </bean>
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${ACTIVEMQ_BROKER_NAME}" dataDirectory="${activemq.data}">
+        <destinationPolicy>
+            <policyMap>
+              <policyEntries>
+                <policyEntry topic=">" >
+                  <pendingMessageLimitStrategy>
+                    <constantPendingMessageLimitStrategy limit="1000"/>
+                  </pendingMessageLimitStrategy>
+                </policyEntry>
+              </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.data}/kahadb"/>
+        </persistenceAdapter>
+          <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage percentOfJvmHeap="70" />
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="100 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="50 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+      </broker>
+      <import resource="jetty.xml"/>
+    </beans>
+  config: |
+    startDelaySeconds: 10
+    hostPort: localhost:1616
+    ssl: false
+    lowercaseOutputName: false
+    lowercaseOutputLabelNames: false
+    includeObjectNames: ["org.apache.activemq:*","java.lang:type=OperatingSystem","java.lang:type=GarbageCollector,*","java.lang:type=Threading","java.lang:type=Runtime","java.lang:type=Memory","java.lang:name=*"]
+    excludeObjectNames: ["org.apache.activemq:type=ColumnFamily,*"]
+    autoExcludeObjectNameAttributes: true
+    excludeObjectNameAttributes:
+      "java.lang:type=OperatingSystem":
+        - "ObjectName"
+      "java.lang:type=Runtime":
+        - "ClassPath"
+        - "SystemProperties"
+    rules:
+    - pattern: ".*"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.ciliumServices.hub }}/frontend:{{ .Values.ciliumServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 500m
+              memory: "256Mi"
+            requests:
+              cpu: 500m
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 9091 # APISIX Prometheus plugin port
+              name: metrics
+          env:
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: {{ template "skywalking.collector.address" . }}
+            - name: SW_SERVICE_INSTANCE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/config.yaml
+              subPath: config
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/apisix.yaml
+              subPath: apisix
+      volumes:
+        - name: apisix-config
+          configMap:
+            name: apisix-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:5.15.9
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ACTIVEMQ_SUNJMX_START
+              value: "-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.rmi.port=1616 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+            - name: ACTIVEMQ_BROKER_NAME
+              value: "activemq-broker"
+            - name: ACTIVEMQ_OPTS
+              value: "-Xmx128m -Xms128m"
+          resources:
+            limits:
+              cpu: 100m
+              memory: "256Mi"
+            requests:
+              cpu: 100m
+              memory: "128Mi"
+          volumeMounts:
+            - name: activemq-config
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq
+        {{- if .Values.features.activemqMonitor.enabled }}
+        - name: activemq-exporter
+          image: bitnami/jmx-exporter:0.20.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5556
+              name: metrics
+          resources:
+            limits:
+              cpu: 100m
+              memory: "256Mi"
+            requests:
+              cpu: 100m
+              memory: "128Mi"
+          volumeMounts:
+            - name: activemq-config
+              mountPath: /opt/bitnami/jmx-exporter/example_configs/httpserver_sample_config.yml
+              subPath: config
+        {{- end }}
+      volumes:
+        - name: activemq-config
+          configMap:
+            name: activemq-config
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: activemq
+  ports:
+    - protocol: TCP
+      port: 61616
+      targetPort: 61616
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-deployment
+  namespace: {{ .Values.ciliumServices.namespace }}
+  labels:
+    app: rating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating
+  template:
+    metadata:
+      labels:
+        app: rating
+    spec:
+      containers:
+        - name: rating
+          image: "{{ .Values.ciliumServices.hub }}/rating-service:{{ .Values.ciliumServices.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::rating
+            - name: SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE
+              value: {{ template "skywalking.collector.address" . }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating
+  namespace: {{ .Values.ciliumServices.namespace }}
+spec:
+  selector:
+    app: rating
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+
+
+{{- end }}
