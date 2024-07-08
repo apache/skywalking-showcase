@@ -25,8 +25,7 @@ features := $(foreach f,$(features),feature-$(f))
 include check.mak
 
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG) --set skywalking.oap.env.SW_CILIUM_FETCHER=default
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_ENABLE_UPDATE_UI_TEMPLATE=true
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=stream-data
@@ -225,7 +224,7 @@ endif
 # @feature: function; install open function resources
 .PHONY: feature-cilium
 feature-cilium: cilium
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.cilium.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.cilium.enabled=true --set skywalking.oap.env.SW_CILIUM_FETCHER=default)
 
 .PHONY: deploy
 deploy: $(features)
