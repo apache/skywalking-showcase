@@ -91,6 +91,20 @@ skywalking:
              </Root>
             </Loggers>
         </Configuration>
+      cilium-rules:
+        exclude.yaml: |
+          namespaces:
+            - kube-system
+            - skywalking-showcase
+            - sample-services
+
+          labels:
+            - k8s:io.cilium.k8s.namespace.labels.istio-injection: enabled
+              k8s:security.istio.io/tlsMode: istio
+
+        metadata-service-mapping.yaml: |
+          serviceName: cilium::${LABELS."app.kubernetes.io/name",LABELS.component,LABELS.app,LABELS.k8s-app}.${NAMESPACE}
+          serviceInstanceName: ${NAME}
   ui:
     name: ui
     replicas: 1
@@ -213,6 +227,11 @@ sampleServices:
   hub: ~
   tag: ~
   namespace: sample-services
+
+ciliumServices:
+  hub: ~
+  tag: ~
+  namespace: cilium-services
 
 # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
 swck:

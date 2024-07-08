@@ -115,6 +115,7 @@ Currently, the features supported are:
 | `pulsar-monitor`        | Deploy OpenTelemetry and export Pulsar monitoring metrics to SkyWalking for analysis and display on UI.                                                                                |                                                                                                                                       |
 | `rabbitmq-monitor`      | Deploy OpenTelemetry and export RabbitMQ monitoring metrics to SkyWalking for analysis and display on UI.                                                                              |                                                                                                                                       |
 | `activemq-monitor`      | Deploy OpenTelemetry and export [ActiveMQ classic](https://activemq.apache.org/components/classic/) monitoring metrics to SkyWalking for analysis and display on UI.                   |                                                                                                                                       |
+| `cilium`                | Deploy Cilium and showcase services in a separate namespace, SkyWalking fetch Cilium Services Traffic to analysis and display on UI.                                                   | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 
 ### Kubernetes
 
