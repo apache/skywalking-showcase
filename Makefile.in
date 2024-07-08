@@ -34,6 +34,7 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 SW_OAP_IMAGE_TAG ?= 97f015ba4d62efcfcb86bcf7e90292f4b1d8e82d
+
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
 SW_UI_IMAGE_TAG ?= 97f015ba4d62efcfcb86bcf7e90292f4b1d8e82d
 
