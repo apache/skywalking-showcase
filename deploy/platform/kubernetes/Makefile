@@ -217,9 +217,12 @@ cilium:
 ifeq (, $(shell which cilium))
 	$(error "No cilium in PATH, please make sure cilium CLI is available in PATH")
 endif
+ifeq (,$(findstring $(CILIUM_CLI_VERSION),$(shell cilium version --client)))
+	$(error "Cilium CLI version is not $(CILIUM_CLI_VERSION), please make sure cilium CLI is $(CILIUM_CLI_VERSION))")
+endif
 	@INSTALL_OR_UPDATE=$$(cilium status 2>&1 | grep -q "daemonsets.apps \"cilium\" not found" && echo "install" || echo "upgrade"); \
 	echo "Cilium will be $$INSTALL_OR_UPDATE"; \
-	cilium $$INSTALL_OR_UPDATE --set cni.exclusive=false --set socketLB.hostNamespaceOnly=true --set hubble.tls.enabled=false
+	cilium $$INSTALL_OR_UPDATE --version $(CILIUM_VERSION) --set cni.exclusive=false --set socketLB.hostNamespaceOnly=true --set hubble.tls.enabled=false
 
 # @feature: function; install open function resources
 .PHONY: feature-cilium
@@ -237,7 +240,7 @@ endif
 
 .PHONY: undeploy
 undeploy:
-	helm -n $(NAMESPACE) delete $(RELEASE) --wait
+	helm -n $(NAMESPACE) delete $(RELEASE) --wait || true
 ifneq ($(findstring cilium,$(FEATURE_FLAGS)),)
 	cilium uninstall
 endif
