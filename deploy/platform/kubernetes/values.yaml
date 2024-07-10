@@ -443,3 +443,6 @@ features:
 
   activemqMonitor:
     enabled: false
+
+  cilium:
+    enabled: false
