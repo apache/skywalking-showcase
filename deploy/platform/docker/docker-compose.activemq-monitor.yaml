@@ -30,7 +30,7 @@ services:
       - sw
 
   otel-collector:
-    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_VERSION}
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     environment:
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
       OTEL_TARGET_ADDREESS: amqexporter:5556
