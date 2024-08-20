@@ -59,6 +59,9 @@ skywalking:
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
       SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
+      SW_STORAGE_BANYANDB_METRICS_SHARDS_NUMBER: "2"
+      SW_STORAGE_BANYANDB_RECORD_SHARDS_NUMBER: "2"
+      SW_STORAGE_BANYANDB_SUPERDATASET_SHARDS_FACTOR: "1"
     startupProbe:
       failureThreshold: 10
       tcpSocket:
@@ -145,14 +148,14 @@ skywalking:
           accessModes:
             - ReadWriteOnce
           storageClass: ~
-          volumeMode: Filesystem 
+          volumeMode: Filesystem
     etcd:
       enabled: true
       auth:
         rbac:
           create: true
           allowNoneAuthentication: false
-          rootPassword: banyandb 
+          rootPassword: banyandb
       replicaCount: 1
       persistence:
         size: 5Gi
@@ -326,7 +329,7 @@ opentelemetry-collector:
   clusterRole:
     create: true
     rules:
-      - apiGroups: [ "" ]
+      - apiGroups: [""]
         resources:
           # @feature: kubernetes-monitor; permissions to read resources
           - "endpoints"
@@ -335,7 +338,7 @@ opentelemetry-collector:
           - "nodes"
           - "nodes/metrics"
           - "nodes/proxy"
-        verbs: [ "get", "watch", "list" ]
+        verbs: ["get", "watch", "list"]
   resources:
     limits:
       cpu: 1024m
@@ -349,7 +352,7 @@ opentelemetry-collector:
 
   command:
     name: otelcol
-    extraArgs: [ "--config=/conf/config.yaml" ]
+    extraArgs: ["--config=/conf/config.yaml"]
 
   extraVolumes:
     - name: otelcol-configmap
@@ -437,7 +440,7 @@ features:
 
   rocketmqMonitor:
     enabled: false
-    
+
   pulsarMonitor:
     enabled: false
 
