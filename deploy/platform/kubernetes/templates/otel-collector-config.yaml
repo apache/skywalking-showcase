@@ -16,7 +16,22 @@
 # under the License.
 #
 {{- if .Values.opentelemetry.enabled }}
-
+{{- $configs := list
+  "opentelemetry-config-nginx"
+  "opentelemetry-config-apisix"
+  "opentelemetry-config-istiod-monitor"
+  "opentelemetry-config-kubernetes-monitor"
+  "opentelemetry-config-mysql-monitor"
+  "opentelemetry-config-postgresql-monitor"
+  "opentelemetry-config-so11y"
+  "opentelemetry-config-vm"
+  "opentelemetry-config-elasticsearch-monitor"
+  "opentelemetry-config-rabbitmq-monitor"
+  "opentelemetry-config-mongodb-monitor"
+  "opentelemetry-config-rocketmq-monitor"
+  "opentelemetry-config-pulsar-monitor"
+  "opentelemetry-config-activemq-monitor"
+}}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -25,23 +40,15 @@ metadata:
 data:
   config.yaml: |
     receivers:
-      prometheus:
+      {{- $root := . -}}
+      {{- range $idx, $config := $configs -}}
+      {{- if not (include $config $root | trim | empty) }}
+      prometheus/{{ $idx }}:
         config:
           scrape_configs:
-            {{- include "opentelemetry-config-nginx" . | indent 12 }}
-            {{- include "opentelemetry-config-apisix" . | indent 12 }}
-            {{- include "opentelemetry-config-istiod-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-kubernetes-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-mysql-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-postgresql-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-so11y" . | indent 12 }}
-            {{- include "opentelemetry-config-vm" . | indent 12 }}
-            {{- include "opentelemetry-config-elasticsearch-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-rabbitmq-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-mongodb-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-rocketmq-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-pulsar-monitor" . | indent 12 }}
-            {{- include "opentelemetry-config-activemq-monitor" . | indent 12 }}
+            {{- include $config $root | indent 12 }}
+      {{- end }}
+      {{- end }}
 
     exporters:
       otlp:
@@ -60,7 +67,13 @@ data:
     service:
       pipelines:
         metrics:
-          receivers: [ prometheus ]
+          receivers: 
+      {{- $root := . }}
+      {{- range $idx, $config := $configs }}
+      {{- if not (include $config $root | trim | empty) }}
+            - prometheus/{{ $idx }}
+      {{- end }}
+      {{- end }}
           exporters: [ otlp,logging ]
       extensions:
         - health_check
