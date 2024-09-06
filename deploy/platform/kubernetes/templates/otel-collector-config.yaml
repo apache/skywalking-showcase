@@ -51,10 +51,15 @@ data:
       {{- end }}
 
     exporters:
-      otlp:
-        endpoint: "{{ include "skywalking.oap.address.grpc" . }}"
+      {{- $root := . }}
+      {{- range $idx, $config := $configs }}
+      {{- if not (include $config $root | trim | empty) }}
+      otlp/{{ $idx }}:
+        endpoint: "{{ include "skywalking.oap.address.grpc" $root }}"
         tls:
           insecure: true
+      {{- end }}
+      {{- end }}
       logging:
         verbosity: detailed
 
@@ -66,15 +71,15 @@ data:
 
     service:
       pipelines:
-        metrics:
-          receivers: 
       {{- $root := . }}
       {{- range $idx, $config := $configs }}
       {{- if not (include $config $root | trim | empty) }}
+        metrics/{{ $idx }}:
+          receivers: 
             - prometheus/{{ $idx }}
+          exporters: [ otlp/{{ $idx }},logging ]
       {{- end }}
       {{- end }}
-          exporters: [ otlp,logging ]
       extensions:
         - health_check
 
