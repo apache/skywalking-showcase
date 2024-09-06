@@ -22,6 +22,11 @@ skywalking:
       tag: ~
       pullPolicy: IfNotPresent
     replicas: 1
+    javaOpts: -Xmx8g -Xms2g
+    resources:
+      limits:
+        cpu: 4
+        memory: 8Gi
     storageType: ~
     ports:
       grpc: 11800
@@ -318,7 +323,6 @@ prometheus-elasticsearch-exporter:
     httpPort: 9114
   es:
     uri: "http://elasticsearch-master:9200"
-
 
 opentelemetry:
   enabled: false
