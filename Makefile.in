@@ -33,10 +33,10 @@ ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= a81437f9a6f3fc6efa11501ba61c1f245e062983
+SW_OAP_IMAGE_TAG ?= 78483991b780152a00f7f4032e0012638a1aba93
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
-SW_UI_IMAGE_TAG ?= a81437f9a6f3fc6efa11501ba61c1f245e062983
+SW_UI_IMAGE_TAG ?= 78483991b780152a00f7f4032e0012638a1aba93
 
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:0883266bfaa36612927b69e35781b64ea181758d
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
