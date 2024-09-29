@@ -79,6 +79,8 @@ skywalking:
             # 20ms is just for demo
             expression: sum(service_resp_time > 20) >= 1 
             period: 5
+            tags:
+              level: WARNING
             message: Response time of service {name} is more than 20ms.
       core.default.log4j-xml: |-
         <Configuration status="WARN">
