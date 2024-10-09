@@ -261,6 +261,8 @@ istiod:
   meshConfig:
     accessLogFile: /dev/stdout
     ingressClass: istio
+    ingressService: istio-ingressgateway
+    ingressSelector: istio-ingressgateway
     enableEnvoyAccessLogService: true
     enableTracing: true
     defaultConfig:
