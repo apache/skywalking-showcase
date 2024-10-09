@@ -55,7 +55,7 @@ dependencies:
     condition: mongodb.enabled
 
   - name: base
-    version: 1.14.4
+    version: 1.23.2
     repository: https://istio-release.storage.googleapis.com/charts
     condition: istio.enabled
 
