@@ -259,6 +259,8 @@ istiod:
   global:
     istioNamespace: demo
   meshConfig:
+    accessLogFile: /dev/stdout
+    ingressClass: istio
     enableEnvoyAccessLogService: true
     enableTracing: true
     defaultConfig:
@@ -320,7 +322,6 @@ prometheus-elasticsearch-exporter:
     httpPort: 9114
   es:
     uri: "http://elasticsearch-master:9200"
-
 
 opentelemetry:
   enabled: false
