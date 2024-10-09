@@ -252,6 +252,7 @@ istio:
   enabled: false
 
 base:
+  enableCRDTemplates: true
   global:
     istioNamespace: demo
 
