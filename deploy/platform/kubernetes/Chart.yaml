@@ -60,7 +60,7 @@ dependencies:
     condition: istio.enabled
 
   - name: istiod
-    version: 1.21.5
+    version: 1.23.2
     repository: https://istio-release.storage.googleapis.com/charts
     condition: istio.enabled
 
