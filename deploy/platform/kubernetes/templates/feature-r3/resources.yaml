@@ -77,7 +77,7 @@ spec:
             - name: r3-load
               image: curlimages/curl
               command: ["/bin/sh"]
-              args: ["-c", "for i in $(seq 1 200); do curl http://rating/songs/$i/reviews/$((i+1)); sleep 1; done; curl -X POST http://localhost:15000/quitquitquit;"]
+              args: ["-c", "for i in $(seq 1 200); do curl http://rating/songs/$i/reviews/$((i+1)); sleep 1; done;"]
               securityContext:
                 capabilities:
                   add:
