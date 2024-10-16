@@ -69,9 +69,6 @@ spec:
     spec:
       template:
         spec:
-          metadata:
-            annotations:
-              sidecar.istio.io/inject: "false"
           shareProcessNamespace: true
           containers:
             - name: r3-load
