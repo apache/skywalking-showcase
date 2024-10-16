@@ -69,15 +69,12 @@ spec:
     spec:
       template:
         spec:
-          metadata:
-            annotations:
-              sidecar.istio.io/inject: "false"
           shareProcessNamespace: true
           containers:
             - name: r3-load
               image: curlimages/curl
               command: ["/bin/sh"]
-              args: ["-c", "for i in $(seq 1 200); do curl http://rating/songs/$i/reviews/$((i+1)); sleep 1; done;"]
+              args: ["-c", "for i in $(seq 1 200); do curl http://rating/songs/$i/reviews/$((i+1)); sleep 1; done; curl -X POST http://localhost:15000/quitquitquit;"]
               securityContext:
                 capabilities:
                   add:
