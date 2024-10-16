@@ -49,7 +49,7 @@ SW_AGENT_NODEJS_FRONTEND_VERSION ?= 1e31bd17dcebb616163d848fc435f3a2d4822fb8
 SW_SATELLITE_IMAGE ?= ghcr.io/apache/skywalking-satellite/skywalking-satellite
 SW_SATELLITE_IMAGE_TAG ?= v261daa37cfe4abbae6e12ef5706a941b4357b815
 
-SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:2331dbe091343b9ebb2c74a8c6500af80274fb07
+SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:e0fc8f7c72a8b57dab6ea9552d7be2b40b134fe8
 
 SWCK_OPERATOR_IMAGE ?= docker.io/apache/skywalking-swck
 SWCK_OPERATOR_IMAGE_TAG ?= v0.7.0
