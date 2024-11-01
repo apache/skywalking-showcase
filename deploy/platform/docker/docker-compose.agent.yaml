@@ -22,6 +22,7 @@ services:
   gateway:
     image: ${HUB}/gateway-service:${TAG}
     networks: [ sw ]
+    privileged: true
     environment:
       SW_AGENT_NAME: gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
@@ -39,6 +40,7 @@ services:
   # Java agent
   songs:
     image: ${HUB}/songs-service:${TAG}
+    privileged: true
     networks: [ sw ]
     environment:
       SW_AGENT_NAME: songs
