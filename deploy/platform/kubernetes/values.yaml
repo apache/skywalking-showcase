@@ -59,9 +59,6 @@ skywalking:
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
       SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
-      SW_STORAGE_BANYANDB_METRICS_SHARDS_NUMBER: "2"
-      SW_STORAGE_BANYANDB_RECORD_SHARDS_NUMBER: "2"
-      SW_STORAGE_BANYANDB_SUPERDATASET_SHARDS_FACTOR: "1"
     startupProbe:
       failureThreshold: 10
       tcpSocket:
@@ -134,6 +131,20 @@ skywalking:
           type: ClusterIP
       data:
         replicas: 2
+        env:
+          - name: GOMEMLIMIT
+            value: "3GiB"
+        resources:
+          requests:
+            - key: cpu
+              value: 100m
+            - key: memory
+              value: 1Gi
+          limits:
+            - key: cpu
+              value: 4
+            - key: memory
+              value: 4Gi
     storage:
       enabled: true
       persistentVolumeClaims:
