@@ -26,17 +26,17 @@ HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
 BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
-BANYANDB_IMAGE_TAG ?= 9f423a826602b91d305e62f41ae1d6881ab015c9
+BANYANDB_IMAGE_TAG ?= 8dfe616f332848f041b0f184b023d9a256eac39e
 STORAGE_CLASS ?= ""
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= d3d3ee8abdb1ea24cc20afec0951047327e4e051
+SW_OAP_IMAGE_TAG ?= 0a0890c148e3139df33142c2270db4d098570872
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
-SW_UI_IMAGE_TAG ?= d3d3ee8abdb1ea24cc20afec0951047327e4e051
+SW_UI_IMAGE_TAG ?= 0a0890c148e3139df33142c2270db4d098570872
 
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
