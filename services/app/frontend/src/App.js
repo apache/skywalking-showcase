@@ -40,6 +40,7 @@ function App() {
     return (
         <div className="App">
             <p>{!data ? "Loading..." : data}</p>
+            <div>Hello React</div>
         </div>
     );
 }

@@ -16,7 +16,7 @@
 # under the License.
 #
 
-FROM node:10 AS build
+FROM node:22 AS build
 
 ARG SW_AGENT_NODEJS_FRONTEND_VERSION
 
