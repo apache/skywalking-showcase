@@ -31,6 +31,7 @@ ClientMonitor.register({
     service: agentName,
     pagePath: '/homepage',
     serviceVersion: 'v1.0.0',
+    useWebVitals: true,
     traceTimeInterval: 2000,
 });
 
