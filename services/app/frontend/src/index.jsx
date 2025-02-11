@@ -20,12 +20,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
+import App from './App.jsx';
 
 // @feature: nodejs-agent-frontend;
+// import ClientMonitor from 'skywalking-client-js/src/index.ts';
 import ClientMonitor from 'skywalking-client-js';
 
-const agentName = process.env.REACT_APP_SW_AGENT_NAME_UI || 'agent::ui'
+const agentName = import.meta.env.REACT_APP_SW_AGENT_NAME_UI || 'agent::ui'
 
 ClientMonitor.register({
     service: agentName,
