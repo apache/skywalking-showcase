@@ -24,6 +24,7 @@ import App from './App';
 
 // @feature: nodejs-agent-frontend;
 import ClientMonitor from 'skywalking-client-js';
+// import ClientMonitor from '../node_modules/skywalking-client-js/src/index.ts';
 
 const agentName = process.env.REACT_APP_SW_AGENT_NAME_UI || 'agent::ui'
 
@@ -57,6 +58,6 @@ timeout();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-      <App />
+        <App />
   </React.StrictMode>
 );

@@ -19,6 +19,12 @@
  */
 import React from 'react';
 import './App.css';
+import Recipe from './components/Recipe';
+import FancyText from './components/FancyText';
+import InspirationGenerator from './components/InspirationGenerator';
+import Copyright from './components/Copyright';
+import List from './components/List';
+import Form from './components/Form';
 
 function App() {
     const [data, setData] = React.useState(null);
@@ -40,7 +46,16 @@ function App() {
     return (
         <div className="App">
             <p>{!data ? "Loading..." : data}</p>
-            <div>Hello React</div>
+            <h2>For a gathering</h2>
+            <Recipe drinkers={4} />
+            <>
+                <FancyText title text="Get Inspired App" />
+                <InspirationGenerator>
+                    <Copyright year={2004} />
+                </InspirationGenerator>
+            </>
+            <List />
+            <Form />
         </div>
     );
 }
