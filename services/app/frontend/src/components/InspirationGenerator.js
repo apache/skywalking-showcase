@@ -17,18 +17,21 @@
  * under the License.
  *
  */
-.App {
-  text-align: center;
-  margin: 10px 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+import * as React from 'react';
+import quotes from './data';
+import FancyText from './FancyText';
 
-  
-}
-body {
-  background-color: #282c34;
-  color: white;
+export default function InspirationGenerator({children}) {
+  const [index, setIndex] = React.useState(0);
+  const quote = quotes[index];
+  const next = () => setIndex((index + 1) % quotes.length);
+
+  return (
+    <>
+      <p>Your inspirational quote is:</p>
+      <FancyText text={quote} />
+      <button onClick={next}>Inspire me again</button>
+      {children}
+    </>
+  );
 }

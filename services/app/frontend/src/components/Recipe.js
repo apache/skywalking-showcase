@@ -17,18 +17,12 @@
  * under the License.
  *
  */
-.App {
-  text-align: center;
-  margin: 10px 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  
-}
-body {
-  background-color: #282c34;
-  color: white;
+export default function Recipe({ drinkers }) {
+  return (
+    <ol>    
+      <li>Boil {drinkers} cups of water.</li>
+      <li>Add {drinkers} spoons of tea and {0.5 * drinkers} spoons of spice.</li>
+      <li>Add {0.5 * drinkers} cups of milk to boil and sugar to taste.</li>
+    </ol>
+  );
 }

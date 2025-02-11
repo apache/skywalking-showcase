@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,18 +18,28 @@
  * under the License.
  *
  */
-.App {
-  text-align: center;
-  margin: 10px 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+import { people } from './data.js';
 
-  
+export default function List() {
+  const listItems = people.map(person =>
+    <li key={person.id}>
+      <img
+        src={getImageUrl(person)}
+        alt={person.name}
+      />
+      <p>
+        <b>{person.name}</b>
+          {' ' + person.profession + ' '}
+          known for {person.accomplishment}
+      </p>
+    </li>
+  );
+  return <ul>{listItems}</ul>;
 }
-body {
-  background-color: #282c34;
-  color: white;
+function getImageUrl(person) {
+  return (
+    'https://i.imgur.com/' +
+    person.imageId +
+    's.jpg'
+  );
 }

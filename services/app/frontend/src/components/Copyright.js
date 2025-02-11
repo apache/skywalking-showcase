@@ -17,18 +17,6 @@
  * under the License.
  *
  */
-.App {
-  text-align: center;
-  margin: 10px 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  
-}
-body {
-  background-color: #282c34;
-  color: white;
+export default function Copyright({year}) {
+  return <p className='small'>©️ {year}</p>;
 }

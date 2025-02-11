@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,18 +18,30 @@
  * under the License.
  *
  */
-.App {
-  text-align: center;
-  margin: 10px 0;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+import { useState } from 'react';
 
-  
+export default function Form() {
+  const [isSent, setIsSent] = useState(false);
+  const [message, setMessage] = useState('Hi!');
+  if (isSent) {
+    return <h1>Your message is on its way!</h1>
+  }
+  return (
+    <form onSubmit={(e) => {
+      e.preventDefault();
+      setIsSent(true);
+      sendMessage(message);
+    }}>
+      <textarea
+        placeholder="Message"
+        value={message}
+        onChange={e => setMessage(e.target.value)}
+      />
+      <button type="submit">Send</button>
+    </form>
+  );
 }
-body {
-  background-color: #282c34;
-  color: white;
+
+function sendMessage(message) {
+  // ...
 }
