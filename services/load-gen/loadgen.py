@@ -21,6 +21,7 @@ import traceback
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 
 url = os.getenv('URL', 'http://frontend/index.html')
 
@@ -33,7 +34,21 @@ while True:
     # noinspection PyBroadException
     try:
         driver.get(url)
-    except Exception:
+        # Click the send button
+        try:
+            send_button = driver.find_element(By.ID, "sendButton")
+            send_button.click()
+        except NoSuchElementException:
+            print("Send button not found")
+        # Click the quote button
+        try:
+            quote_button = driver.find_element(By.ID, "quoteButton")
+            quote_button.click()
+        except NoSuchElementException:
+            print("Quote button not found")
+    except WebDriverException as e:
+        print(f"WebDriver Error: {e}")
         traceback.print_exc()
+        break
     finally:
         time.sleep(10)
