@@ -15,14 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM selenium/standalone-firefox:94.0
+FROM selenium/standalone-chrome:97.0-20250202
 
 WORKDIR /home/seluser
 
 COPY requirements.txt requirements.txt
 COPY loadgen.py loadgen.py
 
-RUN sudo apt-get update && sudo apt-get install -y python3-pip
-RUN pip3 install -r requirements.txt
+RUN sudo apt-get update && sudo apt-get install -y python3-pip python3-venv
+RUN sudo python3 -m venv python && sudo ./python/bin/pip3 install -r requirements.txt
 
-CMD python3 -u loadgen.py
+CMD python/bin/python3 -u loadgen.py
