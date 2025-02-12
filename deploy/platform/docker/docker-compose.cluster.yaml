@@ -61,7 +61,7 @@ services:
       JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth,go-runtime,java-agent
     healthcheck:
-      test: [ "CMD-SHELL", "/skywalking/bin/swctl ch" ]
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/11800"]
       interval: 30s
       timeout: 10s
       retries: 3

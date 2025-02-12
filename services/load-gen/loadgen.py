@@ -20,14 +20,15 @@ import time
 import traceback
 
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.common.exceptions import NoSuchElementException, WebDriverException
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 url = os.getenv('URL', 'http://frontend/index.html')
 
-options = FirefoxOptions()
+options = ChromeOptions()
 options.add_argument("--headless")
-driver = webdriver.Firefox(options=options)
+driver = webdriver.Chrome(options=options)
 
 while True:
     print(f'Sending traffic to {url}')
@@ -46,10 +47,9 @@ while True:
             quote_button.click()
         except NoSuchElementException:
             print("Quote button not found")
-    except WebDriverException as e:
-        print(f"WebDriver Error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
         traceback.print_exc()
         break
     finally:
         time.sleep(10)
-        driver.quit()
