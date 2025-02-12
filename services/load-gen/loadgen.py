@@ -52,3 +52,4 @@ while True:
         break
     finally:
         time.sleep(10)
+        driver.quit()
