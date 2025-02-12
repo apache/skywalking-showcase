@@ -30,7 +30,7 @@ export default function InspirationGenerator({children}) {
     <>
       <p>Your inspirational quote is:</p>
       <FancyText text={quote} />
-      <button onClick={next}>Inspire me again</button>
+      <button id='quoteButton' onClick={next}>Inspire me again</button>
       {children}
     </>
   );
