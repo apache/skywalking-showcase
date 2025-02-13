@@ -91,6 +91,8 @@ feature-cluster:
 .PHONY: feature-elasticsearch
 feature-elasticsearch:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=elasticsearch)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.elasticsearch.image=$(ES_IMAGE))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.elasticsearch.imageTag=$(ES_IMAGE_TAG))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.elasticsearch.enabled=true)
 
 .PHONY: feature-postgresql

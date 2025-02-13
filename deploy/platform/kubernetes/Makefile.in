@@ -24,4 +24,4 @@ CILIUM_SERVICES_NAMESPACE ?= cilium-services
 RELEASE ?= demo
 AGENTLESS ?= false
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,elasticsearch,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,nginx-monitor,apisix-monitor,grafana,elasticsearch-monitor,rabbitmq-monitor,mongodb-monitor,r3,rocketmq-monitor,pulsar-monitor,activemq-monitor
+FEATURE_FLAGS ?= java-agent-injector,cluster,banyandb,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,nginx-monitor,apisix-monitor,grafana,rabbitmq-monitor,mongodb-monitor,r3,rocketmq-monitor,pulsar-monitor,activemq-monitor
