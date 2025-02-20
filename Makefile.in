@@ -66,5 +66,7 @@ SW_R3_IMAGE_TAG ?= 0.1.0
 CILIUM_VERSION ?= 1.13.4
 CILIUM_CLI_VERSION ?= v0.15.0
 
+SW_PREDICTOR_IMAGE ?= ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
+
 # ALL variables should be listed above ^^
 EXPORTED_VARS := $(filter-out <%,$(.VARIABLES))
