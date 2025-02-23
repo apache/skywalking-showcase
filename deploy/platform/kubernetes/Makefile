@@ -61,6 +61,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.rover.image=$(SW_ROVER_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRAFANA_PLUGIN_VERSION)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.image=$(SW_R3_IMAGE):$(SW_R3_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.image=$(SW_PREDICTOR_IMAGE)
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
@@ -219,6 +220,10 @@ feature-pulsar-monitor:
 feature-activemq-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.activemqMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
+.PHONY: feature-baseline
+feature-baseline:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.enabled=true --set skywalking.oap.env.SW_API_PIPELINE_BASELINE_SERVICE_HOST=$(RELEASE)-baseline.$(NAMESPACE).svc.cluster.local)
 
 .PHONY: cilium
 cilium:
