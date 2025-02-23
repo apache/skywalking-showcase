@@ -23,7 +23,9 @@ services:
     networks: [ sw ]
     expose:
       - 17912
-    command: standalone
+    ports:
+      - "17913:17913"
+    command: standalone --observability-modes=native
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "17913"]
       interval: 30s
