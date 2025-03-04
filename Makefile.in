@@ -33,15 +33,15 @@ ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= 0f2ef5a53af61b58d494bd582296957aeceb0b93
+SW_OAP_IMAGE_TAG ?= 04411b829c68ca96abb575b2dd34e88bfabd7375
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking/ui
-SW_UI_IMAGE_TAG ?= 0f2ef5a53af61b58d494bd582296957aeceb0b93
+SW_UI_IMAGE_TAG ?= 04411b829c68ca96abb575b2dd34e88bfabd7375
 
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
 SW_AGENT_JAVA_IMAGE ?= ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8
-SW_AGENT_GO_IMAGE ?= ghcr.io/apache/skywalking-go/skywalking-go:637845b76c9949a495a14ecf0e7e2f0e385701c8-go1.18
+SW_AGENT_GO_IMAGE ?= ghcr.io/apache/skywalking-go/skywalking-go:154de50628e82e590941585411299459e352317d-go1.19
 
 SW_AGENT_NODEJS_BACKEND_VERSION ?= 59ef1aed6a404e2e8afffbb4b81ea849ae4f3026
 SW_AGENT_NODEJS_FRONTEND_VERSION ?= dce0d5b39ab95b8062031bc74e6f7a191f08e186
