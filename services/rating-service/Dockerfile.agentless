@@ -16,7 +16,7 @@
 # under the License.
 #
 
-FROM golang:1.18
+FROM golang:1.19
 
 WORKDIR /workspace
 
