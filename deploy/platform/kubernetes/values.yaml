@@ -173,7 +173,7 @@ skywalking:
           rootPassword: banyandb
       replicaCount: 1
       persistence:
-        size: 5Gi
+        size: 10Gi
         storageClass: ~
       startupProbe:
         enabled: true
