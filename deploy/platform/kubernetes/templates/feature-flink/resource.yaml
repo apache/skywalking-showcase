@@ -16,8 +16,7 @@
 # under the License.
 #
 
-
-{{- if .Values.features.rocketmqMonitor.enabled }}
+{{- if .Values.features.flinkMonitor.enabled }}
 
 apiVersion: v1
 kind: Service
@@ -121,26 +120,29 @@ spec:
           args: ["taskmanager"]
 
 ---
-apiVersion: batch/v1
-kind: CronJob
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: execute-flink-job
 spec:
-  schedule: "*/10 * * * *"
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 1
-  jobTemplate:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: execute-flink-job
+  template:
+    metadata:
+      labels:
+        app: execute-flink-job
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
-      template:
-        spec:
-          restartPolicy: Never
-          containers:
-            - name: execute-flink-job
-              image: flink:2.0-preview1
-              imagePullPolicy: IfNotPresent
-              command:
-                - bash
-                - -c
-                - "./bin/flink run -m flink-jobmanager:8081 examples/streaming/WindowJoin.jar"
+      containers:
+        - name: execute-flink-job
+          image: flink:2.0-preview1
+          imagePullPolicy: IfNotPresent
+          command:
+            - bash
+            - -c
+            - "./bin/flink run -m jobmanager:8081 examples/streaming/WindowJoin.jar"
 
 {{- end }}
