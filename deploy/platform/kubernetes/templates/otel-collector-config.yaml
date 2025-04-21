@@ -31,6 +31,7 @@
   "opentelemetry-config-rocketmq-monitor"
   "opentelemetry-config-pulsar-monitor"
   "opentelemetry-config-activemq-monitor"
+  "opentelemetry-config-flink-monitor"
 }}
 ---
 apiVersion: v1

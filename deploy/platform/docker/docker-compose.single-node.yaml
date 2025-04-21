@@ -38,7 +38,7 @@ services:
     environment:
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/* # @feature: vm,mysql,postgresql,elasticsearch; enable the OC rules that analyse the metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/*,flink/* # @feature: vm,mysql,postgresql,elasticsearch; enable the OC rules that analyse the metrics
       SW_STORAGE: banyandb
       SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus

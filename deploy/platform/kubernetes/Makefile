@@ -242,6 +242,11 @@ endif
 feature-cilium: cilium
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.cilium.enabled=true --set skywalking.oap.env.SW_CILIUM_FETCHER=default)
 
+.PHONY: feature-flink-monitor
+feature-flink-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.flinkMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: deploy
 deploy: $(features)
 	helm dep up .

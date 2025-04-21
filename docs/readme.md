@@ -117,6 +117,7 @@ Currently, the features supported are:
 | `activemq-monitor`      | Deploy OpenTelemetry and export [ActiveMQ classic](https://activemq.apache.org/components/classic/) monitoring metrics to SkyWalking for analysis and display on UI.                   |                                                                                                                                       |
 | `cilium`                | Deploy Cilium and showcase services in a separate namespace, SkyWalking fetch Cilium Services Traffic to analysis and display on UI.                                                   | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 | `baseline`              | Deploy [SkyPredictor](https://github.com/SkyAPM/SkyPredictor) as baseline calculator to predict metrics.                                                                               | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
+| `flink-monitor`         | Deploy OpenTelemetry and export Flink monitoring metrics to SkyWalking for analysis and display on UI.     
 
 ### Kubernetes
 

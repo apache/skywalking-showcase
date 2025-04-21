@@ -16,12 +16,25 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+{{- define "opentelemetry-config-flink-monitor" }}
+{{- if .Values.features.flinkMonitor.enabled }}
 
-NAMESPACE ?= skywalking-showcase
-SAMPLE_SERVICES_NAMESPACE ?= sample-services
-CILIUM_SERVICES_NAMESPACE ?= cilium-services
-RELEASE ?= demo
-AGENTLESS ?= false
+- job_name: "flink-jobmanager-monitoring"
+  scrape_interval: 30s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: jobmanager;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: flink.{{ .Release.Namespace }}
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
 
-FEATURE_FLAGS ?= java-agent-injector,cluster,banyandb,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,nginx-monitor,apisix-monitor,grafana,rabbitmq-monitor,mongodb-monitor,r3,rocketmq-monitor,pulsar-monitor,activemq-monitor,flink-monitor
+{{- end }}
+{{- end }}
