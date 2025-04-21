@@ -78,6 +78,7 @@ spec:
           ports:
             - containerPort: 8081
             - containerPort: 9260
+              name: metrics
             - containerPort: 6123
           env:
             - name: FLINK_PROPERTIES
@@ -110,6 +111,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9261
+              name: metrics
           env:
             - name: FLINK_PROPERTIES
               value: |
