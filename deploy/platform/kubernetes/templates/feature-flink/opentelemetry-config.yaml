@@ -19,7 +19,7 @@
 {{- define "opentelemetry-config-flink-monitor" }}
 {{- if .Values.features.flinkMonitor.enabled }}
 
-- job_name: "flink-jobmanager-monitoring"
+- job_name: "flink-jobManager-monitoring"
   scrape_interval: 30s
   metrics_path: "/metrics"
   kubernetes_sd_configs:
