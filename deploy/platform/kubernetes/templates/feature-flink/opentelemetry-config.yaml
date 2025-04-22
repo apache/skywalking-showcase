@@ -35,6 +35,14 @@
       target_label: service_instance_id
       regex: (.+)
       replacement: $$1
+  metric_relabel_configs:
+    - source_labels: [ job_name ]
+      action: replace
+      target_label: flink_job_name
+      replacement: $$1
+    - source_labels: [ ]
+      target_label: job_name
+      replacement: flink-jobManager-monitoring
 
 {{- end }}
 {{- end }}
