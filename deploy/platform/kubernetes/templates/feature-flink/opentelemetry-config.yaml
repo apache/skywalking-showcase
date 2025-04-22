@@ -64,7 +64,7 @@
       target_label: service_instance_id
       regex: (.+)
       replacement: $$1
-    - source_labels: [ __meta_kubernetes_pod_node_name ]
+    - source_labels: [ __meta_kubernetes_pod_name ]
       target_label: taskManager_node
       regex: (.+)
       replacement: $$1
