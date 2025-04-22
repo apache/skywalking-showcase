@@ -35,6 +35,9 @@
       target_label: service_instance_id
       regex: (.+)
       replacement: $$1
+    - source_labels: [ __address__ ]
+      target_label: jobManager_node
+      replacement: $$1
   metric_relabel_configs:
     - source_labels: [ job_name ]
       action: replace
@@ -43,6 +46,35 @@
     - source_labels: [ ]
       target_label: job_name
       replacement: flink-jobManager-monitoring
+
+- job_name: "flink-taskManager-monitoring"
+  scrape_interval: 30s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: taskmanager;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: flink.{{ .Release.Namespace }}
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - source_labels: [ __address__ ]
+      regex: (.+)
+      target_label: taskManager_node
+      replacement: $$1
+  metric_relabel_configs:
+    - source_labels: [ job_name ]
+      action: replace
+      target_label: flink_job_name
+      replacement: $$1
+    - source_labels: [ ]
+      target_label: job_name
+      replacement: flink-taskManager-monitoring
 
 {{- end }}
 {{- end }}
