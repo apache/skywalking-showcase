@@ -1,0 +1,81 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+{{- define "opentelemetry-config-flink-monitor" }}
+{{- if .Values.features.flinkMonitor.enabled }}
+
+- job_name: "flink-jobManager-monitoring"
+  scrape_interval: 30s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: jobmanager;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: flink.{{ .Release.Namespace }}
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      regex: (.+)
+      target_label: jobManager_node
+      replacement: $$1
+  metric_relabel_configs:
+    - source_labels: [ job_name ]
+      action: replace
+      target_label: flink_job_name
+      replacement: $$1
+    - source_labels: [ ]
+      target_label: job_name
+      replacement: flink-jobManager-monitoring
+
+- job_name: "flink-taskManager-monitoring"
+  scrape_interval: 30s
+  metrics_path: "/metrics"
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [ __meta_kubernetes_pod_container_name, __meta_kubernetes_pod_container_port_name ]
+      action: keep
+      regex: taskmanager;metrics
+    - source_labels: [ ]
+      target_label: cluster
+      replacement: flink.{{ .Release.Namespace }}
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: service_instance_id
+      regex: (.+)
+      replacement: $$1
+    - source_labels: [ __meta_kubernetes_pod_name ]
+      target_label: taskManager_node
+      regex: (.+)
+      replacement: $$1
+  metric_relabel_configs:
+    - source_labels: [ job_name ]
+      action: replace
+      target_label: flink_job_name
+      replacement: $$1
+    - source_labels: [ ]
+      target_label: job_name
+      replacement: flink-taskManager-monitoring
+
+{{- end }}
+{{- end }}

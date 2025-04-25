@@ -40,7 +40,7 @@ skywalking:
       # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
       # @feature: mysql; enable mysql rules to analyze MySQL metrics
       # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS: "mx-mesh,persistence" # @feature: als; enable mesh analyzer (mx-mesh) to analyze ALS logs
       K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
@@ -467,4 +467,7 @@ features:
     enabled: false
 
   cilium:
+    enabled: false
+
+  flinkMonitor:
     enabled: false
