@@ -56,13 +56,14 @@ metadata:
   namespace: {{ .Values.sampleServices.namespace }}
 
 ---
+{{- if .Values.sampleServices.scaller.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: event-scale-up
   namespace: {{ .Values.sampleServices.namespace }}
 spec:
-  schedule: "0,10,20,30,40,50 * * * *"
+  schedule: "0 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -89,7 +90,7 @@ metadata:
   name: event-scale-down
   namespace: {{ .Values.sampleServices.namespace }}
 spec:
-  schedule: "5,15,25,35,45,55 * * * *"
+  schedule: "30 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
@@ -108,4 +109,5 @@ spec:
                 - -c
                 - kubectl -n {{ .Values.sampleServices.namespace }} scale deployment songs-deployment gateway-deployment app-deployment --replicas=1
           restartPolicy: Never
+{{- end }}
 {{- end }}

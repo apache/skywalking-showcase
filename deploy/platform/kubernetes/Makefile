@@ -62,6 +62,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRAFANA_PLUGIN_VERSION)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.image=$(SW_R3_IMAGE):$(SW_R3_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.image=$(SW_PREDICTOR_IMAGE)
+HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.scaller.enabled=$(SCALLER_ENABLE)
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
