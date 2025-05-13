@@ -191,6 +191,13 @@ skywalking:
         failureThreshold: 5
       readinessProbe:
         enabled: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 2048m
+          memory: 1Gi
 
   elasticsearch:
     enabled: false
