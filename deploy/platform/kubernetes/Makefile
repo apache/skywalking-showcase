@@ -28,19 +28,22 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=stream-data
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].nodeRole=hot
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=hot-stream-data
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].size=10Gi
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].accessModes[0]=ReadWriteOnce
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].storageClass=$(STORAGE_CLASS)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].volumeMode=Filesystem
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].mountTargets[0]=measure
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=measure-data
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].nodeRole=hot
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=hot-measure-data
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].size=10Gi
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].accessModes[0]=ReadWriteOnce
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].storageClass=$(STORAGE_CLASS)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].volumeMode=Filesystem
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].mountTargets[0]=property
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].claimName=property-data
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].nodeRole=hot
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].claimName=hot-property-data
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].size=2Gi
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].accessModes[0]=ReadWriteOnce
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].storageClass=$(STORAGE_CLASS)

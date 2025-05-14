@@ -151,15 +151,25 @@ skywalking:
       enabled: true
       persistentVolumeClaims:
         - mountTargets: ["stream"]
-          claimName: stream-data
+          nodeRole: hot
+          claimName: hot-stream-data
           size: 10Gi
           accessModes:
             - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
         - mountTargets: ["measure"]
-          claimName: measure-data
+          nodeRole: hot
+          claimName: hot-measure-data
           size: 10Gi
+          accessModes:
+            - ReadWriteOnce
+          storageClass: ~
+          volumeMode: Filesystem
+        - mountTargets: ["property"]
+          nodeRole: hot
+          claimName: hot-property-data
+          size: 5Gi
           accessModes:
             - ReadWriteOnce
           storageClass: ~
@@ -196,7 +206,7 @@ skywalking:
           cpu: 100m
           memory: 256Mi
         limits:
-          cpu: 2048m
+          cpu: 4096m
           memory: 1Gi
 
   elasticsearch:
