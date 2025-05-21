@@ -129,24 +129,62 @@ skywalking:
       enabled: true
       liaison:
         replicas: 2
+        env:
+        - name: BYDB_DATA_NODE_SELECTOR
+          value: "type=hot"
         httpSvc:
           type: ClusterIP
       data:
-        replicas: 2
-        env:
-          - name: GOMEMLIMIT
-            value: "3GiB"
-        resources:
-          requests:
-            - key: cpu
-              value: 100m
-            - key: memory
-              value: 1Gi
-          limits:
-            - key: cpu
-              value: 4
-            - key: memory
-              value: 4Gi
+        nodeTemplate:
+          replicas: 2
+          resources:
+            requests:
+              - key: cpu
+                value: 100m
+              - key: memory
+                value: 1Gi
+            limits:
+              - key: cpu
+                value: 4
+              - key: memory
+                value: 4Gi
+        roles:
+          hot:
+            env:
+            - name: GOMEMLIMIT
+              value: "3GiB"
+            - name: BYDB_NODE_LABELS
+              value: "type=hot"
+            lifecycleSidecar:
+              schedule: "@daily"
+              enabled: true
+          warm:
+            env:
+            - name: GOMEMLIMIT
+              value: "3GiB"
+            - name: BYDB_NODE_LABELS
+              value: "type=warm"
+            lifecycleSidecar:
+              schedule: "@daily"
+              enabled: true
+          cold:
+            replicas: 1
+            env:
+            - name: BYDB_NODE_LABELS
+              value: "type=cold"
+            - name: GOMEMLIMIT
+              value: "6GiB"
+            resources:
+              requests:
+                - key: cpu
+                  value: 100m
+                - key: memory
+                  value: 1Gi
+              limits:
+                - key: cpu
+                  value: 8
+                - key: memory
+                  value: 8Gi
     storage:
       enabled: true
       persistentVolumeClaims:
@@ -174,6 +212,20 @@ skywalking:
             - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
+        - mountTargets: [ "measure", "stream" ]
+          nodeRole: warm
+          claimName: warm-data
+          size: 100Gi
+          accessModes:
+          - ReadWriteOnce
+          storageClass: ~
+        - mountTargets: [ "measure", "stream" ]
+          nodeRole: cold
+          claimName: cold-data
+          size: 500Gi
+          accessModes:
+          - ReadWriteOnce
+          storageClass: ~
     etcd:
       enabled: true
       auth:

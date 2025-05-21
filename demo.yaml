@@ -1,0 +1,4634 @@
+make[1]: Entering directory '/mnt/ssd/skywalking-showcase/deploy/platform/kubernetes'
+helm dep up .
+Getting updates for unmanaged Helm repositories...
+...Successfully got an update from the "https://open-telemetry.github.io/opentelemetry-helm-charts" chart repository
+...Successfully got an update from the "https://istio-release.storage.googleapis.com/charts" chart repository
+...Successfully got an update from the "https://istio-release.storage.googleapis.com/charts" chart repository
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "grafana" chart repository
+...Successfully got an update from the "prometheus-community" chart repository
+...Successfully got an update from the "bitnami" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Saving 9 charts
+Downloading skywalking-helm from repo oci://ghcr.io/apache/skywalking-helm
+Downloading skywalking-helm-swck-operator from repo oci://ghcr.io/apache/skywalking-helm
+Downloading kube-state-metrics from repo https://prometheus-community.github.io/helm-charts
+Downloading prometheus-elasticsearch-exporter from repo https://prometheus-community.github.io/helm-charts
+Downloading rabbitmq from repo https://charts.bitnami.com/bitnami
+Downloading mongodb from repo https://charts.bitnami.com/bitnami
+Downloading base from repo https://istio-release.storage.googleapis.com/charts
+Downloading istiod from repo https://istio-release.storage.googleapis.com/charts
+Downloading opentelemetry-collector from repo https://open-telemetry.github.io/opentelemetry-helm-charts
+Deleting outdated charts
+helm -n skywalking-showcase upgrade --install demo . --create-namespace --timeout=20m --set skywalking.fullnameOverride=demo --set skywalking.banyandb.image.repository=ghcr.io/apache/skywalking-banyandb --set skywalking.banyandb.image.tag=f33c8b42351cb48c7fb07c0da73f50d39b0b5205 --set skywalking.banyandb.etcd.persistence.storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[0].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=hot-stream-data --set skywalking.banyandb.storage.persistentVolumeClaims[0].size=10Gi --set skywalking.banyandb.storage.persistentVolumeClaims[0].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[0].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[0].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[1].mountTargets[0]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[1].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=hot-measure-data --set skywalking.banyandb.storage.persistentVolumeClaims[1].size=10Gi --set skywalking.banyandb.storage.persistentVolumeClaims[1].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[1].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[1].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[2].mountTargets[0]=property --set skywalking.banyandb.storage.persistentVolumeClaims[2].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[2].claimName=hot-property-data --set skywalking.banyandb.storage.persistentVolumeClaims[2].size=2Gi --set skywalking.banyandb.storage.persistentVolumeClaims[2].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[2].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[2].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[1]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[3].nodeRole=warm --set skywalking.banyandb.storage.persistentVolumeClaims[3].claimName=warm-data --set skywalking.banyandb.storage.persistentVolumeClaims[3].size=50Gi --set skywalking.banyandb.storage.persistentVolumeClaims[3].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[3].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[3].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[1]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[4].nodeRole=cold --set skywalking.banyandb.storage.persistentVolumeClaims[4].claimName=cold-data --set skywalking.banyandb.storage.persistentVolumeClaims[4].size=100Gi --set skywalking.banyandb.storage.persistentVolumeClaims[4].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[4].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[4].volumeMode=Filesystem --set skywalking.oap.image.repository=ghcr.io/apache/skywalking/oap --set skywalking.oap.image.tag=3739add599a4e213071d68b1f2e9fbae31b7a6bf --set skywalking.ui.image.repository=ghcr.io/apache/skywalking/ui --set skywalking.ui.image.tag=3739add599a4e213071d68b1f2e9fbae31b7a6bf --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http://demo-oap.skywalking-showcase.svc:9412 --set skywalking.satellite.image.repository=ghcr.io/apache/skywalking-satellite/skywalking-satellite --set skywalking.satellite.image.tag=v8778e3e8a4ab4962102502ffc9ba7a3c73270609 --set swck.image.repository=docker.io/apache/skywalking-swck --set swck.image.tag=v0.7.0 --set sampleServices.hub=ghcr.io/apache/skywalking-showcase --set sampleServices.tag=3e3d5c3 --set sampleServices.namespace=sample-services --set ciliumServices.hub=ghcr.io/apache/skywalking-showcase --set ciliumServices.tag=3e3d5c3 --set ciliumServices.namespace=cilium-services --set opentelemetry-collector.image.repository=otel/opentelemetry-collector --set opentelemetry-collector.image.tag=0.102.1 --set features.rover.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.traceProfiling.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.event.exporter.image=ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22 --set features.javaAgentInjector.agentImage=ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8 --set features.rover.image=ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3 --set features.grafana.image=grafana/grafana:11.3.0 --set skywalking.grafana.plugin.version=0.1.0 --set features.r3.image=ghcr.io/skyapm/r3:0.1.0 --set features.baseline.image=ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150 --set sampleServices.scaller.enabled=false --dry-run --debug --set skywalking.oap.storageType=banyandb --set skywalking.banyandb.enabled=true --set skywalking.oap.replicas=2
+Release "demo" does not exist. Installing it now.
+NAME: demo
+LAST DEPLOYED: Wed May 21 11:53:11 2025
+NAMESPACE: skywalking-showcase
+STATUS: pending-install
+REVISION: 1
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+ciliumServices:
+  hub: ghcr.io/apache/skywalking-showcase
+  namespace: cilium-services
+  tag: 3e3d5c3
+features:
+  baseline:
+    image: ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
+  event:
+    exporter:
+      image: ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
+  grafana:
+    image: grafana/grafana:11.3.0
+  javaAgentInjector:
+    agentImage: ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8
+  r3:
+    image: ghcr.io/skyapm/r3:0.1.0
+  rover:
+    image: ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3
+    swctl:
+      image: ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
+  traceProfiling:
+    swctl:
+      image: ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
+opentelemetry-collector:
+  image:
+    repository: otel/opentelemetry-collector
+    tag: 0.102.1
+sampleServices:
+  hub: ghcr.io/apache/skywalking-showcase
+  namespace: sample-services
+  scaller:
+    enabled: false
+  tag: 3e3d5c3
+skywalking:
+  banyandb:
+    enabled: true
+    etcd:
+      persistence:
+        storageClass: ""
+    image:
+      repository: ghcr.io/apache/skywalking-banyandb
+      tag: f33c8b42351cb48c7fb07c0da73f50d39b0b5205
+    storage:
+      persistentVolumeClaims:
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-stream-data
+        mountTargets:
+        - stream
+        nodeRole: hot
+        size: 10Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-measure-data
+        mountTargets:
+        - measure
+        nodeRole: hot
+        size: 10Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-property-data
+        mountTargets:
+        - property
+        nodeRole: hot
+        size: 2Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: warm-data
+        mountTargets:
+        - stream
+        - measure
+        nodeRole: warm
+        size: 50Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: cold-data
+        mountTargets:
+        - stream
+        - measure
+        nodeRole: cold
+        size: 100Gi
+        storageClass: ""
+        volumeMode: Filesystem
+  fullnameOverride: demo
+  grafana:
+    plugin:
+      version: 0.1.0
+  oap:
+    image:
+      repository: ghcr.io/apache/skywalking/oap
+      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+    replicas: 2
+    storageType: banyandb
+  satellite:
+    image:
+      repository: ghcr.io/apache/skywalking-satellite/skywalking-satellite
+      tag: v8778e3e8a4ab4962102502ffc9ba7a3c73270609
+  ui:
+    env:
+      SW_ZIPKIN_ADDRESS: http://demo-oap.skywalking-showcase.svc:9412
+    image:
+      repository: ghcr.io/apache/skywalking/ui
+      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+swck:
+  image:
+    repository: docker.io/apache/skywalking-swck
+    tag: v0.7.0
+
+COMPUTED VALUES:
+base:
+  enableCRDTemplates: true
+  global:
+    istioNamespace: demo
+ciliumServices:
+  hub: ghcr.io/apache/skywalking-showcase
+  namespace: cilium-services
+  tag: 3e3d5c3
+features:
+  activemqMonitor:
+    enabled: false
+  agent:
+    enabled: false
+  als:
+    enabled: false
+  apisixMonitor:
+    enabled: false
+  baseline:
+    image: ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
+  cilium:
+    enabled: false
+  elasticsearchMonitor:
+    enabled: false
+  event:
+    enabled: false
+    exporter:
+      image: ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
+  flinkMonitor:
+    enabled: false
+  function:
+    enabled: false
+  grafana:
+    enabled: false
+    image: grafana/grafana:11.3.0
+  istiodMonitor:
+    enabled: false
+  javaAgentInjector:
+    agentImage: ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8
+    enabled: false
+  kubernetesMonitor:
+    enabled: false
+  meshWithAgent:
+    enabled: false
+  mongodbMonitor:
+    enabled: false
+  mysqlMonitor:
+    enabled: false
+  nginxMonitor:
+    enabled: false
+  postgresqlMonitor:
+    enabled: false
+  pulsarMonitor:
+    enabled: false
+  r3:
+    enabled: false
+    image: ghcr.io/skyapm/r3:0.1.0
+  rabbitmqMonitor:
+    enabled: false
+  rocketmqMonitor:
+    enabled: false
+  rover:
+    enabled: false
+    image: ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3
+    swctl:
+      image: ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
+  so11y:
+    enabled: false
+  traceProfiling:
+    enabled: false
+    swctl:
+      image: ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
+  vmMonitor:
+    enabled: false
+istio:
+  enabled: false
+istiod:
+  global:
+    istioNamespace: demo
+  meshConfig:
+    accessLogFile: /dev/stdout
+    defaultConfig:
+      envoyAccessLogService:
+        address: ""
+      envoyMetricsService:
+        address: ""
+      proxyStatsMatcher:
+        inclusionRegexps:
+        - .*membership_healthy.*
+        - .*upstream_cx_active.*
+        - .*upstream_cx_total.*
+        - .*upstream_rq_active.*
+        - .*upstream_rq_total.*
+        - .*upstream_rq_pending_active.*
+        - .*lb_healthy_panic.*
+        - .*upstream_cx_none_healthy.*
+      tracing:
+        sampling: 100
+        zipkin:
+          address: ""
+    enableEnvoyAccessLogService: true
+    enableTracing: true
+    ingressClass: istio
+    ingressSelector: istio-ingressgateway
+    ingressService: istio-ingressgateway
+kube-state-metrics:
+  enabled: false
+mongodb:
+  architecture: replicaset
+  auth:
+    enabled: false
+  enabled: false
+  metrics:
+    collector:
+      dbstats: true
+      diagnosticdata: true
+      replicasetstatus: true
+    compatibleMode: true
+    enabled: true
+  persistence:
+    enabled: false
+  replicaCount: 2
+opentelemetry:
+  enabled: false
+opentelemetry-collector:
+  clusterRole:
+    create: true
+    rules:
+    - apiGroups:
+      - ""
+      resources:
+      - endpoints
+      - pods
+      - services
+      - nodes
+      - nodes/metrics
+      - nodes/proxy
+      verbs:
+      - get
+      - watch
+      - list
+  command:
+    extraArgs:
+    - --config=/conf/config.yaml
+    name: otelcol
+  configMap:
+    create: false
+  extraVolumeMounts:
+  - mountPath: /conf
+    name: otelcol-configmap
+  extraVolumes:
+  - configMap:
+      defaultMode: 420
+      name: otel-collector-config
+    name: otelcol-configmap
+  image:
+    repository: otel/opentelemetry-collector
+    tag: 0.102.1
+  mode: deployment
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 1024m
+      memory: 2Gi
+prometheus-elasticsearch-exporter:
+  enabled: false
+  es:
+    uri: http://elasticsearch-master:9200
+  fullnameOverride: prometheus-elasticsearch-exporter
+  service:
+    httpPort: 9114
+rabbitmq:
+  auth:
+    erlangCookie: skywalking-showcase
+    password: guest
+    username: guest
+  enabled: false
+  metrics:
+    enabled: true
+  persistence:
+    enabled: false
+  replicaCount: 1
+sampleServices:
+  hub: ghcr.io/apache/skywalking-showcase
+  namespace: sample-services
+  scaller:
+    enabled: false
+  tag: 3e3d5c3
+skywalking:
+  banyandb:
+    cluster:
+      data:
+        nodeTemplate:
+          affinity: {}
+          backupSidecar:
+            dest: file:///tmp/backups/data-$(ORDINAL_NUMBER)
+            enabled: false
+            resources: {}
+            schedule: '@hourly'
+            timeStyle: daily
+          env: []
+          grpcSvc:
+            annotations: {}
+            labels: {}
+            port: 17912
+          lifecycleSidecar:
+            enabled: false
+            resources: {}
+            schedule: '@hourly'
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          nodeSelector: []
+          podAffinityPreset: ""
+          podAnnotations: {}
+          podAntiAffinityPreset: soft
+          podDisruptionBudget:
+            maxUnavailable: 1
+          priorityClassName: ""
+          readinessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          replicas: 2
+          resources:
+            limits:
+            - key: cpu
+              value: 4
+            - key: memory
+              value: 4Gi
+            requests:
+            - key: cpu
+              value: 100m
+            - key: memory
+              value: 1Gi
+          restoreInitContainer:
+            enabled: false
+            resources: {}
+          securityContext: {}
+          sidecar: []
+          startupProbe:
+            failureThreshold: 60
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          tolerations: []
+        replicas: 1
+        roles:
+          cold:
+            env:
+            - name: GOMEMLIMIT
+              value: 6GiB
+            replicas: 1
+            resources:
+              limits:
+              - key: cpu
+                value: 8
+              - key: memory
+                value: 8Gi
+              requests:
+              - key: cpu
+                value: 100m
+              - key: memory
+                value: 1Gi
+          hot:
+            env:
+            - name: GOMEMLIMIT
+              value: 3GiB
+            lifecycleSidecar:
+              enabled: true
+              schedule: '@daily'
+          warm:
+            env:
+            - name: GOMEMLIMIT
+              value: 3GiB
+            lifecycleSidecar:
+              enabled: true
+              schedule: '@daily'
+      enabled: true
+      etcdEndpoints: []
+      liaison:
+        affinity: {}
+        env:
+        - name: BYDB_DATA_NODE_SELECTOR
+          value: type=hot
+        grpcSvc:
+          annotations: {}
+          labels: {}
+          port: 17912
+        httpSvc:
+          annotations: {}
+          externalIPs: []
+          labels: {}
+          loadBalancerIP: null
+          loadBalancerSourceRanges: []
+          port: 17913
+          type: ClusterIP
+        ingress:
+          annotations: {}
+          enabled: false
+          labels: {}
+          rules: []
+          tls: []
+        livenessProbe:
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        nodeSelector: []
+        podAffinityPreset: ""
+        podAnnotations: {}
+        podAntiAffinityPreset: soft
+        podDisruptionBudget: {}
+        priorityClassName: ""
+        readinessProbe:
+          failureThreshold: 5
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 5
+        replicas: 2
+        resources:
+          limits: []
+          requests: []
+        securityContext: {}
+        startupProbe:
+          failureThreshold: 60
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        tolerations: []
+        updateStrategy:
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 1
+          type: RollingUpdate
+      ui:
+        standalone:
+          affinity: {}
+          env: []
+          httpSvc:
+            annotations: {}
+            externalIPs: []
+            labels: {}
+            loadBalancerIP: null
+            loadBalancerSourceRanges: []
+            port: 17913
+            type: LoadBalancer
+          ingress:
+            annotations: {}
+            enabled: false
+            labels: {}
+            rules: []
+            tls: []
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          nodeSelector: []
+          podAffinityPreset: ""
+          podAnnotations: {}
+          podAntiAffinityPreset: soft
+          podDisruptionBudget: {}
+          priorityClassName: ""
+          readinessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          replicas: 1
+          resources:
+            limits: []
+            requests: []
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 60
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          tolerations: []
+          updateStrategy:
+            rollingUpdate:
+              maxSurge: 1
+              maxUnavailable: 1
+            type: RollingUpdate
+        type: Embedded
+    config:
+      grpcAddress: banyandb-grpc:17912
+      httpAddress: banyandb-http:17913
+    enabled: true
+    etcd:
+      affinity: {}
+      args: []
+      auth:
+        client:
+          caFilename: ""
+          certFilename: tls.crt
+          certKeyFilename: tls.key
+          enableAuthentication: false
+          existingSecret: ""
+          secureTransport: false
+          useAutoTLS: false
+        peer:
+          caFilename: ""
+          certFilename: cert.pem
+          certKeyFilename: key.pem
+          enableAuthentication: false
+          existingSecret: ""
+          secureTransport: false
+          useAutoTLS: false
+        rbac:
+          allowNoneAuthentication: false
+          create: true
+          existingSecret: ""
+          existingSecretPasswordKey: ""
+          rootPassword: banyandb
+        token:
+          enabled: true
+          privateKey:
+            existingSecret: ""
+            filename: jwt-token.pem
+          signMethod: RS256
+          ttl: 10m
+          type: simple
+      autoCompactionMode: periodic
+      autoCompactionRetention: "1"
+      automountServiceAccountToken: false
+      clusterDomain: cluster.local
+      command: []
+      common:
+        exampleValue: common-chart
+        global:
+          compatibility:
+            openshift:
+              adaptSecurityContext: auto
+          defaultStorageClass: ""
+          imagePullSecrets: []
+          imageRegistry: ""
+          security:
+            allowInsecureImages: false
+          storageClass: ""
+      commonAnnotations: {}
+      commonLabels: {}
+      configuration: ""
+      containerPorts:
+        client: 2379
+        metrics: 9090
+        peer: 2380
+      containerSecurityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        enabled: true
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+        seLinuxOptions: {}
+        seccompProfile:
+          type: RuntimeDefault
+      customLivenessProbe: {}
+      customReadinessProbe: {}
+      customStartupProbe: {}
+      defrag:
+        cronjob:
+          activeDeadlineSeconds: ""
+          annotations: {}
+          args: []
+          command: []
+          concurrencyPolicy: Forbid
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            enabled: true
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          failedJobsHistoryLimit: 1
+          labels: {}
+          nodeSelector: {}
+          podAnnotations: {}
+          podLabels: {}
+          podSecurityContext:
+            enabled: true
+            fsGroup: 1001
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            sysctls: []
+          resources: {}
+          resourcesPreset: nano
+          restartPolicy: OnFailure
+          schedule: 0 0 * * *
+          serviceAccountName: ""
+          startingDeadlineSeconds: ""
+          successfulJobsHistoryLimit: 1
+          suspend: false
+          tolerations: []
+        enabled: true
+      diagnosticMode:
+        args:
+        - infinity
+        command:
+        - sleep
+        enabled: false
+      disasterRecovery:
+        cronjob:
+          command: []
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            enabled: true
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          historyLimit: 1
+          nodeSelector: {}
+          podAnnotations: {}
+          podLabels: {}
+          podSecurityContext:
+            enabled: true
+            fsGroup: 1001
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            sysctls: []
+          resources: {}
+          resourcesPreset: nano
+          schedule: '*/30 * * * *'
+          serviceAccountName: ""
+          snapshotHistoryLimit: 1
+          snapshotsDir: /snapshots
+          tolerations: []
+        enabled: false
+        pvc:
+          existingClaim: ""
+          size: 2Gi
+          storageClassName: nfs
+          subPath: ""
+      enabled: true
+      existingConfigmap: ""
+      extraDeploy: []
+      extraEnvVars: []
+      extraEnvVarsCM: ""
+      extraEnvVarsSecret: ""
+      extraVolumeClaimTemplates: []
+      extraVolumeMounts: []
+      extraVolumes: []
+      fullnameOverride: ""
+      global:
+        compatibility:
+          openshift:
+            adaptSecurityContext: auto
+        defaultStorageClass: ""
+        imagePullSecrets: []
+        imageRegistry: ""
+        security:
+          allowInsecureImages: false
+        storageClass: ""
+      hostAliases: []
+      image:
+        debug: false
+        digest: ""
+        pullPolicy: IfNotPresent
+        pullSecrets: []
+        registry: docker.io
+        repository: bitnami/etcd
+        tag: 3.5.21-debian-12-r1
+      initContainers: []
+      initialClusterToken: etcd-cluster-k8s
+      kubeVersion: ""
+      lifecycleHooks: {}
+      livenessProbe:
+        enabled: true
+        failureThreshold: 5
+        initialDelaySeconds: 0
+        periodSeconds: 30
+        successThreshold: 1
+        timeoutSeconds: 5
+      logLevel: info
+      maxProcs: ""
+      metrics:
+        enabled: false
+        podAnnotations:
+          prometheus.io/port: '{{ .Values.metrics.useSeparateEndpoint | ternary .Values.containerPorts.metrics
+            .Values.containerPorts.client }}'
+          prometheus.io/scrape: "true"
+        podMonitor:
+          additionalLabels: {}
+          enabled: false
+          interval: 30s
+          namespace: monitoring
+          relabelings: []
+          scheme: http
+          scrapeTimeout: 30s
+          tlsConfig: {}
+        prometheusRule:
+          additionalLabels: {}
+          enabled: false
+          namespace: ""
+          rules: []
+        useSeparateEndpoint: false
+      nameOverride: ""
+      networkPolicy:
+        allowExternal: true
+        allowExternalEgress: true
+        enabled: true
+        extraEgress: []
+        extraIngress: []
+        ingressNSMatchLabels: {}
+        ingressNSPodMatchLabels: {}
+      nodeAffinityPreset:
+        key: ""
+        type: ""
+        values: []
+      nodeSelector: {}
+      pdb:
+        create: true
+        maxUnavailable: ""
+        minAvailable: 51%
+      persistence:
+        accessModes:
+        - ReadWriteOnce
+        annotations: {}
+        enabled: true
+        labels: {}
+        selector: {}
+        size: 5Gi
+        storageClass: ""
+      persistentVolumeClaimRetentionPolicy:
+        enabled: false
+        whenDeleted: Retain
+        whenScaled: Retain
+      podAffinityPreset: ""
+      podAnnotations: {}
+      podAntiAffinityPreset: soft
+      podLabels: {}
+      podManagementPolicy: Parallel
+      podSecurityContext:
+        enabled: true
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      preUpgradeJob:
+        annotations: {}
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add: []
+            drop:
+            - ALL
+          enabled: true
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+          seLinuxOptions: {}
+          seccompProfile:
+            type: RuntimeDefault
+        enabled: true
+        podAnnotations: {}
+        podLabels: {}
+        podSecurityContext:
+          enabled: true
+          fsGroup: 1001
+          fsGroupChangePolicy: Always
+          supplementalGroups: []
+          sysctls: []
+        resources: {}
+        resourcesPreset: micro
+      priorityClassName: ""
+      readinessProbe:
+        enabled: false
+        failureThreshold: 5
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      replicaCount: 1
+      resources:
+        limits:
+          cpu: 4096m
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      resourcesPreset: micro
+      runtimeClassName: ""
+      schedulerName: ""
+      service:
+        annotations: {}
+        clientPortNameOverride: ""
+        clusterIP: ""
+        enabled: true
+        externalIPs: []
+        externalTrafficPolicy: Cluster
+        extraPorts: []
+        headless:
+          annotations: {}
+        loadBalancerClass: ""
+        loadBalancerIP: ""
+        loadBalancerSourceRanges: []
+        metricsPortNameOverride: ""
+        nodePorts:
+          client: ""
+          metrics: ""
+          peer: ""
+        peerPortNameOverride: ""
+        ports:
+          client: 2379
+          metrics: 9090
+          peer: 2380
+        sessionAffinity: None
+        sessionAffinityConfig: {}
+        type: ClusterIP
+      serviceAccount:
+        annotations: {}
+        automountServiceAccountToken: false
+        create: true
+        labels: {}
+        name: ""
+      shareProcessNamespace: false
+      sidecars: []
+      startFromSnapshot:
+        enabled: false
+        existingClaim: ""
+        snapshotFilename: ""
+      startupProbe:
+        enabled: true
+        failureThreshold: 60
+        initialDelaySeconds: 20
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      terminationGracePeriodSeconds: ""
+      tolerations: []
+      topologySpreadConstraints: []
+      updateStrategy:
+        type: RollingUpdate
+      usePasswordFiles: true
+      volumePermissions:
+        enabled: false
+        image:
+          digest: ""
+          pullPolicy: IfNotPresent
+          pullSecrets: []
+          registry: docker.io
+          repository: bitnami/os-shell
+          tag: 12-debian-12-r40
+        resources: {}
+        resourcesPreset: nano
+    fullnameOverride: ""
+    global: {}
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/apache/skywalking-banyandb
+      tag: f33c8b42351cb48c7fb07c0da73f50d39b0b5205
+    nameOverride: banyandb
+    serviceAccount:
+      annotations: {}
+      create: true
+      name: ""
+    standalone:
+      affinity: {}
+      enabled: false
+      env: []
+      grpcSvc:
+        annotations: {}
+        labels: {}
+        port: 17912
+      httpSvc:
+        annotations: {}
+        externalIPs: []
+        labels: {}
+        loadBalancerIP: null
+        loadBalancerSourceRanges: []
+        port: 17913
+        type: LoadBalancer
+      ingress:
+        annotations: {}
+        enabled: false
+        labels: {}
+        rules: []
+        tls: []
+      livenessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 20
+        periodSeconds: 30
+        successThreshold: 1
+        timeoutSeconds: 5
+      nodeSelector: []
+      podAnnotations: {}
+      podDisruptionBudget: {}
+      priorityClassName: ""
+      readinessProbe:
+        failureThreshold: 5
+        initialDelaySeconds: 20
+        periodSeconds: 30
+        successThreshold: 1
+        timeoutSeconds: 5
+      resources: {}
+      securityContext: {}
+      sidecar: []
+      startupProbe:
+        failureThreshold: 60
+        initialDelaySeconds: 0
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      tolerations: []
+    storage:
+      enabled: true
+      persistentVolumeClaims:
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-stream-data
+        mountTargets:
+        - stream
+        nodeRole: hot
+        size: 10Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-measure-data
+        mountTargets:
+        - measure
+        nodeRole: hot
+        size: 10Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: hot-property-data
+        mountTargets:
+        - property
+        nodeRole: hot
+        size: 2Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: warm-data
+        mountTargets:
+        - stream
+        - measure
+        nodeRole: warm
+        size: 50Gi
+        storageClass: ""
+        volumeMode: Filesystem
+      - accessModes:
+        - ReadWriteOnce
+        claimName: cold-data
+        mountTargets:
+        - stream
+        - measure
+        nodeRole: cold
+        size: 100Gi
+        storageClass: ""
+        volumeMode: Filesystem
+  elasticsearch:
+    antiAffinity: soft
+    antiAffinityTopologyKey: kubernetes.io/hostname
+    clusterHealthCheckParams: wait_for_status=green&timeout=1s
+    clusterName: elasticsearch
+    config:
+      host: elasticsearch
+      password: xxx
+      port:
+        http: 9200
+      user: xxx
+    enabled: false
+    esConfig: {}
+    esJavaOpts: -Xmx1g -Xms1g
+    esMajorVersion: ""
+    extraEnvs: []
+    extraInitContainers: ""
+    extraVolumeMounts: ""
+    extraVolumes: ""
+    fsGroup: ""
+    fullnameOverride: ""
+    httpPort: 9200
+    image: null
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+    imageTag: null
+    ingress:
+      annotations: {}
+      enabled: false
+      hosts:
+      - chart-example.local
+      path: /
+      tls: []
+    initResources: {}
+    keystore: []
+    labels: {}
+    lifecycle: {}
+    masterService: ""
+    masterTerminationFix: false
+    maxUnavailable: 1
+    minimumMasterNodes: 2
+    nameOverride: ""
+    networkHost: 0.0.0.0
+    nodeAffinity: {}
+    nodeGroup: master
+    nodeSelector: {}
+    persistence:
+      annotations: {}
+      enabled: false
+    podAnnotations: {}
+    podManagementPolicy: Parallel
+    podSecurityContext:
+      fsGroup: 1000
+      runAsUser: 1000
+    podSecurityPolicy:
+      create: false
+      name: ""
+      spec:
+        fsGroup:
+          rule: RunAsAny
+        privileged: true
+        runAsUser:
+          rule: RunAsAny
+        seLinux:
+          rule: RunAsAny
+        supplementalGroups:
+          rule: RunAsAny
+        volumes:
+        - secret
+        - configMap
+        - persistentVolumeClaim
+    priorityClassName: ""
+    protocol: http
+    rbac:
+      create: false
+      serviceAccountName: ""
+    readinessProbe:
+      failureThreshold: 3
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      successThreshold: 3
+      timeoutSeconds: 5
+    replicas: 3
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 100m
+        memory: 2Gi
+    roles:
+      data: "true"
+      ingest: "true"
+      master: "true"
+    schedulerName: ""
+    secretMounts: []
+    securityContext:
+      capabilities:
+        drop:
+        - ALL
+      runAsNonRoot: true
+      runAsUser: 1000
+    service:
+      annotations: {}
+      httpPortName: http
+      labels: {}
+      labelsHeadless: {}
+      nodePort: ""
+      transportPortName: transport
+      type: ClusterIP
+    sidecarResources: {}
+    sysctlInitContainer:
+      enabled: true
+    sysctlVmMaxMapCount: 262144
+    terminationGracePeriod: 120
+    tolerations: []
+    transportPort: 9300
+    updateStrategy: RollingUpdate
+    volumeClaimTemplate:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 30Gi
+  fullnameOverride: demo
+  global: {}
+  grafana:
+    plugin:
+      version: 0.1.0
+  imagePullSecrets: []
+  initContainer:
+    image: busybox
+    tag: "1.30"
+  nameOverride: ""
+  oap:
+    antiAffinity: soft
+    config:
+      alarm-settings.yml: "rules:\n  service_resp_time_rule:\n    # 20ms is just for
+        demo\n    expression: sum(service_resp_time > 20) >= 1 \n    period: 5\n    tags:\n
+        \     level: WARNING\n    message: Response time of service {name} is more
+        than 20ms.\n"
+      cilium-rules:
+        exclude.yaml: |
+          namespaces:
+            - kube-system
+            - skywalking-showcase
+            - sample-services
+
+          labels:
+            - k8s:io.cilium.k8s.namespace.labels.istio-injection: enabled
+              k8s:security.istio.io/tlsMode: istio
+        metadata-service-mapping.yaml: |
+          serviceName: cilium::${LABELS."app.kubernetes.io/name",LABELS.component,LABELS.app,LABELS.k8s-app}.${NAMESPACE}
+          serviceInstanceName: ${NAME}
+      core.default.log4j-xml: |-
+        <Configuration status="WARN">
+           <Appenders>
+             <Console name="Console" target="SYSTEM_OUT">
+               <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+             </Console>
+           </Appenders>
+           <Loggers>
+             <logger name="org.apache.skywalking.oap.server.storage" level="INFO"/>
+             <Root level="INFO">
+               <AppenderRef ref="Console"/>
+             </Root>
+            </Loggers>
+        </Configuration>
+      metadata-service-mapping.yaml: |
+        serviceName: mesh-svr::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}.${NAMESPACE}
+        serviceInstanceName: ${NAME}
+    dynamicConfig:
+      config: {}
+      enabled: false
+      period: 60
+    env:
+      K8S_SERVICE_NAME_RULE: mesh-svr::${service.metadata.name}.${service.metadata.namespace}
+      SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
+      SW_CONFIGURATION: k8s-configmap
+      SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
+      SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT: 85
+      SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
+      SW_ENABLE_ON_DEMAND_POD_LOG: "true"
+      SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
+      SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS: mx-mesh,persistence
+      SW_ENVOY_METRIC_ALS_TCP_ANALYSIS: mx-mesh
+      SW_HEALTH_CHECKER: default
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent
+      SW_OTEL_RECEIVER: default
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*
+      SW_QUERY_ZIPKIN: default
+      SW_RECEIVER_ZIPKIN: default
+      SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
+      SW_STORAGE_ES_INDEX_SHARDS_NUMBER: "6"
+      SW_STORAGE_ES_RESPONSE_TIMEOUT: "50000"
+      SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
+      SW_TELEMETRY: prometheus
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/apache/skywalking/oap
+      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+    javaOpts: -Xmx2g -Xms2g
+    livenessProbe: {}
+    name: oap
+    nodeAffinity: {}
+    nodeSelector: {}
+    ports:
+      grpc: 11800
+      logql: 3100
+      metrics: 1234
+      promql: 9090
+      rest: 12800
+      zipkin: 9411
+      zipkin-query: 9412
+    readinessProbe: {}
+    replicas: 2
+    resources: {}
+    secretMounts: []
+    securityContext: {}
+    service:
+      annotations: {}
+      type: ClusterIP
+    startupProbe:
+      failureThreshold: 10
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      tcpSocket:
+        port: 12800
+    storageType: banyandb
+    tolerations: []
+  oapInit:
+    extraPodLabels: {}
+    nodeAffinity: {}
+    nodeSelector: {}
+    tolerations: []
+  postgresql:
+    auth:
+      database: skywalking
+      password: "123456"
+      postgresPassword: "123456"
+      username: postgres
+    config:
+      host: postgresql-service.your-awesome-company.com
+    containerPorts:
+      postgresql: 5432
+    enabled: false
+    primary:
+      persistence:
+        enabled: false
+    readReplicas:
+      persistence:
+        enabled: false
+  satellite:
+    antiAffinity: soft
+    config: {}
+    enabled: false
+    env:
+      SATELLITE_TELEMETRY_EXPORT_TYPE: metrics_service
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/apache/skywalking-satellite/skywalking-satellite
+      tag: v8778e3e8a4ab4962102502ffc9ba7a3c73270609
+    name: satellite
+    nodeAffinity: {}
+    nodeSelector: {}
+    podAnnotations:
+      sidecar.istio.io/inject: "false"
+    ports:
+      grpc: 11800
+      prometheus: 1234
+    replicas: 1
+    resources:
+      limits:
+        cpu: 2
+        memory: 4Gi
+      requests:
+        cpu: 2
+        memory: 4Gi
+    securityContext: {}
+    service:
+      type: ClusterIP
+    tolerations: []
+  serviceAccounts:
+    oap:
+      create: true
+      name: ""
+  ui:
+    env:
+      SW_ZIPKIN_ADDRESS: http://demo-oap.skywalking-showcase.svc:9412
+    image:
+      pullPolicy: IfNotPresent
+      repository: ghcr.io/apache/skywalking/ui
+      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+    ingress:
+      annotations: {}
+      enabled: false
+      hosts: []
+      path: /
+      tls: []
+    name: ui
+    nodeAffinity: {}
+    nodeSelector: {}
+    replicas: 1
+    securityContext: {}
+    service:
+      annotations: {}
+      externalPort: 80
+      internalPort: 8080
+      type: ClusterIP
+    tolerations: []
+swck:
+  cert-manager:
+    enabled: true
+  fullnameOverride: swck-demo
+  image:
+    repository: docker.io/apache/skywalking-swck
+    tag: v0.7.0
+
+HOOKS:
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/preupgrade-hook-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: demo-etcd-pre-upgrade
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd-pre-upgrade-job
+  annotations:
+    helm.sh/hook: pre-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/version: 3.5.21
+        helm.sh/chart: etcd-11.2.4
+        app.kubernetes.io/component: etcd-pre-upgrade-job
+      annotations:
+    spec:
+      
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/name: etcd
+                    app.kubernetes.io/component: etcd-pre-upgrade-job
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      restartPolicy: Never
+      containers:
+        - name: pre-upgrade-job
+          image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add: []
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          command: [ "/opt/bitnami/scripts/etcd/entrypoint.sh" ]
+          args: [ "/opt/bitnami/scripts/etcd/preupgrade.sh" ]
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: ETCD_ON_K8S
+              value: "yes"
+            - name: ETCD_DATA_DIR
+              value: "/bitnami/etcd/data"
+            - name: ETCD_ROOT_PASSWORD_FILE
+              value: /opt/bitnami/etcd/secrets/etcd-root-password
+            - name: ETCD_INITIAL_CLUSTER
+              value: "demo-etcd-0=http://demo-etcd-0.demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379"
+          envFrom:
+          resources:
+            limits:
+              cpu: 375m
+              ephemeral-storage: 2Gi
+              memory: 384Mi
+            requests:
+              cpu: 250m
+              ephemeral-storage: 50Mi
+              memory: 256Mi
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /opt/bitnami/etcd/conf/
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: etcd-secrets
+              mountPath: /opt/bitnami/etcd/secrets
+      volumes:
+        - name: empty-dir
+          emptyDir: {}
+        - name: etcd-secrets
+          projected:
+            sources:
+              - secret:
+                  name:  demo-etcd
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-init.job.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# https://docs.sentry.io/server/installation/docker/#running-migrations
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "demo-oap-init"
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "demo-job"
+    heritage: Helm
+    release: demo
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade,post-rollback
+    "helm.sh/hook-weight": "1"
+spec:
+  template:
+    metadata:
+      name: "demo-oap-init"
+      labels:
+        app: demo
+        component: "demo-job"
+        release: demo
+    spec:
+      serviceAccountName: demo-oap
+      restartPolicy: Never
+      initContainers:
+      
+      - name: wait-for-banyandb
+        image: curlimages/curl
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
+      containers:
+      - name: oap
+        image: ghcr.io/apache/skywalking/oap:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: JAVA_OPTS
+          value: "-Xmx2g -Xms2g -Dmode=init"
+        - name: SW_STORAGE
+          value: banyandb
+        - name: SW_STORAGE_BANYANDB_TARGETS
+          value: "demo-banyandb-grpc:17912"
+        - name: K8S_SERVICE_NAME_RULE
+          value: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
+        - name: SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT
+          value: "17128"
+        - name: SW_CONFIGURATION
+          value: "k8s-configmap"
+        - name: SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI
+          value: "false"
+        - name: SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT
+          value: "85"
+        - name: SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR
+          value: "3000"
+        - name: SW_ENABLE_ON_DEMAND_POD_LOG
+          value: "true"
+        - name: SW_ENABLE_UPDATE_UI_TEMPLATE
+          value: "false"
+        - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
+          value: "mx-mesh,persistence"
+        - name: SW_ENVOY_METRIC_ALS_TCP_ANALYSIS
+          value: "mx-mesh"
+        - name: SW_HEALTH_CHECKER
+          value: "default"
+        - name: SW_METER_ANALYZER_ACTIVE_FILES
+          value: "datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent"
+        - name: SW_OTEL_RECEIVER
+          value: "default"
+        - name: SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES
+          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*"
+        - name: SW_QUERY_ZIPKIN
+          value: "default"
+        - name: SW_RECEIVER_ZIPKIN
+          value: "default"
+        - name: SW_SLOW_DB_THRESHOLD
+          value: "default:0,mongodb:100"
+        - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
+          value: "6"
+        - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
+          value: "50000"
+        - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
+          value: "2"
+        - name: SW_TELEMETRY
+          value: "prometheus"
+
+        volumeMounts:
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/alarm-settings.yml
+            subPath: alarm-settings.yml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/cilium-rules/exclude.yaml
+            subPath: cilium-rules-exclude.yaml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
+            subPath: cilium-rules-metadata-service-mapping.yaml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/core.default.log4j-xml
+            subPath: core.default.log4j-xml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/metadata-service-mapping.yaml
+            subPath: metadata-service-mapping.yaml
+
+      volumes:
+        - name: skywalking-oap-override
+          configMap:
+            name: demo-oap-cm-override
+MANIFEST:
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sample-services
+  labels:
+    istio-injection: enabled
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/networkpolicy.yaml
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/name: etcd
+      app.kubernetes.io/component: etcd
+  policyTypes:
+    - Ingress
+    - Egress
+  egress:
+    - {}
+  ingress:
+    # Allow inbound connections
+    - ports:
+        - port: 2379
+        - port: 2380
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+spec:
+  minAvailable: 51%
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/name: etcd
+      app.kubernetes.io/component: etcd
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: false
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demo-banyandb
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-serviceaccount.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "oap"
+    heritage: Helm
+    release: demo
+  name: demo-oap
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+type: Opaque
+data:
+  etcd-root-password: "YmFueWFuZGI="
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-cm-override.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-oap-cm-override
+  labels:
+    app: demo
+    release: demo
+    component: oap
+data:
+ alarm-settings.yml: |
+    rules:
+      service_resp_time_rule:
+        # 20ms is just for demo
+        expression: sum(service_resp_time > 20) >= 1 
+        period: 5
+        tags:
+          level: WARNING
+        message: Response time of service {name} is more than 20ms.
+    
+ cilium-rules-exclude.yaml: |
+    namespaces:
+      - kube-system
+      - skywalking-showcase
+      - sample-services
+    
+    labels:
+      - k8s:io.cilium.k8s.namespace.labels.istio-injection: enabled
+        k8s:security.istio.io/tlsMode: istio
+    
+ cilium-rules-metadata-service-mapping.yaml: |
+    serviceName: cilium::${LABELS."app.kubernetes.io/name",LABELS.component,LABELS.app,LABELS.k8s-app}.${NAMESPACE}
+    serviceInstanceName: ${NAME}
+    
+ core.default.log4j-xml: |
+    <Configuration status="WARN">
+       <Appenders>
+         <Console name="Console" target="SYSTEM_OUT">
+           <PatternLayout charset="UTF-8" pattern="%d - %c - %L [%t] %-5p %x - %m%n"/>
+         </Console>
+       </Appenders>
+       <Loggers>
+         <logger name="org.apache.skywalking.oap.server.storage" level="INFO"/>
+         <Root level="INFO">
+           <AppenderRef ref="Console"/>
+         </Root>
+        </Loggers>
+    </Configuration>
+ metadata-service-mapping.yaml: |
+    serviceName: mesh-svr::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}.${NAMESPACE}
+    serviceInstanceName: ${NAME}
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-config
+  namespace: sample-services
+  labels:
+    app: apisix-config
+data:
+  apisix: |
+      routes:
+      - uri: /browser/*
+        service_id: 1
+      - uri: /v3/*
+        service_id: 1
+      - uri: /homepage
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{SW_AGENT_SERVICE}}
+            service_instance_name: ${{SW_AGENT_SERVICE_INSTANCE}}
+            endpoint_addr: http://demo-oap.skywalking-showcase.svc.cluster.local:12800
+      - uri: /test
+        service_id: 2
+        plugins:
+          skywalking:
+            service_name: ${{SW_AGENT_SERVICE}}
+            service_instance_name: ${{SW_AGENT_SERVICE_INSTANCE}}
+            endpoint_addr: http://demo-oap.skywalking-showcase.svc.cluster.local:12800
+      services:
+      - id: 1
+        upstream_id: 1
+      - id: 2
+        upstream_id: 2
+
+      upstreams:
+      - id: 1
+        nodes:
+          "demo-oap.skywalking-showcase.svc.cluster.local:12800": 1
+        type: roundrobin
+      - id: 2
+        nodes:
+          "app:80": 1
+        type: roundrobin
+
+      global_rules:
+      - id: 1
+        plugins:
+          prometheus:
+            export_addr:
+              ip: "0.0.0.0"
+              port: 9091
+      #END
+  config: |
+    apisix:
+      node_listen: 80
+      enable_ipv6: false
+      enable_admin: false
+      config_center: yaml
+    plugin_attr:
+      prometheus:
+        export_addr:
+          ip: "0.0.0.0"
+          port: 9091
+      skywalking:
+        service_name: ${{SW_AGENT_SERVICE}}
+        service_instance_name: ${{SW_AGENT_SERVICE_INSTANCE}}
+        endpoint_addr: http://demo-oap.skywalking-showcase.svc.cluster.local:12800
+    plugins:
+      - prometheus
+      - skywalking
+    nginx_config:
+      http_server_configuration_snippet: |
+        location ~ \.(gif|jpg|png|js|css|html)$ {
+          root /app/build;
+          index index.html;
+        }
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: activemq-config
+  namespace: sample-services
+  labels:
+    app: activemq-config
+data:
+  activemq: |
+    <beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
+    </bean>
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${ACTIVEMQ_BROKER_NAME}" dataDirectory="${activemq.data}">
+        <destinationPolicy>
+            <policyMap>
+              <policyEntries>
+                <policyEntry topic=">" >
+                  <pendingMessageLimitStrategy>
+                    <constantPendingMessageLimitStrategy limit="1000"/>
+                  </pendingMessageLimitStrategy>
+                </policyEntry>
+              </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+        <managementContext>
+            <managementContext createConnector="false"/>
+        </managementContext>
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.data}/kahadb"/>
+        </persistenceAdapter>
+          <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage percentOfJvmHeap="70" />
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="100 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="50 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+      </broker>
+      <import resource="jetty.xml"/>
+    </beans>
+  config: |
+    startDelaySeconds: 10
+    hostPort: localhost:1616
+    ssl: false
+    lowercaseOutputName: false
+    lowercaseOutputLabelNames: false
+    includeObjectNames: ["org.apache.activemq:*","java.lang:type=OperatingSystem","java.lang:type=GarbageCollector,*","java.lang:type=Threading","java.lang:type=Runtime","java.lang:type=Memory","java.lang:name=*"]
+    excludeObjectNames: ["org.apache.activemq:type=ColumnFamily,*"]
+    autoExcludeObjectNameAttributes: true
+    excludeObjectNameAttributes:
+      "java.lang:type=OperatingSystem":
+        - "ObjectName"
+      "java.lang:type=Runtime":
+        - "ClassPath"
+        - "SystemProperties"
+    rules:
+    - pattern: ".*"
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-clusterrole.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: demo
+  labels:
+    app: demo
+    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    release: "demo"
+    heritage: "Helm"
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log", "endpoints", "services", "nodes", "namespaces", "configmaps"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["extensions"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["networking.istio.io"]
+  resources: ["serviceentries"]
+  verbs: ["get", "watch", "list"]
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-clusterrolebinding.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: demo
+  labels:
+    app: demo
+    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    release: "demo"
+    heritage: "Helm"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: demo
+subjects:
+- kind: ServiceAccount
+  name: demo-oap
+  namespace: skywalking-showcase
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-role.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: demo
+  labels:
+    app: demo
+    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    release: "demo"
+    heritage: "Helm"
+rules:
+  - apiGroups: [""]
+    resources: ["pods","configmaps"]
+    verbs: ["get", "watch", "list"]
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-rolebinding.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: demo
+  labels:
+    app: demo
+    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    release: "demo"
+    heritage: "Helm"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: demo
+subjects:
+  - kind: ServiceAccount
+    name: demo-oap
+    namespace: skywalking-showcase
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/svc-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-etcd-headless
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - name: client
+      port: 2379
+      targetPort: client
+    - name: peer
+      port: 2380
+      targetPort: peer
+  selector:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/component: etcd
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: "client"
+      port: 2379
+      targetPort: client
+      nodePort: null
+    - name: "peer"
+      port: 2380
+      targetPort: peer
+      nodePort: null
+  selector:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/component: etcd
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/grpc_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-grpc
+  labels:  
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: liaison
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 17912
+      name: grpc
+  selector: 
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: liaison
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/http_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-http
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: liaison
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 17913
+      name: http
+  selector: 
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: liaison
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-svc.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-oap
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "oap"
+    heritage: Helm
+    release: demo
+spec:
+  type: ClusterIP
+  ports:
+  - port: 11800
+    name: grpc
+  - port: 3100
+    name: logql
+  - port: 1234
+    name: metrics
+  - port: 9090
+    name: promql
+  - port: 12800
+    name: rest
+  - port: 9411
+    name: zipkin
+  - port: 9412
+    name: zipkin-query
+  selector:
+    app: demo
+    component: "oap"
+    release: demo
+---
+# Source: skywalking-showcase/charts/skywalking/templates/ui-svc.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "ui"
+    heritage: Helm
+    release: demo
+  name: demo-ui
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+
+  selector:
+    app: demo
+    component: "ui"
+    release: demo
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+  namespace: sample-services
+spec:
+  selector:
+    app: gateway
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: songs
+  namespace: sample-services
+spec:
+  selector:
+    app: songs
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: rcmd
+  namespace: sample-services
+spec:
+  selector:
+    app: recommendation
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: sample-services
+spec:
+  selector:
+    app: app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: sample-services
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq
+  namespace: sample-services
+spec:
+  selector:
+    app: activemq
+  ports:
+    - protocol: TCP
+      port: 61616
+      targetPort: 61616
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: rating
+  namespace: sample-services
+spec:
+  selector:
+    app: rating
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_liaison_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: liaison
+  name: demo-banyandb-liaison
+spec:
+  replicas: 2
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: liaison
+  strategy: 
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels: 
+        helm.sh/chart: banyandb-0.5.0-rc0
+        app.kubernetes.io/name: banyandb
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: liaison
+    spec:
+      serviceAccountName: demo-banyandb
+      priorityClassName: 
+      containers:
+        - name: liaison
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BYDB_DATA_NODE_SELECTOR
+              value: type=hot
+            - name: BYDB_ETCD_USERNAME
+              value: "root"
+            - name: BYDB_ETCD_PASSWORD
+              value: banyandb
+            
+            - name: BYDB_ETCD_ENDPOINTS
+              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
+          args:
+            - liaison
+          ports:
+            - containerPort: 17912
+              name: grpc
+            - containerPort: 17913
+              name: http
+            - containerPort: 6060
+              name: pprof
+            - containerPort: 2121
+              name: observebility
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: 
+                    app.kubernetes.io/name: banyandb
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/component: liaison
+                topologyKey: kubernetes.io/hostname
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-deployment.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "oap"
+    heritage: Helm
+    release: demo
+  name: demo-oap
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: demo
+      component: "oap"
+      release: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+        component: "oap"
+        release: demo
+    spec:
+      serviceAccountName: demo-oap
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            podAffinityTerm:
+              topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app: "demo"
+                  release: "demo"
+                  component: "oap"
+      initContainers:
+      
+      - name: wait-for-banyandb
+        image: curlimages/curl
+        imagePullPolicy: IfNotPresent
+        command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
+      containers:
+      - name: oap
+        image: ghcr.io/apache/skywalking/oap:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          tcpSocket:
+            port: 12800
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        startupProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          tcpSocket:
+            port: 12800
+
+        readinessProbe:
+          tcpSocket:
+            port: 12800
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        ports:
+        - containerPort: 11800
+          name: grpc
+        - containerPort: 3100
+          name: logql
+        - containerPort: 1234
+          name: metrics
+        - containerPort: 9090
+          name: promql
+        - containerPort: 12800
+          name: rest
+        - containerPort: 9411
+          name: zipkin
+        - containerPort: 9412
+          name: zipkin-query
+        env:
+        - name: JAVA_OPTS
+          value: "-Dmode=no-init -Xmx2g -Xms2g"
+        - name: SW_CLUSTER
+          value: kubernetes
+        - name: SW_CLUSTER_K8S_NAMESPACE
+          value: "skywalking-showcase"
+        - name: SW_CLUSTER_K8S_LABEL
+          value: "app=demo,release=demo,component=oap"
+        - name: SKYWALKING_COLLECTOR_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: SW_STORAGE
+          value: banyandb
+        - name: SW_STORAGE_BANYANDB_TARGETS
+          value: "demo-banyandb-grpc:17912"
+        - name: K8S_SERVICE_NAME_RULE
+          value: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
+        - name: SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT
+          value: "17128"
+        - name: SW_CONFIGURATION
+          value: "k8s-configmap"
+        - name: SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI
+          value: "false"
+        - name: SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT
+          value: "85"
+        - name: SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR
+          value: "3000"
+        - name: SW_ENABLE_ON_DEMAND_POD_LOG
+          value: "true"
+        - name: SW_ENABLE_UPDATE_UI_TEMPLATE
+          value: "false"
+        - name: SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS
+          value: "mx-mesh,persistence"
+        - name: SW_ENVOY_METRIC_ALS_TCP_ANALYSIS
+          value: "mx-mesh"
+        - name: SW_HEALTH_CHECKER
+          value: "default"
+        - name: SW_METER_ANALYZER_ACTIVE_FILES
+          value: "datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent"
+        - name: SW_OTEL_RECEIVER
+          value: "default"
+        - name: SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES
+          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*"
+        - name: SW_QUERY_ZIPKIN
+          value: "default"
+        - name: SW_RECEIVER_ZIPKIN
+          value: "default"
+        - name: SW_SLOW_DB_THRESHOLD
+          value: "default:0,mongodb:100"
+        - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
+          value: "6"
+        - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
+          value: "50000"
+        - name: SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR
+          value: "2"
+        - name: SW_TELEMETRY
+          value: "prometheus"
+
+        volumeMounts:
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/alarm-settings.yml
+            subPath: alarm-settings.yml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/cilium-rules/exclude.yaml
+            subPath: cilium-rules-exclude.yaml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
+            subPath: cilium-rules-metadata-service-mapping.yaml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/core.default.log4j-xml
+            subPath: core.default.log4j-xml
+          - name: skywalking-oap-override
+            mountPath: /skywalking/config/metadata-service-mapping.yaml
+            subPath: metadata-service-mapping.yaml
+
+      volumes:
+        - name: skywalking-oap-override
+          configMap:
+            name: demo-oap-cm-override
+---
+# Source: skywalking-showcase/charts/skywalking/templates/ui-deployment.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-ui
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    component: "ui"
+    heritage: Helm
+    release: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo
+      component: "ui"
+      release: demo
+  template:
+    metadata:
+      labels:
+        app: demo
+        component: "ui"
+        release: demo
+    spec:
+
+      affinity:
+      containers:
+      - name: ui
+        image: ghcr.io/apache/skywalking/ui:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: page
+        env:
+        - name: SW_OAP_ADDRESS
+          value: "http://demo-oap:12800"
+        - name: SW_ZIPKIN_ADDRESS
+          value: "http://demo-oap.skywalking-showcase.svc:9412"
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+  namespace: sample-services
+  labels:
+    app: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: gateway
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "gateway"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::gateway"
+        optional.skywalking.apache.org: "spring-cloud-gateway-3.x"
+        sidecar.skywalking.apache.org/initcontainer.Image: "ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8"
+    spec:
+      containers:
+        - name: gateway
+          image: "ghcr.io/apache/skywalking-showcase/gateway-service:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only to configure java gent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::gateway
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: songs-deployment
+  namespace: sample-services
+  labels:
+    app: songs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: songs
+  template:
+    metadata:
+      labels:
+        # @feature: java-agent-injector; enable the java agent injector
+        swck-java-agent-injected: "true"
+        app: songs
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+        # @feature: java-agent-injector; set the java agent configuration
+        strategy.skywalking.apache.org/inject.Container: "songs"
+        strategy.skywalking.apache.org/agent.Overlay: "true"
+        agent.skywalking.apache.org/agent.service_name: "agent::songs"
+        optional.skywalking.apache.org: "guava-cache-plugin"
+        sidecar.skywalking.apache.org/initcontainer.Image: "ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8"
+    spec:
+      containers:
+        - name: songs
+          image: "ghcr.io/apache/skywalking-showcase/songs-service:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          # @feature: agent; set env to configure java agent, If we use injector, we don't need to set env, only need to configure java agent through annotation
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::songs
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+            - name: ACTIVE_MQ_URL
+              value: tcp://activemq:61616
+            - name: ACTIVE_MQ_QUEUE
+              value: queue-songs-ping
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-deployment
+  namespace: sample-services
+  labels:
+    app: recommendation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation
+  template:
+    metadata:
+      labels:
+        app: recommendation
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+    spec:
+      containers:
+        - name: recommendation
+          image: "ghcr.io/apache/skywalking-showcase/recommendation-service:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::recommendation
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  namespace: sample-services
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+    spec:
+      containers:
+        - name: app
+          image: "ghcr.io/apache/skywalking-showcase/app:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME_SERVER
+              value: agent::app
+            - name: REACT_APP_SW_AGENT_NAME_UI
+              value: agent::ui
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen-deployment
+  namespace: sample-services
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+    spec:
+      containers:
+        - name: app
+          image: "ghcr.io/apache/skywalking-showcase/load-gen:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: sample-services
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+    spec:
+      containers:
+        - name: frontend
+          image: "ghcr.io/apache/skywalking-showcase/frontend:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 500m
+              memory: "256Mi"
+            requests:
+              cpu: 500m
+              memory: "256Mi"
+          ports:
+            - containerPort: 80
+              name: http
+            - containerPort: 9091 # APISIX Prometheus plugin port
+              name: metrics
+          env:
+            - name: SW_AGENT_COLLECTOR_BACKEND_SERVICES
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+            - name: SW_SERVICE_INSTANCE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/config.yaml
+              subPath: config
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/apisix.yaml
+              subPath: apisix
+      volumes:
+        - name: apisix-config
+          configMap:
+            name: apisix-config
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq-deployment
+  namespace: sample-services
+  labels:
+    app: activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:5.15.9
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ACTIVEMQ_SUNJMX_START
+              value: "-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.rmi.port=1616 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+            - name: ACTIVEMQ_BROKER_NAME
+              value: "activemq-broker"
+            - name: ACTIVEMQ_OPTS
+              value: "-Xmx128m -Xms128m"
+          resources:
+            limits:
+              cpu: 100m
+              memory: "256Mi"
+            requests:
+              cpu: 100m
+              memory: "128Mi"
+          volumeMounts:
+            - name: activemq-config
+              mountPath: /opt/activemq/conf/activemq.xml
+              subPath: activemq
+      volumes:
+        - name: activemq-config
+          configMap:
+            name: activemq-config
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-deployment
+  namespace: sample-services
+  labels:
+    app: rating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating
+  template:
+    metadata:
+      labels:
+        app: rating
+      annotations:
+        sidecar.istio.io/inject: "map[enabled:false]"
+    spec:
+      containers:
+        - name: rating
+          image: "ghcr.io/apache/skywalking-showcase/rating-service:3e3d5c3"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: SW_AGENT_NAME
+              value: agent::rating
+            - name: SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE
+              value: demo-oap.skywalking-showcase.svc.cluster.local:11800
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demo-etcd
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: etcd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/name: etcd
+      app.kubernetes.io/component: etcd
+  serviceName: demo-etcd-headless
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: etcd
+        app.kubernetes.io/version: 3.5.21
+        helm.sh/chart: etcd-11.2.4
+        app.kubernetes.io/component: etcd
+      annotations:
+    spec:
+      
+      automountServiceAccountToken: false
+      affinity:
+        podAffinity:
+          
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/name: etcd
+                    app.kubernetes.io/component: etcd
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+        nodeAffinity:
+          
+      securityContext:
+        fsGroup: 1001
+        fsGroupChangePolicy: Always
+        supplementalGroups: []
+        sysctls: []
+      serviceAccountName: "demo-etcd"
+      containers:
+        - name: etcd
+          image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
+          imagePullPolicy: "IfNotPresent"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+            seLinuxOptions: {}
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_STS_NAME
+              value: "demo-etcd"
+            - name: ETCDCTL_API
+              value: "3"
+            - name: ETCD_ON_K8S
+              value: "yes"
+            - name: ETCD_START_FROM_SNAPSHOT
+              value: "no"
+            - name: ETCD_DISASTER_RECOVERY
+              value: "no"
+            - name: ETCD_NAME
+              value: "$(MY_POD_NAME)"
+            - name: ETCD_DATA_DIR
+              value: "/bitnami/etcd/data"
+            - name: ETCD_LOG_LEVEL
+              value: "info"
+            - name: ALLOW_NONE_AUTHENTICATION
+              value: "no"
+            - name: ETCD_ROOT_PASSWORD_FILE
+              value: /opt/bitnami/etcd/secrets/etcd-root-password
+            - name: ETCD_AUTH_TOKEN
+              value: "simple"
+            - name: ETCD_ADVERTISE_CLIENT_URLS
+              value: "http://$(MY_POD_NAME).demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379,http://demo-etcd.skywalking-showcase.svc.cluster.local:2379"
+            - name: ETCD_LISTEN_CLIENT_URLS
+              value: "http://0.0.0.0:2379"
+            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
+              value: "http://$(MY_POD_NAME).demo-etcd-headless.skywalking-showcase.svc.cluster.local:2380"
+            - name: ETCD_LISTEN_PEER_URLS
+              value: "http://0.0.0.0:2380"
+            - name: ETCD_AUTO_COMPACTION_MODE
+              value: "periodic"
+            - name: ETCD_AUTO_COMPACTION_RETENTION
+              value: "1"
+            - name: ETCD_CLUSTER_DOMAIN
+              value: "demo-etcd-headless.skywalking-showcase.svc.cluster.local"
+          envFrom:
+          ports:
+            - name: client
+              containerPort: 2379
+              protocol: TCP
+            - name: peer
+              containerPort: 2380
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              port: 2379
+              path: /livez
+              scheme: "HTTP"
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            exec:
+              command:
+                - /opt/bitnami/scripts/etcd/healthcheck.sh
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+            limits:
+              cpu: 4096m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          volumeMounts:
+            - name: empty-dir
+              mountPath: /opt/bitnami/etcd/conf/
+              subPath: app-conf-dir
+            - name: empty-dir
+              mountPath: /tmp
+              subPath: tmp-dir
+            - name: data
+              mountPath: /bitnami/etcd
+            - name: etcd-secrets
+              mountPath: /opt/bitnami/etcd/secrets
+      volumes:
+        - name: empty-dir
+          emptyDir: {}
+        - name: etcd-secrets
+          projected:
+            sources:
+              - secret:
+                  name:  demo-etcd
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "5Gi"
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: cold
+  name: demo-banyandb-data-cold
+spec:
+  serviceName: banyandb
+  replicas: 1
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: data
+      app.kubernetes.io/role: cold
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels: 
+        helm.sh/chart: banyandb-0.5.0-rc0
+        app.kubernetes.io/name: banyandb
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: data
+        app.kubernetes.io/role: cold
+    spec:
+      serviceAccountName: demo-banyandb
+      priorityClassName: 
+      initContainers:
+      containers:
+        - name: data
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205-slim
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GOMEMLIMIT
+              value: 6GiB
+            - name: BYDB_DATA_NODE_ROLE
+              value: cold
+            - name: BYDB_ETCD_USERNAME
+              value: "root"
+            - name: BYDB_ETCD_PASSWORD
+              value: banyandb
+            
+            - name: BYDB_ETCD_ENDPOINTS
+              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "ip"
+            - name: BYDB_NODE_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          args:
+            - data 
+          ports:
+            - containerPort: 17912
+              name: grpc
+            - containerPort: 17913
+              name: http-healthz
+            - containerPort: 6060
+              name: pprof
+            - containerPort: 2121
+              name: observebility
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: 8
+              memory: 8Gi
+          volumeMounts:
+            - mountPath: /tmp/stream
+              name: cold-data
+              subPath: stream
+            - mountPath: /tmp/measure
+              name: cold-data
+              subPath: measure
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: 
+                    app.kubernetes.io/name: banyandb
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/component: data
+                    app.kubernetes.io/role: cold
+                topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+    - metadata:
+        name: cold-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Gi
+        volumeMode: Filesystem
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: hot
+  name: demo-banyandb-data-hot
+spec:
+  serviceName: banyandb
+  replicas: 2
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: data
+      app.kubernetes.io/role: hot
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels: 
+        helm.sh/chart: banyandb-0.5.0-rc0
+        app.kubernetes.io/name: banyandb
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: data
+        app.kubernetes.io/role: hot
+    spec:
+      serviceAccountName: demo-banyandb
+      priorityClassName: 
+      initContainers:
+      containers:
+        - name: data
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205-slim
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GOMEMLIMIT
+              value: 3GiB
+            - name: BYDB_DATA_NODE_ROLE
+              value: hot
+            - name: BYDB_ETCD_USERNAME
+              value: "root"
+            - name: BYDB_ETCD_PASSWORD
+              value: banyandb
+            
+            - name: BYDB_ETCD_ENDPOINTS
+              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "ip"
+            - name: BYDB_NODE_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          args:
+            - data 
+          ports:
+            - containerPort: 17912
+              name: grpc
+            - containerPort: 17913
+              name: http-healthz
+            - containerPort: 6060
+              name: pprof
+            - containerPort: 2121
+              name: observebility
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: 4
+              memory: 4Gi
+          volumeMounts:
+            - mountPath: /tmp/stream
+              name: hot-stream-data
+              subPath: stream
+            - mountPath: /tmp/measure
+              name: hot-measure-data
+              subPath: measure
+            - mountPath: /tmp/property
+              name: hot-property-data
+              subPath: property
+        - name: lifecycle
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/lifecycle"
+            - "--schedule=@daily"
+          volumeMounts:
+            - mountPath: /tmp/stream
+              name: hot-stream-data
+              subPath: stream
+            - mountPath: /tmp/measure
+              name: hot-measure-data
+              subPath: measure
+            - mountPath: /tmp/property
+              name: hot-property-data
+              subPath: property
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: 
+                    app.kubernetes.io/name: banyandb
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/component: data
+                    app.kubernetes.io/role: hot
+                topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+    - metadata:
+        name: hot-stream-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
+    - metadata:
+        name: hot-measure-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
+    - metadata:
+        name: hot-property-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+        volumeMode: Filesystem
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels: 
+    helm.sh/chart: banyandb-0.5.0-rc0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: warm
+  name: demo-banyandb-data-warm
+spec:
+  serviceName: banyandb
+  replicas: 2
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: data
+      app.kubernetes.io/role: warm
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels: 
+        helm.sh/chart: banyandb-0.5.0-rc0
+        app.kubernetes.io/name: banyandb
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: data
+        app.kubernetes.io/role: warm
+    spec:
+      serviceAccountName: demo-banyandb
+      priorityClassName: 
+      initContainers:
+      containers:
+        - name: data
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205-slim
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GOMEMLIMIT
+              value: 3GiB
+            - name: BYDB_DATA_NODE_ROLE
+              value: warm
+            - name: BYDB_ETCD_USERNAME
+              value: "root"
+            - name: BYDB_ETCD_PASSWORD
+              value: banyandb
+            
+            - name: BYDB_ETCD_ENDPOINTS
+              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "ip"
+            - name: BYDB_NODE_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          args:
+            - data 
+          ports:
+            - containerPort: 17912
+              name: grpc
+            - containerPort: 17913
+              name: http-healthz
+            - containerPort: 6060
+              name: pprof
+            - containerPort: 2121
+              name: observebility
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: 4
+              memory: 4Gi
+          volumeMounts:
+            - mountPath: /tmp/stream
+              name: warm-data
+              subPath: stream
+            - mountPath: /tmp/measure
+              name: warm-data
+              subPath: measure
+        - name: lifecycle
+          image: ghcr.io/apache/skywalking-banyandb:f33c8b42351cb48c7fb07c0da73f50d39b0b5205-slim
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/lifecycle"
+            - "--schedule=@daily"
+          volumeMounts:
+            - mountPath: /tmp/stream
+              name: warm-data
+              subPath: stream
+            - mountPath: /tmp/measure
+              name: warm-data
+              subPath: measure
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: 
+                    app.kubernetes.io/name: banyandb
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/component: data
+                    app.kubernetes.io/role: warm
+                topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+    - metadata:
+        name: warm-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        volumeMode: Filesystem
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/cronjob-defrag.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: demo-etcd-defrag
+  namespace: "skywalking-showcase"
+  labels:
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: etcd
+    app.kubernetes.io/version: 3.5.21
+    helm.sh/chart: etcd-11.2.4
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "0 0 * * *"
+  suspend: false
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/instance: demo
+            app.kubernetes.io/managed-by: Helm
+            app.kubernetes.io/name: etcd
+            app.kubernetes.io/version: 3.5.21
+            helm.sh/chart: etcd-11.2.4
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            fsGroup: 1001
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            sysctls: []
+          containers:
+            - name: etcd-defrag
+              image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
+              imagePullPolicy: "IfNotPresent"
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL
+                privileged: false
+                readOnlyRootFilesystem: true
+                runAsGroup: 1001
+                runAsNonRoot: true
+                runAsUser: 1001
+                seLinuxOptions: {}
+                seccompProfile:
+                  type: RuntimeDefault
+              env:
+                - name: BITNAMI_DEBUG
+                  value: "false"
+                - name: ETCD_ROOT_PASSWORD_FILE
+                  value: /opt/bitnami/etcd/secrets/etcd-root-password
+                - name: ETCDCTL_USER
+                  value: "root:$(ETCD_ROOT_PASSWORD)"
+              command: ["etcdctl"]
+              args:
+                - defrag
+                - --cluster
+                - --endpoints=[http://demo-etcd-0.demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379]
+              resources:
+                limits:
+                  cpu: 150m
+                  ephemeral-storage: 2Gi
+                  memory: 192Mi
+                requests:
+                  cpu: 100m
+                  ephemeral-storage: 50Mi
+                  memory: 128Mi
+          volumes:
+            - name: etcd-secrets
+              projected:
+                sources:
+                  - secret:
+                      name:  demo-etcd
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/pdb.yaml
+---
+---
+# Source: skywalking-showcase/charts/skywalking/templates/oap-cm-dynamic.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-cm-override.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-deployment.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-role.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-rolebinding.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-serviceaccount.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/satellite-svc.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/charts/skywalking/templates/ui-ingress.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+# Source: skywalking-showcase/templates/feature-activemq-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-agent/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-apisix-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-baseline/deployment.yml
+#  Copyright 2025 SkyAPM org
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+---
+# Source: skywalking-showcase/templates/feature-ciilum/policy.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-ciilum/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-elasticseasrch-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-event/permissions.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-event/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-event/scaler.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-flink/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-flink/resource.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-grafana/configmaps.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-grafana/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-istiod-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-kubernetes-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-mongodb/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-mysql-monitor/fluent-bit.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-mysql-monitor/mysql.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-mysql-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-nginx-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-nginx-monitor/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-postgresql-monitor/fluent-bit.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-postgresql-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-postgresql-monitor/psql.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-pulsar-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-pulsar-monitor/resource.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-r3/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rabbitmq-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rabbitmq-monitor/rabbitmq.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rocketmq/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rocketmq/resource.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rover/permissions.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rover/profiling.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-rover/resources.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-so11y/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-trace-profiling/profiling.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-vm-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/feature-vm-monitor/vm.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+# Source: skywalking-showcase/templates/otel-collector-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+NOTES:
+*************************************************************************
+*                                                                       *
+*                          SkyWalking Showcase                          *
+*                                                                       *
+*************************************************************************
+
+Thank you for installing skywalking-showcase.
+
+Your release is named demo.
+
+Get the UI URL by running these commands:
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl port-forward svc/demo-ui 8080:80 --namespace skywalking-showcase
+make[1]: Leaving directory '/mnt/ssd/skywalking-showcase/deploy/platform/kubernetes'
