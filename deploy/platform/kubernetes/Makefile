@@ -26,44 +26,20 @@ include check.mak
 
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.fullnameOverride=$(RELEASE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.image.repository=$(BANYANDB_IMAGE) --set skywalking.banyandb.image.tag=$(BANYANDB_IMAGE_TAG)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].nodeRole=hot
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=hot-stream-data
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].size=10Gi
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].accessModes[0]=ReadWriteOnce
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[0].volumeMode=Filesystem
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].mountTargets[0]=measure
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].nodeRole=hot
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=hot-measure-data
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].size=10Gi
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].accessModes[0]=ReadWriteOnce
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[1].volumeMode=Filesystem
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].mountTargets[0]=property
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].nodeRole=hot
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].claimName=hot-property-data
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].size=2Gi
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].accessModes[0]=ReadWriteOnce
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[2].volumeMode=Filesystem
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[0]=stream
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[1]=measure
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].nodeRole=warm
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].claimName=warm-data
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].size=50Gi
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].accessModes[0]=ReadWriteOnce
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[3].volumeMode=Filesystem
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[0]=stream
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[1]=measure
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].nodeRole=cold
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].claimName=cold-data
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].size=100Gi
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].accessModes[0]=ReadWriteOnce
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].storageClass=$(STORAGE_CLASS)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.storage.persistentVolumeClaims[4].volumeMode=Filesystem
+# Sanitize STORAGE_CLASS (remove quotes and whitespace), then conditionally include storageClass fields
+STORAGE_CLASS_SANITIZED := $(strip $(subst ",,$(subst ',,$(STORAGE_CLASS))))
+ifeq ($(STORAGE_CLASS_SANITIZED),)
+PVC_STORAGE_CLASS_FIELD :=
+else
+PVC_STORAGE_CLASS_FIELD := ,"storageClass":"$(STORAGE_CLASS_SANITIZED)"
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.etcd.persistence.storageClass=$(STORAGE_CLASS_SANITIZED)
+endif
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.liaison.persistentVolumeClaims[0]={"mountTargets":["measure","stream"],"claimName":"liaison-data","size":"10Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[0]={"mountTargets":["stream"],"nodeRole":"hot","claimName":"hot-stream-data","size":"10Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[1]={"mountTargets":["measure"],"nodeRole":"hot","claimName":"hot-measure-data","size":"10Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[2]={"mountTargets":["property"],"nodeRole":"hot","claimName":"hot-property-data","size":"2Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[3]={"mountTargets":["stream","measure","property"],"nodeRole":"warm","claimName":"warm-data","size":"50Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
+HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[4]={"mountTargets":["stream","measure","property"],"nodeRole":"cold","claimName":"cold-data","size":"100Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.image.repository=$(SW_OAP_IMAGE) --set skywalking.oap.image.tag=$(SW_OAP_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.image.repository=$(SW_UI_IMAGE) --set skywalking.ui.image.tag=$(SW_UI_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http://$(RELEASE)-oap.$(NAMESPACE).svc:9412

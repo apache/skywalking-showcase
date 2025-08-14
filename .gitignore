@@ -66,3 +66,10 @@ deploy/platform/kubernetes/charts/
 deploy/platform/kubernetes/tmpcharts/
 
 deploy/platform/kubernetes/generated
+
+### Cursor ###
+.cursor
+
+### Claude Code ###
+Claude.md
+.claude

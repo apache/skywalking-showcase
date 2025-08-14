@@ -161,31 +161,72 @@ skywalking:
       liaison:
         replicas: 2
         env:
+        - name: GOMEMLIMIT
+          value: "3GiB"
         - name: BYDB_DATA_NODE_SELECTOR
           value: "type=hot"
         httpSvc:
           type: ClusterIP
+        resources:
+          requests:
+          - key: cpu
+            value: 100m
+          - key: memory
+            value: 1Gi
+          limits:
+          - key: cpu
+            value: 4
+          - key: memory
+            value: 4Gi
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+        containerSecurityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: [ "ALL" ]
+        volumePermissions:
+          enabled: true
+          chownUser: 1000
+          chownGroup: 1000
+          image: busybox:1.36
       data:
         nodeTemplate:
           replicas: 2
           resources:
             requests:
-              - key: cpu
-                value: 100m
-              - key: memory
-                value: 1Gi
+            - key: cpu
+              value: 100m
+            - key: memory
+              value: 1Gi
             limits:
-              - key: cpu
-                value: 4
-              - key: memory
-                value: 4Gi
+            - key: cpu
+              value: 4
+            - key: memory
+              value: 4Gi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containerSecurityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: [ "ALL" ]
+          volumePermissions:
+            enabled: true
+            chownUser: 1000
+            chownGroup: 1000
+            image: busybox:1.36
         roles:
           hot:
             env:
             - name: GOMEMLIMIT
               value: "3GiB"
-            - name: BYDB_NODE_LABELS
-              value: "type=hot"
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
@@ -193,64 +234,71 @@ skywalking:
             env:
             - name: GOMEMLIMIT
               value: "3GiB"
-            - name: BYDB_NODE_LABELS
-              value: "type=warm"
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
           cold:
             replicas: 1
             env:
-            - name: BYDB_NODE_LABELS
-              value: "type=cold"
             - name: GOMEMLIMIT
               value: "6GiB"
             resources:
               requests:
-                - key: cpu
-                  value: 100m
-                - key: memory
-                  value: 1Gi
+              - key: cpu
+                value: 100m
+              - key: memory
+                value: 1Gi
               limits:
-                - key: cpu
-                  value: 8
-                - key: memory
-                  value: 8Gi
+              - key: cpu
+                value: 8
+              - key: memory
+                value: 8Gi
     storage:
-      enabled: true
-      persistentVolumeClaims:
-        - mountTargets: ["stream"]
+      liaison:
+        enabled: true
+        persistentVolumeClaims:
+        - mountTargets: [ "measure", "stream" ]
+          claimName: liaison-data
+          size: 10Gi
+          accessModes:
+          - ReadWriteOnce
+          storageClass: ~
+          volumeMode: Filesystem
+      data:
+        enabled: true
+        persistentVolumeClaims:
+        - mountTargets: [ "stream" ]
           nodeRole: hot
           claimName: hot-stream-data
           size: 10Gi
           accessModes:
-            - ReadWriteOnce
+          - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: ["measure"]
+        - mountTargets: [ "measure" ]
           nodeRole: hot
           claimName: hot-measure-data
           size: 10Gi
           accessModes:
-            - ReadWriteOnce
+          - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: ["property"]
+        - mountTargets: [ "property" ]
           nodeRole: hot
           claimName: hot-property-data
           size: 5Gi
           accessModes:
-            - ReadWriteOnce
+          - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: [ "measure", "stream" ]
+        - mountTargets: [ "measure", "stream", "property" ]
           nodeRole: warm
           claimName: warm-data
           size: 100Gi
           accessModes:
           - ReadWriteOnce
           storageClass: ~
-        - mountTargets: [ "measure", "stream" ]
+        - mountTargets: [ "measure", "stream", "property" ]
           nodeRole: cold
           claimName: cold-data
           size: 500Gi
@@ -390,14 +438,14 @@ istiod:
         address: ""
       proxyStatsMatcher:
         inclusionRegexps:
-          - ".*membership_healthy.*"
-          - ".*upstream_cx_active.*"
-          - ".*upstream_cx_total.*"
-          - ".*upstream_rq_active.*"
-          - ".*upstream_rq_total.*"
-          - ".*upstream_rq_pending_active.*"
-          - ".*lb_healthy_panic.*"
-          - ".*upstream_cx_none_healthy.*"
+        - ".*membership_healthy.*"
+        - ".*upstream_cx_active.*"
+        - ".*upstream_cx_total.*"
+        - ".*upstream_rq_active.*"
+        - ".*upstream_rq_total.*"
+        - ".*upstream_rq_pending_active.*"
+        - ".*lb_healthy_panic.*"
+        - ".*upstream_cx_none_healthy.*"
 
 # @feature: kubernetes-monitor; extra resources to install for kubernetes monitoring, standard kube-state-metrics
 kube-state-metrics:
@@ -448,16 +496,16 @@ opentelemetry-collector:
   clusterRole:
     create: true
     rules:
-      - apiGroups: [""]
-        resources:
-          # @feature: kubernetes-monitor; permissions to read resources
-          - "endpoints"
-          - "pods"
-          - "services"
-          - "nodes"
-          - "nodes/metrics"
-          - "nodes/proxy"
-        verbs: ["get", "watch", "list"]
+    - apiGroups: [ "" ]
+      resources:
+      # @feature: kubernetes-monitor; permissions to read resources
+      - "endpoints"
+      - "pods"
+      - "services"
+      - "nodes"
+      - "nodes/metrics"
+      - "nodes/proxy"
+      verbs: [ "get", "watch", "list" ]
   resources:
     limits:
       cpu: 1024m
@@ -471,16 +519,16 @@ opentelemetry-collector:
 
   command:
     name: otelcol
-    extraArgs: ["--config=/conf/config.yaml"]
+    extraArgs: [ "--config=/conf/config.yaml" ]
 
   extraVolumes:
-    - name: otelcol-configmap
-      configMap:
-        name: otel-collector-config
-        defaultMode: 420
+  - name: otelcol-configmap
+    configMap:
+      name: otel-collector-config
+      defaultMode: 420
   extraVolumeMounts:
-    - name: otelcol-configmap
-      mountPath: /conf
+  - name: otelcol-configmap
+    mountPath: /conf
 
 features:
   kubernetesMonitor:
