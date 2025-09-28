@@ -23,9 +23,11 @@ services:
     networks: [ sw ]
     expose:
       - 17912
+      - 2121
     ports:
       - "17913:17913"
-    command: standalone --observability-modes=native
+      - "2121:2121"
+    command: standalone
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "17913"]
       interval: 30s
@@ -35,10 +37,15 @@ services:
   oap:
     image: ${SW_OAP_IMAGE}:${SW_OAP_IMAGE_TAG}
     networks: [ sw ]
+    expose:
+      - 11800
+    ports:
+      - "11800:11800"
+      - "12800:12800"
     environment:
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,mysql/*,postgresql/*,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/*,flink/* # @feature: vm,mysql,postgresql,elasticsearch; enable the OC rules that analyse the metrics
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: banyandb,vm,mysql/*,postgresql/*,elasticsearch/*,rabbitmq/*,mongodb/*,rocketmq/*,pulsar/*,activemq/*,flink/* # @feature: vm,mysql,postgresql,elasticsearch; enable the OC rules that analyse the metrics
       SW_STORAGE: banyandb
       SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
@@ -55,7 +62,7 @@ services:
         condition: service_healthy
 
   ui:
-    image: ${SW_UI_IMAGE}
+    image: ${SW_UI_IMAGE}:${SW_UI_IMAGE_TAG}
     networks: [ sw ]
     ports:
       - "9999:8080"
