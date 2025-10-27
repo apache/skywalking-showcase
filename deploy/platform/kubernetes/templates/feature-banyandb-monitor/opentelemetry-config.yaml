@@ -24,7 +24,7 @@
   relabel_configs:
     - source_labels: [ __meta_kubernetes_pod_name, __meta_kubernetes_pod_container_port_name ]
       action: keep
-      regex: demo-banyandb-data-(cold|hot|warm)-[0-9]+;observebility
+      regex: demo-banyandb-(data-(cold|hot|warm)|liaison)-[0-9]+;observebility
     - source_labels: [ ]
       target_label: host_name
       replacement: banyandb.{{ .Release.Namespace }}
