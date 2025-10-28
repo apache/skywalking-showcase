@@ -148,6 +148,11 @@ feature-mysql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.mysqlMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-banyandb-monitor
+feature-banyandb-monitor:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.banyandbMonitor.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+
 .PHONY: feature-postgresql-monitor
 feature-postgresql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.postgresqlMonitor.enabled=true)

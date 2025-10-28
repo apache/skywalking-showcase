@@ -32,6 +32,7 @@
   "opentelemetry-config-pulsar-monitor"
   "opentelemetry-config-activemq-monitor"
   "opentelemetry-config-flink-monitor"
+  "opentelemetry-config-banyandb-monitor"
 }}
 ---
 apiVersion: v1

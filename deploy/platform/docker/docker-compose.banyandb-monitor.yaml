@@ -16,13 +16,21 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
+version: '2.1'
 
-NAMESPACE ?= skywalking-showcase
-SAMPLE_SERVICES_NAMESPACE ?= sample-services
-CILIUM_SERVICES_NAMESPACE ?= cilium-services
-RELEASE ?= demo
-AGENTLESS ?= false
-SCALLER_ENABLE ?= false
+services:
+  otel-collector:
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
+    networks:
+      - sw
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./config/otel-collector-config-banyandb.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - 55678
+    depends_on:
+      oap:
+        condition: service_healthy
+networks:
+  sw:
 
-FEATURE_FLAGS ?= banyandb-monitor,java-agent-injector,cluster,banyandb,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,nginx-monitor,apisix-monitor,grafana,rabbitmq-monitor,mongodb-monitor,r3,rocketmq-monitor,pulsar-monitor,activemq-monitor,flink-monitor
