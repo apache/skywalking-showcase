@@ -291,12 +291,12 @@ skywalking:
           volumeMode: Filesystem
         - mountTargets: [ "trace" ]
           nodeRole: hot
-          existingClaimName: null
+          existingClaimName: ~
           claimName: hot-trace-data
           size: 50Gi
           accessModes:
             - ReadWriteOnce
-          storageClass: null
+          storageClass: ~
           volumeMode: Filesystem
         - mountTargets: [ "measure", "stream", "property", "trace" ]
           nodeRole: warm
