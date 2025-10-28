@@ -28,7 +28,7 @@ processors:
 
 exporters:
   otlp:
-    endpoint: "oap:11800"
+    endpoint: "host.docker.internal:11800"
     insecure: true
   logging:
     verbosity: detailed

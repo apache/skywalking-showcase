@@ -59,8 +59,6 @@ skywalking:
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
       SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
-      # 85% for test recovery, remove it after the test
-      SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT: 85
       SW_STORAGE_BANYANDB_RECORDS_TTL_DAYS: "1"
       SW_STORAGE_BANYANDB_RECORDS_ENABLE_WARM_STAGE: "true"
       SW_STORAGE_BANYANDB_RECORDS_ENABLE_COLD_STAGE: "true"
@@ -257,7 +255,7 @@ skywalking:
       liaison:
         enabled: true
         persistentVolumeClaims:
-        - mountTargets: [ "measure", "stream" ]
+        - mountTargets: [ "measure", "stream", "trace" ]
           claimName: liaison-data
           size: 10Gi
           accessModes:
@@ -291,14 +289,23 @@ skywalking:
           - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: [ "measure", "stream", "property" ]
+        - mountTargets: [ "trace" ]
+          nodeRole: hot
+          existingClaimName: null
+          claimName: hot-trace-data
+          size: 50Gi
+          accessModes:
+            - ReadWriteOnce
+          storageClass: null
+          volumeMode: Filesystem
+        - mountTargets: [ "measure", "stream", "property", "trace" ]
           nodeRole: warm
           claimName: warm-data
           size: 100Gi
           accessModes:
           - ReadWriteOnce
           storageClass: ~
-        - mountTargets: [ "measure", "stream", "property" ]
+        - mountTargets: [ "measure", "stream", "property", "trace" ]
           nodeRole: cold
           claimName: cold-data
           size: 500Gi
