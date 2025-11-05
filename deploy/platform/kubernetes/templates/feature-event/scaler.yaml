@@ -76,7 +76,7 @@ spec:
           serviceAccountName: event-scaler-sa
           containers:
             - name: event-scaler
-              image: bitnami/kubectl:1.20.12
+              image: bitnami/kubectl:latest
               command:
                 - sh
                 - -c
@@ -103,7 +103,7 @@ spec:
           serviceAccountName: event-scaler-sa
           containers:
             - name: event-scaler
-              image: bitnami/kubectl:1.20.12
+              image: bitnami/kubectl:latest
               command:
                 - sh
                 - -c
