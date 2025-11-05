@@ -153,6 +153,11 @@ feature-banyandb-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.banyandbMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+.PHONY: feature-banyandb-backup
+feature-banyandb-backup:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.nodeTemplate.backupSidecar.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.nodeTemplate.backupSidecar.dest=$(BANYANDB_BACKUP_DEST))
+
 .PHONY: feature-postgresql-monitor
 feature-postgresql-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.postgresqlMonitor.enabled=true)

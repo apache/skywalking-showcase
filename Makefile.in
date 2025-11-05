@@ -28,6 +28,7 @@ TAG ?= $(shell git rev-parse --short HEAD)
 BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
 BANYANDB_IMAGE_TAG ?= 38f19094145a30c6403fbc4390d0b0cf57494725
 STORAGE_CLASS ?= ""
+BANYANDB_BACKUP_DEST ?= file:///tmp/backups/data
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
