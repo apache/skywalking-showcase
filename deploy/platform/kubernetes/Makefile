@@ -155,8 +155,12 @@ feature-banyandb-monitor:
 
 .PHONY: feature-banyandb-backup
 feature-banyandb-backup:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.nodeTemplate.backupSidecar.enabled=true)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.nodeTemplate.backupSidecar.dest=$(BANYANDB_BACKUP_DEST))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.hot.backupSidecar.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.hot.restoreInitContainer.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.warm.backupSidecar.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.warm.restoreInitContainer.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.cold.backupSidecar.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.cluster.data.roles.cold.restoreInitContainer.enabled=true)
 
 .PHONY: feature-postgresql-monitor
 feature-postgresql-monitor:
