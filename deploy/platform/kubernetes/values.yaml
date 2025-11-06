@@ -228,6 +228,11 @@ skywalking:
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
+            backupSidecar:
+              enabled: false
+              dest: gcs://banyandb-backup/backup/hot-$(ORDINAL_NUMBER)
+            restoreInitContainer:
+              enabled: false
           warm:
             env:
             - name: GOMEMLIMIT
@@ -235,6 +240,11 @@ skywalking:
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
+            backupSidecar:
+              enabled: false
+              dest: gcs://banyandb-backup/backup/warn-$(ORDINAL_NUMBER)
+            restoreInitContainer:
+              enabled: false
           cold:
             replicas: 1
             env:
@@ -251,6 +261,11 @@ skywalking:
                 value: 8
               - key: memory
                 value: 8Gi
+            backupSidecar:
+              enabled: false
+              dest: gcs://banyandb-backup/backup/cold-$(ORDINAL_NUMBER)
+            restoreInitContainer:
+              enabled: false
     storage:
       liaison:
         enabled: true
