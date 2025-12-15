@@ -63,10 +63,14 @@ environment variable with the same name, e.g.:
 
 ```shell
 export ES_VERSION=7.14.0
-make <target>
+make <target> FEATURE_FLAGS=single-node,agent,elasticsearch
 ```
 
-or directly specifying in the `make` command, e.g.: `make <target> ES_VERSION=7.14.0`.
+or directly specifying in the `make` command, e.g.: `make <target> ES_VERSION=7.14.0 FEATURE_FLAGS=single-node,agent,elasticsearch`.
+
+**Note**: Since BanyanDB is the default storage, if you want to use Elasticsearch or PostgreSQL as storage, you need to 
+explicitly include the `elasticsearch` or `postgresql` feature flag in `FEATURE_FLAGS` to switch the storage backend, 
+and exclude the `banyandb` feature flag from the default feature flags.
 
 Run `make help` to get more information.
 
@@ -90,9 +94,10 @@ Currently, the features supported are:
 | `java-agent-injector`   | Use the java agent injector to inject the Skywalking Java agent and deploy microservices with other SkyWalking agent enabled.                                                          | The microservices include agents for Java, NodeJS server, browser, Python.                                                            |
 | `agent`                 | Deploy microservices with SkyWalking agent pre-installed.                                                                                                                              | In Kubernetes scenarios, please use `java-agent-injector` instead of this, if possible.                                               |
 | `cluster`               | Deploy SkyWalking OAP in cluster mode, with 2 nodes, and SkyWalking UI.                                                                                                                | Only one of `cluster` or `single-node` can be enabled.                                                                                |
-| `single-node`           | Deploy only one single node of SkyWalking OAP, and SkyWalking UI, ElasticSearch as storage.                                                                                            | Only one of `cluster` or `single-node` can be enabled.                                                                                |
-| `elasticsearch`         | Deploy ElasticSearch as storage, you may want to disable this if you want to use your own ElasticSearch deployments.                                                                   |                                                                                                                                       |
-| `postgresql`            | Deploy PostgreSQL as storage, you may want to disable this if you want to use your own PostgreSQL deployments.                                                                         |                                                                                                                                       |
+| `single-node`           | Deploy only one single node of SkyWalking OAP, and SkyWalking UI.                                                                                                                      | Only one of `cluster` or `single-node` can be enabled.                                                                                |
+| `banyandb`              | Deploy BanyanDB as storage, you may want to disable this if you want to use your own BanyanDB deployments.                                                                             | This is the default storage for the showcase.                                                                                         |
+| `elasticsearch`         | Deploy ElasticSearch as storage, you may want to disable this if you want to use your own ElasticSearch deployments.                                                                   | Alternative storage option. BanyanDB is used by default.                                                                              |
+| `postgresql`            | Deploy PostgreSQL as storage, you may want to disable this if you want to use your own PostgreSQL deployments.                                                                         | Alternative storage option. BanyanDB is used by default.                                                                              |
 | `so11y`                 | Enable SkyWalking self observability.                                                                                                                                                  | This is enabled by default for platform [Docker Compose](#docker-compose).                                                            |
 | `vm-monitor`            | Start 2 virtual machines and export their metrics to SkyWalking.                                                                                                                       | The "virtual machines" are mimicked by Docker containers or Pods.                                                                     |
 | `als`                   | Start microservices WITHOUT SkyWalking agent enabled, and configure SkyWalking to analyze the topology and metrics from their access logs.                                             | Command `istioctl` is required to run this feature. The agentless microservices will be running at namespace `${NAMESPACE}-agentless` |
