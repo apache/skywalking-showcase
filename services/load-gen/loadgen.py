@@ -51,13 +51,12 @@ while True:
         print(f"Error: {e}")
         traceback.print_exc()
         break
-    
-    # Wait a bit on the page
-    time.sleep(5 * 60)
+    # Wait a moment on the page
+    time.sleep(30)
     
     # Close the page (navigate to blank page)
     print("Closing page...")
     driver.get("about:blank")
     
     # Wait while page is closed
-    time.sleep(60)
+    time.sleep(30)
