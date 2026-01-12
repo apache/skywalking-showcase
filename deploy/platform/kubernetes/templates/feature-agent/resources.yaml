@@ -552,7 +552,7 @@ spec:
               subPath: activemq
         {{- if .Values.features.activemqMonitor.enabled }}
         - name: activemq-exporter
-          image: bitnami/jmx-exporter:0.20.0
+          image: bitnamilegacy/jmx-exporter:0.20.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5556
