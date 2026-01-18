@@ -17,50 +17,49 @@
 import os
 
 import requests
+from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+
+@app.route('/health', methods=['GET'])
+def health():
+    return 'OK'
+
+
+@app.route('/rcmd', methods=['GET'])
+def application():
+    headers = {}
+    for key in [
+        'x-b3-traceid',
+        'x-b3-spanid',
+        'x-b3-parentspanid',
+        'x-b3-sampled',
+        'x-b3-flags',
+    ]:
+        val = request.headers.get(key)
+        if val is not None:
+            headers[key] = request.headers[key]
+
+    songsResponse = requests.get('http://songs/songs', headers=headers)
+    songs = songsResponse.json()
+    ratingResponse = requests.get('http://rating/rating', headers=headers)
+    ratings = ratingResponse.json()
+
+    # combine ratings to songs
+    ratings_dict = {}
+    for rating_data in ratings:
+        song_id = rating_data['id']
+        ratings_dict[song_id] = rating_data['rating']
+    for song_data in songs:
+        song_id = song_data['id']
+        rating = ratings_dict.get(song_id)
+        if rating is not None:
+            song_data['rating'] = rating
+
+    return jsonify(songs)
+
 
 if __name__ == '__main__':
-    from flask import Flask, jsonify, request
-
-    app = Flask(__name__)
-
-
-    @app.route('/health', methods=['GET'])
-    def health():
-        return 'OK'
-
-
-    @app.route('/rcmd', methods=['GET'])
-    def application():
-        headers = {}
-        for key in [
-            'x-b3-traceid',
-            'x-b3-spanid',
-            'x-b3-parentspanid',
-            'x-b3-sampled',
-            'x-b3-flags',
-        ]:
-            val = request.headers.get(key)
-            if val is not None:
-                headers[key] = request.headers[key]
-
-        songsResponse = requests.get('http://songs/songs', headers=headers)
-        songs = songsResponse.json()
-        ratingResponse = requests.get('http://rating/rating', headers=headers)
-        ratings = ratingResponse.json()
-
-        # combine ratings to songs
-        ratings_dict = {}
-        for rating_data in ratings:
-            song_id = rating_data['id']
-            ratings_dict[song_id] = rating_data['rating']
-        for song_data in songs:
-            song_id = song_data['id']
-            rating = ratings_dict.get(song_id)
-            if rating is not None:
-                song_data['rating'] = rating
-
-        return jsonify(songs)
-
-
     PORT = os.getenv('PORT', 80)
     app.run(host='0.0.0.0', port=PORT)
