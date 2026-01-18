@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 # @feature: python-agent;
-FROM apache/skywalking-python:1.2.0-grpc-py3.11
+FROM apache/skywalking-python:1.2.0-grpc-py3.10-slim
 
 WORKDIR /workspace
 COPY requirements.txt .
