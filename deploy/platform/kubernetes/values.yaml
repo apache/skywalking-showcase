@@ -267,6 +267,31 @@ skywalking:
               dest: gcs://banyandb-backup/backup/cold-$(ORDINAL_NUMBER)
             restoreInitContainer:
               enabled: false
+      fodc:
+        agent:
+          resources:
+            requests:
+            - key: cpu
+              value: 1m
+            - key: memory
+              value: 10Mi
+            limits:
+            - key: cpu
+              value: 500m
+            - key: memory
+              value: 256Mi
+        proxy:
+          resources:
+            requests:
+            - key: cpu
+              value: 1m
+            - key: memory
+              value: 10Mi
+            limits:
+            - key: cpu
+              value: 500m
+            - key: memory
+              value: 256Mi
     storage:
       liaison:
         enabled: true
