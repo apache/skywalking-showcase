@@ -229,9 +229,31 @@ skywalking:
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
+              resources:
+                requests:
+                  - key: cpu
+                    value: 1m
+                  - key: memory
+                    value: 10Mi
+                limits:
+                  - key: cpu
+                    value: 500m
+                  - key: memory
+                    value: 512Mi
             backupSidecar:
               enabled: false
               dest: gcs://banyandb-backup/backup/hot-$(ORDINAL_NUMBER)
+              resources:
+                requests:
+                  - key: cpu
+                    value: 1m
+                  - key: memory
+                    value: 10Mi
+                limits:
+                  - key: cpu
+                    value: 500m
+                  - key: memory
+                    value: 512Mi
             restoreInitContainer:
               enabled: false
           warm:
@@ -241,9 +263,31 @@ skywalking:
             lifecycleSidecar:
               schedule: "@daily"
               enabled: true
+              resources:
+                requests:
+                  - key: cpu
+                    value: 1m
+                  - key: memory
+                    value: 10Mi
+                limits:
+                  - key: cpu
+                    value: 500m
+                  - key: memory
+                    value: 512Mi
             backupSidecar:
               enabled: false
               dest: gcs://banyandb-backup/backup/warn-$(ORDINAL_NUMBER)
+              resources:
+                requests:
+                  - key: cpu
+                    value: 1m
+                  - key: memory
+                    value: 10Mi
+                limits:
+                  - key: cpu
+                    value: 500m
+                  - key: memory
+                    value: 512Mi
             restoreInitContainer:
               enabled: false
           cold:
