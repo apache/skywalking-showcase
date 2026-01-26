@@ -316,9 +316,9 @@ skywalking:
           resources:
             requests:
             - key: cpu
-              value: 1m
+              value: 200m
             - key: memory
-              value: 10Mi
+              value: 128Mi
             limits:
             - key: cpu
               value: 500m
@@ -328,9 +328,9 @@ skywalking:
           resources:
             requests:
             - key: cpu
-              value: 1m
+              value: 200m
             - key: memory
-              value: 10Mi
+              value: 128Mi
             limits:
             - key: cpu
               value: 500m
