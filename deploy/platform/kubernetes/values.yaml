@@ -315,27 +315,19 @@ skywalking:
         agent:
           resources:
             requests:
-            - key: cpu
-              value: 200m
-            - key: memory
-              value: 128Mi
+              cpu: 200m
+              memory: 128Mi
             limits:
-            - key: cpu
-              value: 500m
-            - key: memory
-              value: 256Mi
+              cpu: 500m
+              memory: 256Mi
         proxy:
           resources:
             requests:
-            - key: cpu
-              value: 200m
-            - key: memory
-              value: 128Mi
+              cpu: 200m
+              memory: 128Mi
             limits:
-            - key: cpu
-              value: 500m
-            - key: memory
-              value: 256Mi
+              cpu: 500m
+              memory: 256Mi
     storage:
       liaison:
         enabled: true
