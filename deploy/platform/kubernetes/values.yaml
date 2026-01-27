@@ -309,6 +309,17 @@ skywalking:
             backupSidecar:
               enabled: false
               dest: gcs://banyandb-backup/backup/cold-$(ORDINAL_NUMBER)
+              resources:
+                requests:
+                  - key: cpu
+                    value: 200m
+                  - key: memory
+                    value: 128Mi
+                limits:
+                  - key: cpu
+                    value: 500m
+                  - key: memory
+                    value: 512Mi
             restoreInitContainer:
               enabled: false
       fodc:
