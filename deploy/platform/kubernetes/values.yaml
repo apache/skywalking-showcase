@@ -394,14 +394,22 @@ skywalking:
             - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: [ "measure", "stream", "property", "trace" ]
+        - mountTargets: [ "schema-property" ]
+          nodeRole: hot
+          claimName: hot-schema-property-data
+          size: 5Gi
+          accessModes:
+          - ReadWriteOnce
+          storageClass: ~
+          volumeMode: Filesystem
+        - mountTargets: [ "measure", "stream", "property", "schema-property", "trace" ]
           nodeRole: warm
           claimName: warm-data
           size: 100Gi
           accessModes:
           - ReadWriteOnce
           storageClass: ~
-        - mountTargets: [ "measure", "stream", "property", "trace" ]
+        - mountTargets: [ "measure", "stream", "property", "schema-property", "trace" ]
           nodeRole: cold
           claimName: cold-data
           size: 500Gi
