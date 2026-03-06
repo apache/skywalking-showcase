@@ -24,7 +24,7 @@ sources:
 dependencies:
   - name: skywalking-helm
     alias: skywalking
-    version: 0.0.0-0cc9491e1ceb24e82e9d9cc298c930c321297674
+    version: 0.0.0-1336c1b1f13942d19511f1c1ca9534f1d849ab45
     repository: oci://ghcr.io/apache/skywalking-helm
 
     # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
