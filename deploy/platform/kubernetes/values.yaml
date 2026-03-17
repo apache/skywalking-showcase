@@ -257,6 +257,7 @@ skywalking:
             restoreInitContainer:
               enabled: false
           warm:
+            hasMetaRole: false
             env:
             - name: GOMEMLIMIT
               value: "3GiB"
@@ -291,6 +292,7 @@ skywalking:
             restoreInitContainer:
               enabled: false
           cold:
+            hasMetaRole: false
             replicas: 1
             env:
             - name: GOMEMLIMIT
@@ -402,14 +404,14 @@ skywalking:
           - ReadWriteOnce
           storageClass: ~
           volumeMode: Filesystem
-        - mountTargets: [ "measure", "stream", "property", "schema-property", "trace" ]
+        - mountTargets: [ "measure", "stream", "property", "trace" ]
           nodeRole: warm
           claimName: warm-data
           size: 100Gi
           accessModes:
           - ReadWriteOnce
           storageClass: ~
-        - mountTargets: [ "measure", "stream", "property", "schema-property", "trace" ]
+        - mountTargets: [ "measure", "stream", "property", "trace" ]
           nodeRole: cold
           claimName: cold-data
           size: 500Gi
