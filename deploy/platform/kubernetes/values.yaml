@@ -28,6 +28,7 @@ skywalking:
       rest: 12800
       promql: 9090
       logql: 3100
+      traceql: 3200
       zipkin: 9411
       zipkin-query: 9412
       metrics: 1234
@@ -91,6 +92,9 @@ skywalking:
       SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS: "30"
       SW_STORAGE_BANYANDB_METADATA_TTL_DAYS: "60"
       SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.9,0.10"
+      SW_TRACEQL: default
+      SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true"
+      SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true"
     startupProbe:
       failureThreshold: 10
       tcpSocket:

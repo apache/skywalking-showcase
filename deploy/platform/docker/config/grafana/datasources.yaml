@@ -41,3 +41,21 @@ datasources:
     orgId: 1
     type: loki
     url: http://oap:3100
+  - access: proxy
+    editable: false
+    isDefault: false
+    name: SkywalkingTraceQL
+    orgId: 1
+    type: tempo
+    url: http://oap:3200/skywalking
+    jsonData:
+      streamingEnabled: false
+  - access: proxy
+    editable: false
+    isDefault: false
+    name: ZipkinTraceQL
+    orgId: 1
+    type: tempo
+    url: http://oap:3200/zipkin
+    jsonData:
+      streamingEnabled: false

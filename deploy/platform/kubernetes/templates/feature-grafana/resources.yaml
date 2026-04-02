@@ -82,6 +82,24 @@ data:
       orgId: 1
       type: loki
       url: http://{{ include "skywalking.oap.address.host" . }}:3100
+    - access: proxy
+      editable: false
+      isDefault: false
+      name: SkywalkingTraceQL
+      orgId: 1
+      type: tempo
+      url: http://{{ include "skywalking.oap.address.host" . }}:3200/skywalking
+      jsonData:
+        streamingEnabled: false
+    - access: proxy
+      editable: false
+      isDefault: false
+      name: ZipkinTraceQL
+      orgId: 1
+      type: tempo
+      url: http://{{ include "skywalking.oap.address.host" . }}:3200/zipkin
+      jsonData:
+        streamingEnabled: false
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -133,6 +151,12 @@ spec:
             - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/log.json
               subPath: log.json
+            - name: dashboard-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/trace-zipkin.json
+              subPath: trace-zipkin.json
+            - name: dashboard-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/trace-skywalking.json
+              subPath: trace-skywalking.json
       volumes: # require create configmap from deploy/platform/config/grafana/dashboards
         - name: grafana-config
           configMap:
