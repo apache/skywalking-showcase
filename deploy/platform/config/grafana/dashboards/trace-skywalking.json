@@ -78,7 +78,7 @@
         "cellHeight": "sm",
         "showHeader": true
       },
-      "pluginVersion": "12.4.2",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "datasource": {
@@ -88,8 +88,14 @@
           "filters": [
             {
               "id": "8e32cbaf",
+              "isCustomValue": false,
               "operator": "=",
-              "scope": "span"
+              "scope": "resource",
+              "tag": "instance",
+              "value": [
+                "$service_instance"
+              ],
+              "valueType": "string"
             },
             {
               "id": "service-name",
@@ -98,9 +104,48 @@
               "scope": "resource",
               "tag": "service.name",
               "value": [
-                "$service_name"
+                "$service"
               ],
               "valueType": "string"
+            },
+            {
+              "id": "879358e5",
+              "operator": "=",
+              "scope": "span"
+            },
+            {
+              "id": "span-name",
+              "isCustomValue": false,
+              "operator": "=",
+              "scope": "span",
+              "tag": "name",
+              "value": [
+                "$endpoint"
+              ],
+              "valueType": "string"
+            },
+            {
+              "id": "status",
+              "isCustomValue": false,
+              "operator": "=",
+              "scope": "intrinsic",
+              "tag": "status",
+              "value": "$status",
+              "valueType": "string"
+            },
+            {
+              "id": "min-duration",
+              "operator": ">",
+              "tag": "duration",
+              "value": "$min_duration",
+              "valueType": "duration"
+            },
+            {
+              "id": "max-duration",
+              "operator": "<",
+              "tag": "duration",
+              "value": "$max_duration",
+              "valueType": "duration"
             }
           ],
           "limit": 20,
@@ -122,31 +167,8 @@
     "list": [
       {
         "current": {
-          "text": "agent::app",
-          "value": "agent::app"
-        },
-        "datasource": {
-          "type": "tempo",
-          "uid": "${DS_SW_Tempo}"
-        },
-        "definition": "",
-        "label": "Service Name",
-        "name": "service_name",
-        "options": [],
-        "query": {
-          "label": "service",
-          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery",
-          "type": 1
-        },
-        "refresh": 1,
-        "regex": "",
-        "regexApplyTo": "value",
-        "type": "query"
-      },
-      {
-        "current": {
           "text": "SkywalkingTraceQL",
-          "value": "PA28E3BB23B19F252"
+          "value": "dfhlc7zdaoutcd"
         },
         "hide": 2,
         "name": "DS_SW_Tempo",
@@ -155,6 +177,185 @@
         "refresh": 1,
         "regex": "SkywalkingTraceQL",
         "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "SkyWalkingPromQL",
+          "value": "cfed3ic1yzsaod"
+        },
+        "hide": 2,
+        "name": "DS_SW_Prometheus",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "SkyWalkingPromQL",
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "text": "GENERAL",
+          "value": "GENERAL"
+        },
+        "hide": 2,
+        "label": "Layer",
+        "name": "layer",
+        "query": "GENERAL",
+        "skipUrlSync": true,
+        "type": "constant"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(service_traffic{layer=\"$layer\"},service)",
+        "includeAll": true,
+        "label": "Service",
+        "name": "service",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(service_traffic{layer=\"$layer\"},service)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(instance_traffic{layer=\"$layer\", service=\"$service\"},service_instance)",
+        "includeAll": true,
+        "label": "Service Instance",
+        "name": "service_instance",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(instance_traffic{layer=\"$layer\", service=\"$service\"},service_instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "cfed3ic1yzsaod"
+        },
+        "definition": "label_values(endpoint_traffic{layer=\"$layer\", service=\"$service\", keyword=\"$endpoint_keyword\", limit=\"$endpoint_limit\"},endpoint)",
+        "includeAll": true,
+        "label": "Endpoint",
+        "name": "endpoint",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(endpoint_traffic{layer=\"$layer\", service=\"$service\", keyword=\"$endpoint_keyword\", limit=\"$endpoint_limit\"},endpoint)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "label": "Endpoint Keyword",
+        "name": "endpoint_keyword",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "20",
+          "value": "20"
+        },
+        "label": "Endpoint Limit",
+        "name": "endpoint_limit",
+        "options": [],
+        "query": "20,50,100",
+        "type": "custom",
+        "valuesFormat": "csv"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "$__all",
+          "value": "$__all"
+        },
+        "includeAll": true,
+        "label": "Status",
+        "name": "status",
+        "options": [],
+        "query": "ok,error",
+        "type": "custom",
+        "valuesFormat": "csv"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "Examples\n10s (Seconds)\n10ms (Milliseconds)\n10us (Microseconds)",
+        "label": "Min Duration",
+        "name": "min_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "Examples\n10s (Seconds)\n10ms (Milliseconds)\n10us (Microseconds)",
+        "label": "Max Duration",
+        "name": "max_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
       }
     ]
   },
@@ -166,6 +367,6 @@
   "timezone": "browser",
   "title": "SkyWalking Trace",
   "uid": "ggmb2l",
-  "version": 1,
+  "version": 29,
   "weekStart": ""
 }

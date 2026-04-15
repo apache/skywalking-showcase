@@ -71,7 +71,7 @@
           }
         ]
       },
-      "pluginVersion": "12.4.2",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "datasource": {
@@ -81,8 +81,14 @@
           "filters": [
             {
               "id": "9e1b9c94",
+              "isCustomValue": false,
               "operator": "=",
-              "scope": "span"
+              "scope": "resource",
+              "tag": "remote.service",
+              "value": [
+                "$remote_service"
+              ],
+              "valueType": "string"
             },
             {
               "id": "service-name",
@@ -91,9 +97,43 @@
               "scope": "resource",
               "tag": "service.name",
               "value": [
-                "$service_name"
+                "$service"
               ],
               "valueType": "string"
+            },
+            {
+              "id": "span-name",
+              "isCustomValue": false,
+              "operator": "=",
+              "scope": "span",
+              "tag": "name",
+              "value": [
+                "$span_name"
+              ],
+              "valueType": "string"
+            },
+            {
+              "id": "status",
+              "isCustomValue": false,
+              "operator": "=",
+              "scope": "intrinsic",
+              "tag": "status",
+              "value": "$status",
+              "valueType": "string"
+            },
+            {
+              "id": "min-duration",
+              "operator": ">",
+              "tag": "duration",
+              "value": "$min_duration",
+              "valueType": "duration"
+            },
+            {
+              "id": "max-duration",
+              "operator": "<",
+              "tag": "duration",
+              "value": "$max_duration",
+              "valueType": "duration"
             }
           ],
           "limit": 20,
@@ -115,31 +155,21 @@
     "list": [
       {
         "current": {
-          "text": "app.sample-services",
-          "value": "app.sample-services"
+          "text": "SkyWalkingPromQL",
+          "value": "cfed3ic1yzsaod"
         },
-        "datasource": {
-          "type": "tempo",
-          "uid": "${DS_ZK_Tempo}"
-        },
-        "definition": "",
-        "label": "Service Name",
-        "name": "service_name",
+        "hide": 2,
+        "name": "DS_SW_Prometheus",
         "options": [],
-        "query": {
-          "label": "service",
-          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery",
-          "type": 1
-        },
+        "query": "prometheus",
         "refresh": 1,
-        "regex": "",
-        "regexApplyTo": "value",
-        "type": "query"
+        "regex": "SkyWalkingPromQL",
+        "type": "datasource"
       },
       {
         "current": {
           "text": "ZipkinTraceQL",
-          "value": "PB0E497C724A9970E"
+          "value": "dfibz35ad1gqob"
         },
         "hide": 2,
         "name": "DS_ZK_Tempo",
@@ -148,6 +178,132 @@
         "refresh": 1,
         "regex": "ZipkinTraceQL",
         "type": "datasource"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(zipkin_service_traffic,service)",
+        "includeAll": true,
+        "label": "Service",
+        "name": "service",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(zipkin_service_traffic,service)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(zipkin_service_relation_traffic{service=\"$service\"},remote_service)",
+        "includeAll": true,
+        "label": "Remote Service",
+        "name": "remote_service",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(zipkin_service_relation_traffic{service=\"$service\"},remote_service)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_SW_Prometheus}"
+        },
+        "definition": "label_values(zipkin_service_span_traffic{service=\"$service\"},span_name)",
+        "includeAll": true,
+        "label": "Span Name",
+        "name": "span_name",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(zipkin_service_span_traffic{service=\"$service\"},span_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      },
+      {
+        "allValue": "*",
+        "current": {
+          "text": "$__all",
+          "value": "$__all"
+        },
+        "description": "",
+        "includeAll": true,
+        "label": "Status",
+        "name": "status",
+        "options": [],
+        "query": "error",
+        "type": "custom",
+        "valuesFormat": "csv"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "Examples\n10s (Seconds)\n10ms (Milliseconds)\n10us (Microseconds)",
+        "label": "Min Duration",
+        "name": "min_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "Examples\n10s (Seconds)\n10ms (Milliseconds)\n10us (Microseconds)",
+        "label": "Max Duration",
+        "name": "max_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
       }
     ]
   },
@@ -159,6 +315,6 @@
   "timezone": "browser",
   "title": "Zipkin Trace",
   "uid": "gn6djx",
-  "version": 1,
+  "version": 17,
   "weekStart": ""
 }
