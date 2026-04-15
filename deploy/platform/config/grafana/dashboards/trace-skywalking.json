@@ -261,7 +261,7 @@
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "cfed3ic1yzsaod"
+          "uid": "${DS_SW_Prometheus}"
         },
         "definition": "label_values(endpoint_traffic{layer=\"$layer\", service=\"$service\", keyword=\"$endpoint_keyword\", limit=\"$endpoint_limit\"},endpoint)",
         "includeAll": true,
