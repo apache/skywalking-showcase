@@ -353,6 +353,9 @@ skywalking:
                 value: 500m
               - key: memory
                 value: 256Mi
+          config:
+            httpReadTimeout: 60s
+            httpWriteTimeout: 60s
     storage:
       liaison:
         enabled: true
