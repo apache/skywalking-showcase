@@ -26,6 +26,7 @@ skywalking:
     ports:
       grpc: 11800
       rest: 12800
+      admin: 17128
       promql: 9090
       logql: 3100
       traceql: 3200
@@ -33,6 +34,9 @@ skywalking:
       zipkin-query: 9412
       metrics: 1234
     env:
+      SW_ADMIN_SERVER: default
+      SW_DSL_DEBUGGING: default
+      SW_RECEIVER_RUNTIME_RULE: default
       SW_HEALTH_CHECKER: default
       SW_OTEL_RECEIVER: default # @feature: so11y;,mysql;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
       # @feature: vm; enable vm rules to analyze VM metrics
