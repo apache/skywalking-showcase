@@ -34,9 +34,6 @@ skywalking:
       zipkin-query: 9412
       metrics: 1234
     env:
-      SW_ADMIN_SERVER: default
-      SW_DSL_DEBUGGING: default
-      SW_RECEIVER_RUNTIME_RULE: default
       SW_HEALTH_CHECKER: default
       SW_OTEL_RECEIVER: default # @feature: so11y;,mysql;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
       # @feature: vm; enable vm rules to analyze VM metrics
@@ -157,8 +154,21 @@ skywalking:
       repository: ~
       tag: ~
       pullPolicy: IfNotPresent
-    env:
-      SW_ZIPKIN_ADDRESS: ""
+    # Minimal default so `make deploy.kubernetes` works for local dev — the
+    # upstream Horizon UI BFF refuses to start without at least one user.
+    # The hosted demo environment overrides this via demo-env-installer's
+    # demo-values.yaml; rotate before exposing outside trusted networks.
+    config:
+      auth:
+        backend: local
+        local:
+          users:
+            - username: admin            # password: admin
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
+              roles: [admin]
+            - username: skywalking       # password: skywalking
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
+              roles: [ viewer, maintainer ]
   banyandb:
     enabled: false
     image:
