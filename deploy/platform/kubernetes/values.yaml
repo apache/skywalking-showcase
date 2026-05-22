@@ -30,7 +30,7 @@ skywalking:
       promql: 9090
       logql: 3100
       traceql: 3200
-      zipkin: 9411
+      zipkin-receiver: 9411
       zipkin-query: 9412
       metrics: 1234
     env:
