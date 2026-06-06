@@ -26,7 +26,7 @@ HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
 BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
-BANYANDB_IMAGE_TAG ?= af0b2cf49f06872b6ba9dd231acbfd00c86e9931
+BANYANDB_IMAGE_TAG ?= ab7ac5b603d1f7e89e53fc52da6158b8a26ba12c
 STORAGE_CLASS ?= ""
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
