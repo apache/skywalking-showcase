@@ -346,6 +346,9 @@ skywalking:
             restoreInitContainer:
               enabled: false
       fodc:
+        # FODC (agent + proxy) is enabled by default in the chart; kept explicit so the
+        # banyandb-monitor feature always has an aggregated /metrics scrape target.
+        enabled: true
         agent:
           resources:
             requests:
@@ -373,6 +376,10 @@ skywalking:
           config:
             httpReadTimeout: 60s
             httpWriteTimeout: 60s
+          # The otel collector scrapes the proxy pod in-cluster (component=fodc-proxy, port http),
+          # so expose it as ClusterIP instead of the chart default LoadBalancer (no external LB).
+          httpSvc:
+            type: ClusterIP
     storage:
       liaison:
         enabled: true
