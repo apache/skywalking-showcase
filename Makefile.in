@@ -26,14 +26,14 @@ HUB ?= ghcr.io/apache/skywalking-showcase
 TAG ?= $(shell git rev-parse --short HEAD)
 
 BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
-BANYANDB_IMAGE_TAG ?= 823b3fb2a15e19559aae430d2bd008a1e524fba6
+BANYANDB_IMAGE_TAG ?= c2d925e4eae4d77edda94e1fd438243483960150
 STORAGE_CLASS ?= ""
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= ad733554b0273d6165eff7bae4150df83d49ebe8
+SW_OAP_IMAGE_TAG ?= c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 SW_UI_IMAGE_TAG ?= cc41af231112b6ef7fbbec6c6c1247692e740562

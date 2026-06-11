@@ -16,21 +16,26 @@
 {{- define "opentelemetry-config-banyandb-monitor" }}
 {{- if .Values.features.banyandbMonitor.enabled }}
 
-# @feature: banyandb-monitor; set OpenTelemetry config to scrape the banyandb metrics
+# @feature: banyandb-monitor; SWIP-15 BanyanDB self-observability.
+# Scrape the FODC proxy (component=fodc-proxy) on its HTTP port: the proxy re-exposes every
+# BanyanDB node's Prometheus metrics, aggregated and already stamped with the identity labels the
+# SWIP-15 MAL rules key on (container_name / node_role / node_type / pod_name). SkyWalking only
+# needs to inject the single `cluster` label. Do NOT scrape the per-node :2121 endpoints — they
+# do not carry those identity labels. The Prometheus `job` becomes service.name, which OAP maps to
+# the `job_name` tag the rules filter on, so it MUST stay 'banyandb-monitoring'.
 - job_name: 'banyandb-monitoring'
   metrics_path: '/metrics'
+  # Scrape faster than the default 60s: the SWIP-15 rules compute many `.rate('PT15S')`
+  # write/query/error rates, which read 0 if the scrape interval is coarser than the rate window.
+  scrape_interval: 10s
   kubernetes_sd_configs:
     - role: pod
   relabel_configs:
-    - source_labels: [ __meta_kubernetes_pod_name, __meta_kubernetes_pod_container_port_name ]
+    - source_labels: [ __meta_kubernetes_pod_label_app_kubernetes_io_component, __meta_kubernetes_pod_container_port_name ]
       action: keep
-      regex: .+banyandb.+;observability
+      regex: fodc-proxy;http
     - source_labels: [ ]
-      target_label: host_name
-      replacement: banyandb.{{ .Release.Namespace }}
-    - source_labels: [ __meta_kubernetes_pod_name ]
-      target_label: service_instance_id
-      regex: (.+)
-      replacement: $$1
+      target_label: cluster
+      replacement: showcase-banyandb
 {{- end }}
 {{- end }}

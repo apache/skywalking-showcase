@@ -1,46 +1,27 @@
-make[1]: Entering directory '/mnt/ssd/skywalking-showcase/deploy/platform/kubernetes'
-helm dep up .
-Getting updates for unmanaged Helm repositories...
-...Successfully got an update from the "https://open-telemetry.github.io/opentelemetry-helm-charts" chart repository
-...Successfully got an update from the "https://istio-release.storage.googleapis.com/charts" chart repository
-...Successfully got an update from the "https://istio-release.storage.googleapis.com/charts" chart repository
-Hang tight while we grab the latest from your chart repositories...
-...Successfully got an update from the "grafana" chart repository
-...Successfully got an update from the "prometheus-community" chart repository
-...Successfully got an update from the "bitnami" chart repository
-Update Complete. ⎈Happy Helming!⎈
-Saving 9 charts
-Downloading skywalking-helm from repo oci://ghcr.io/apache/skywalking-helm
-Downloading skywalking-helm-swck-operator from repo oci://ghcr.io/apache/skywalking-helm
-Downloading kube-state-metrics from repo https://prometheus-community.github.io/helm-charts
-Downloading prometheus-elasticsearch-exporter from repo https://prometheus-community.github.io/helm-charts
-Downloading rabbitmq from repo https://charts.bitnami.com/bitnami
-Downloading mongodb from repo https://charts.bitnami.com/bitnami
-Downloading base from repo https://istio-release.storage.googleapis.com/charts
-Downloading istiod from repo https://istio-release.storage.googleapis.com/charts
-Downloading opentelemetry-collector from repo https://open-telemetry.github.io/opentelemetry-helm-charts
-Deleting outdated charts
-helm -n skywalking-showcase upgrade --install demo . --create-namespace --timeout=20m --set skywalking.fullnameOverride=demo --set skywalking.banyandb.image.repository=ghcr.io/apache/skywalking-banyandb --set skywalking.banyandb.image.tag=a4842eeacdb2aa6022c4101e547904698062d67a --set skywalking.banyandb.etcd.persistence.storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[0].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[0].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[0].claimName=hot-stream-data --set skywalking.banyandb.storage.persistentVolumeClaims[0].size=10Gi --set skywalking.banyandb.storage.persistentVolumeClaims[0].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[0].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[0].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[1].mountTargets[0]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[1].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[1].claimName=hot-measure-data --set skywalking.banyandb.storage.persistentVolumeClaims[1].size=10Gi --set skywalking.banyandb.storage.persistentVolumeClaims[1].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[1].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[1].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[2].mountTargets[0]=property --set skywalking.banyandb.storage.persistentVolumeClaims[2].nodeRole=hot --set skywalking.banyandb.storage.persistentVolumeClaims[2].claimName=hot-property-data --set skywalking.banyandb.storage.persistentVolumeClaims[2].size=2Gi --set skywalking.banyandb.storage.persistentVolumeClaims[2].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[2].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[2].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[3].mountTargets[1]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[3].nodeRole=warm --set skywalking.banyandb.storage.persistentVolumeClaims[3].claimName=warm-data --set skywalking.banyandb.storage.persistentVolumeClaims[3].size=50Gi --set skywalking.banyandb.storage.persistentVolumeClaims[3].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[3].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[3].volumeMode=Filesystem --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[0]=stream --set skywalking.banyandb.storage.persistentVolumeClaims[4].mountTargets[1]=measure --set skywalking.banyandb.storage.persistentVolumeClaims[4].nodeRole=cold --set skywalking.banyandb.storage.persistentVolumeClaims[4].claimName=cold-data --set skywalking.banyandb.storage.persistentVolumeClaims[4].size=100Gi --set skywalking.banyandb.storage.persistentVolumeClaims[4].accessModes[0]=ReadWriteOnce --set skywalking.banyandb.storage.persistentVolumeClaims[4].storageClass="" --set skywalking.banyandb.storage.persistentVolumeClaims[4].volumeMode=Filesystem --set skywalking.oap.image.repository=ghcr.io/apache/skywalking/oap --set skywalking.oap.image.tag=3739add599a4e213071d68b1f2e9fbae31b7a6bf --set skywalking.ui.image.repository=ghcr.io/apache/skywalking/ui --set skywalking.ui.image.tag=3739add599a4e213071d68b1f2e9fbae31b7a6bf --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http://demo-oap.skywalking-showcase.svc:9412 --set skywalking.satellite.image.repository=ghcr.io/apache/skywalking-satellite/skywalking-satellite --set skywalking.satellite.image.tag=v8778e3e8a4ab4962102502ffc9ba7a3c73270609 --set swck.image.repository=docker.io/apache/skywalking-swck --set swck.image.tag=v0.7.0 --set sampleServices.hub=ghcr.io/apache/skywalking-showcase --set sampleServices.tag=3e3d5c3 --set sampleServices.namespace=sample-services --set ciliumServices.hub=ghcr.io/apache/skywalking-showcase --set ciliumServices.tag=3e3d5c3 --set ciliumServices.namespace=cilium-services --set opentelemetry-collector.image.repository=otel/opentelemetry-collector --set opentelemetry-collector.image.tag=0.102.1 --set features.rover.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.traceProfiling.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.event.exporter.image=ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22 --set features.javaAgentInjector.agentImage=ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8 --set features.rover.image=ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3 --set features.grafana.image=grafana/grafana:11.3.0 --set skywalking.grafana.plugin.version=0.1.0 --set features.r3.image=ghcr.io/skyapm/r3:0.1.0 --set features.baseline.image=ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150 --set sampleServices.scaller.enabled=false --dry-run --debug --set skywalking.oap.storageType=banyandb --set skywalking.banyandb.enabled=true --set skywalking.oap.replicas=2
+helm -n skywalking-showcase upgrade --install demo . --create-namespace --timeout=20m --set skywalking.fullnameOverride=demo --set skywalking.banyandb.image.repository=ghcr.io/apache/skywalking-banyandb --set skywalking.banyandb.image.tag=c2d925e4eae4d77edda94e1fd438243483960150 --set-json 'skywalking.banyandb.storage.liaison.persistentVolumeClaims[0]={"mountTargets":["measure","stream","trace"],"claimName":"liaison-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[0]={"mountTargets":["stream"],"nodeRole":"hot","claimName":"hot-stream-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[1]={"mountTargets":["measure"],"nodeRole":"hot","claimName":"hot-measure-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[2]={"mountTargets":["property"],"nodeRole":"hot","claimName":"hot-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[3]={"mountTargets":["trace"],"nodeRole":"hot","claimName":"hot-trace-data","size":"50Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[4]={"mountTargets":["schema-property"],"nodeRole":"hot","claimName":"hot-schema-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[5]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"warm","claimName":"warm-data","size":"100Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[6]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"cold","claimName":"cold-data","size":"500Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set skywalking.oap.image.repository=ghcr.io/apache/skywalking/oap --set skywalking.oap.image.tag=c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4 --set skywalking.ui.image.repository=ghcr.io/apache/skywalking-horizon-ui --set skywalking.ui.image.tag=cc41af231112b6ef7fbbec6c6c1247692e740562 --set skywalking.satellite.image.repository=ghcr.io/apache/skywalking-satellite/skywalking-satellite --set skywalking.satellite.image.tag=v3cfaf59a755e7ffcd900d6695a8bc4174397cace --set swck.image.repository=ghcr.io/apache/skywalking-swck/operator --set swck.image.tag=d299bc05ee230f5f366584054db5b099ca60166f --set sampleServices.hub=ghcr.io/apache/skywalking-showcase --set sampleServices.tag=98c98f9 --set sampleServices.namespace=sample-services --set ciliumServices.hub=ghcr.io/apache/skywalking-showcase --set ciliumServices.tag=98c98f9 --set ciliumServices.namespace=cilium-services --set opentelemetry-collector.image.repository=otel/opentelemetry-collector --set opentelemetry-collector.image.tag=0.102.1 --set features.rover.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.traceProfiling.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.event.exporter.image=ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22 --set features.javaAgentInjector.agentImage=ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8 --set features.rover.image=ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3 --set features.grafana.image=grafana/grafana:12.4.2 --set skywalking.grafana.plugin.version=0.1.0 --set features.r3.image=ghcr.io/skyapm/r3:0.1.0 --set features.baseline.image=ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150 --set sampleServices.scaller.enabled=false --set skywalking.oap.replicas=2 --set skywalking.oap.storageType=banyandb --set skywalking.banyandb.enabled=true --set features.banyandbMonitor.enabled=true --set opentelemetry.enabled=true --dry-run --debug
 Release "demo" does not exist. Installing it now.
 NAME: demo
-LAST DEPLOYED: Wed May 21 11:53:11 2025
+LAST DEPLOYED: Thu Jun 11 17:18:40 2026
 NAMESPACE: skywalking-showcase
 STATUS: pending-install
 REVISION: 1
+DESCRIPTION: Dry run complete
 TEST SUITE: None
 USER-SUPPLIED VALUES:
 ciliumServices:
   hub: ghcr.io/apache/skywalking-showcase
   namespace: cilium-services
-  tag: 3e3d5c3
+  tag: 98c98f9
 features:
+  banyandbMonitor:
+    enabled: true
   baseline:
     image: ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
   event:
     exporter:
       image: ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22
   grafana:
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:12.4.2
   javaAgentInjector:
     agentImage: ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8
   r3:
@@ -52,6 +33,8 @@ features:
   traceProfiling:
     swctl:
       image: ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
+opentelemetry:
+  enabled: true
 opentelemetry-collector:
   image:
     repository: otel/opentelemetry-collector
@@ -61,65 +44,89 @@ sampleServices:
   namespace: sample-services
   scaller:
     enabled: false
-  tag: 3e3d5c3
+  tag: 98c98f9
 skywalking:
   banyandb:
     enabled: true
-    etcd:
-      persistence:
-        storageClass: ""
     image:
       repository: ghcr.io/apache/skywalking-banyandb
-      tag: a4842eeacdb2aa6022c4101e547904698062d67a
+      tag: c2d925e4eae4d77edda94e1fd438243483960150
     storage:
-      persistentVolumeClaims:
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-stream-data
-        mountTargets:
-        - stream
-        nodeRole: hot
-        size: 10Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-measure-data
-        mountTargets:
-        - measure
-        nodeRole: hot
-        size: 10Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-property-data
-        mountTargets:
-        - property
-        nodeRole: hot
-        size: 2Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: warm-data
-        mountTargets:
-        - stream
-        - measure
-        nodeRole: warm
-        size: 50Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: cold-data
-        mountTargets:
-        - stream
-        - measure
-        nodeRole: cold
-        size: 100Gi
-        storageClass: ""
-        volumeMode: Filesystem
+      data:
+        persistentVolumeClaims:
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-stream-data
+          mountTargets:
+          - stream
+          nodeRole: hot
+          size: 10Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-measure-data
+          mountTargets:
+          - measure
+          nodeRole: hot
+          size: 10Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-property-data
+          mountTargets:
+          - property
+          nodeRole: hot
+          size: 5Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-trace-data
+          mountTargets:
+          - trace
+          nodeRole: hot
+          size: 50Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-schema-property-data
+          mountTargets:
+          - schema-property
+          nodeRole: hot
+          size: 5Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: warm-data
+          mountTargets:
+          - stream
+          - measure
+          - property
+          - trace
+          nodeRole: warm
+          size: 100Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: cold-data
+          mountTargets:
+          - stream
+          - measure
+          - property
+          - trace
+          nodeRole: cold
+          size: 500Gi
+          volumeMode: Filesystem
+      liaison:
+        persistentVolumeClaims:
+        - accessModes:
+          - ReadWriteOnce
+          claimName: liaison-data
+          mountTargets:
+          - measure
+          - stream
+          - trace
+          size: 10Gi
+          volumeMode: Filesystem
   fullnameOverride: demo
   grafana:
     plugin:
@@ -127,23 +134,21 @@ skywalking:
   oap:
     image:
       repository: ghcr.io/apache/skywalking/oap
-      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+      tag: c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
     replicas: 2
     storageType: banyandb
   satellite:
     image:
       repository: ghcr.io/apache/skywalking-satellite/skywalking-satellite
-      tag: v8778e3e8a4ab4962102502ffc9ba7a3c73270609
+      tag: v3cfaf59a755e7ffcd900d6695a8bc4174397cace
   ui:
-    env:
-      SW_ZIPKIN_ADDRESS: http://demo-oap.skywalking-showcase.svc:9412
     image:
-      repository: ghcr.io/apache/skywalking/ui
-      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+      repository: ghcr.io/apache/skywalking-horizon-ui
+      tag: cc41af231112b6ef7fbbec6c6c1247692e740562
 swck:
   image:
-    repository: docker.io/apache/skywalking-swck
-    tag: v0.7.0
+    repository: ghcr.io/apache/skywalking-swck/operator
+    tag: d299bc05ee230f5f366584054db5b099ca60166f
 
 COMPUTED VALUES:
 base:
@@ -153,7 +158,7 @@ base:
 ciliumServices:
   hub: ghcr.io/apache/skywalking-showcase
   namespace: cilium-services
-  tag: 3e3d5c3
+  tag: 98c98f9
 features:
   activemqMonitor:
     enabled: false
@@ -163,6 +168,8 @@ features:
     enabled: false
   apisixMonitor:
     enabled: false
+  banyandbMonitor:
+    enabled: true
   baseline:
     image: ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
   cilium:
@@ -179,7 +186,7 @@ features:
     enabled: false
   grafana:
     enabled: false
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:12.4.2
   istiodMonitor:
     enabled: false
   javaAgentInjector:
@@ -268,10 +275,22 @@ mongodb:
     enabled: false
   replicaCount: 2
 opentelemetry:
-  enabled: false
+  enabled: true
 opentelemetry-collector:
+  affinity: {}
+  annotations: {}
+  autoscaling:
+    enabled: false
+    maxReplicas: 10
+    minReplicas: 1
+    targetCPUUtilizationPercentage: 80
   clusterRole:
+    annotations: {}
+    clusterRoleBinding:
+      annotations: {}
+      name: ""
     create: true
+    name: ""
     rules:
     - apiGroups:
       - ""
@@ -290,8 +309,79 @@ opentelemetry-collector:
     extraArgs:
     - --config=/conf/config.yaml
     name: otelcol
+  config:
+    exporters:
+      logging: {}
+    extensions:
+      health_check: {}
+      memory_ballast: {}
+    processors:
+      batch: {}
+    receivers:
+      jaeger:
+        protocols:
+          grpc:
+            endpoint: ${MY_POD_IP}:14250
+          thrift_compact:
+            endpoint: ${MY_POD_IP}:6831
+          thrift_http:
+            endpoint: ${MY_POD_IP}:14268
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${MY_POD_IP}:4317
+          http:
+            endpoint: ${MY_POD_IP}:4318
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: opentelemetry-collector
+            scrape_interval: 10s
+            static_configs:
+            - targets:
+              - ${MY_POD_IP}:8888
+      zipkin:
+        endpoint: ${MY_POD_IP}:9411
+    service:
+      extensions:
+      - health_check
+      - memory_ballast
+      pipelines:
+        logs:
+          exporters:
+          - logging
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+        metrics:
+          exporters:
+          - logging
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+          - prometheus
+        traces:
+          exporters:
+          - logging
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+          - jaeger
+          - zipkin
+      telemetry:
+        metrics:
+          address: ${MY_POD_IP}:8888
   configMap:
     create: false
+  dnsPolicy: ""
+  extraContainers: []
+  extraEnvs: []
   extraVolumeMounts:
   - mountPath: /conf
     name: otelcol-configmap
@@ -300,15 +390,123 @@ opentelemetry-collector:
       defaultMode: 420
       name: otel-collector-config
     name: otelcol-configmap
+  fullnameOverride: ""
+  global: {}
+  hostNetwork: false
   image:
+    digest: ""
+    pullPolicy: IfNotPresent
     repository: otel/opentelemetry-collector
     tag: 0.102.1
+  imagePullSecrets: []
+  ingress:
+    additionalIngresses: []
+    enabled: false
+  initContainers: []
+  lifecycleHooks: {}
   mode: deployment
+  nameOverride: ""
+  nodeSelector: {}
+  podAnnotations: {}
+  podDisruptionBudget:
+    enabled: false
+  podLabels: {}
+  podMonitor:
+    enabled: false
+    extraLabels: {}
+    metricsEndpoints:
+    - port: metrics
+  podSecurityContext: {}
+  ports:
+    jaeger-compact:
+      containerPort: 6831
+      enabled: true
+      hostPort: 6831
+      protocol: UDP
+      servicePort: 6831
+    jaeger-grpc:
+      containerPort: 14250
+      enabled: true
+      hostPort: 14250
+      protocol: TCP
+      servicePort: 14250
+    jaeger-thrift:
+      containerPort: 14268
+      enabled: true
+      hostPort: 14268
+      protocol: TCP
+      servicePort: 14268
+    metrics:
+      containerPort: 8888
+      enabled: false
+      protocol: TCP
+      servicePort: 8888
+    otlp:
+      appProtocol: grpc
+      containerPort: 4317
+      enabled: true
+      hostPort: 4317
+      protocol: TCP
+      servicePort: 4317
+    otlp-http:
+      containerPort: 4318
+      enabled: true
+      hostPort: 4318
+      protocol: TCP
+      servicePort: 4318
+    zipkin:
+      containerPort: 9411
+      enabled: true
+      hostPort: 9411
+      protocol: TCP
+      servicePort: 9411
+  presets:
+    clusterMetrics:
+      enabled: false
+    hostMetrics:
+      enabled: false
+    kubeletMetrics:
+      enabled: false
+    kubernetesAttributes:
+      enabled: false
+    logsCollection:
+      enabled: false
+      includeCollectorLogs: false
+      storeCheckpoints: false
+  priorityClassName: ""
+  prometheusRule:
+    defaultRules:
+      enabled: false
+    enabled: false
+    extraLabels: {}
+    groups: []
   replicaCount: 1
   resources:
     limits:
       cpu: 1024m
       memory: 2Gi
+  revisionHistoryLimit: 10
+  rollout:
+    rollingUpdate: {}
+    strategy: RollingUpdate
+  securityContext: {}
+  service:
+    annotations: {}
+    type: ClusterIP
+  serviceAccount:
+    annotations: {}
+    create: true
+    name: ""
+  serviceMonitor:
+    enabled: false
+    extraLabels: {}
+    metricsEndpoints:
+    - port: metrics
+  statefulset:
+    podManagementPolicy: Parallel
+    volumeClaimTemplates: []
+  tolerations: []
+  topologySpreadConstraints: {}
 prometheus-elasticsearch-exporter:
   enabled: false
   es:
@@ -332,19 +530,34 @@ sampleServices:
   namespace: sample-services
   scaller:
     enabled: false
-  tag: 3e3d5c3
+  tag: 98c98f9
 skywalking:
   banyandb:
+    auth:
+      credentialsFileKey: credentials.yaml
+      enabled: false
+      existingSecret: ""
+      users:
+      - password: banyandb
+        username: admin
     cluster:
       data:
         nodeTemplate:
           affinity: {}
           backupSidecar:
+            customFlags: []
             dest: file:///tmp/backups/data-$(ORDINAL_NUMBER)
             enabled: false
             resources: {}
             schedule: '@hourly'
             timeStyle: daily
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           env: []
           grpcSvc:
             annotations: {}
@@ -352,6 +565,8 @@ skywalking:
             port: 17912
           lifecycleSidecar:
             enabled: false
+            progressFile: ""
+            reportDir: ""
             resources: {}
             schedule: '@hourly'
           livenessProbe:
@@ -386,9 +601,13 @@ skywalking:
             - key: memory
               value: 1Gi
           restoreInitContainer:
+            customFlags: []
             enabled: false
             resources: {}
-          securityContext: {}
+          securityContext:
+            fsGroup: 1000
+            runAsGroup: 1000
+            runAsUser: 1000
           sidecar: []
           startupProbe:
             failureThreshold: 60
@@ -397,12 +616,32 @@ skywalking:
             successThreshold: 1
             timeoutSeconds: 5
           tolerations: []
+          volumePermissions:
+            chownGroup: 1000
+            chownUser: 1000
+            enabled: true
+            image: busybox:1.36
         replicas: 1
         roles:
           cold:
+            backupSidecar:
+              dest: gcs://banyandb-backup/backup/cold-$(ORDINAL_NUMBER)
+              enabled: false
+              resources:
+                limits:
+                - key: cpu
+                  value: 500m
+                - key: memory
+                  value: 512Mi
+                requests:
+                - key: cpu
+                  value: 200m
+                - key: memory
+                  value: 128Mi
             env:
             - name: GOMEMLIMIT
               value: 6GiB
+            hasMetaRole: false
             replicas: 1
             resources:
               limits:
@@ -415,25 +654,206 @@ skywalking:
                 value: 100m
               - key: memory
                 value: 1Gi
+            restoreInitContainer:
+              enabled: false
           hot:
+            backupSidecar:
+              dest: gcs://banyandb-backup/backup/hot-$(ORDINAL_NUMBER)
+              enabled: false
+              resources:
+                limits:
+                - key: cpu
+                  value: 500m
+                - key: memory
+                  value: 512Mi
+                requests:
+                - key: cpu
+                  value: 200m
+                - key: memory
+                  value: 128Mi
             env:
             - name: GOMEMLIMIT
               value: 3GiB
+            hasMetaRole: true
             lifecycleSidecar:
               enabled: true
+              resources:
+                limits:
+                - key: cpu
+                  value: 500m
+                - key: memory
+                  value: 512Mi
+                requests:
+                - key: cpu
+                  value: 200m
+                - key: memory
+                  value: 128Mi
               schedule: '@daily'
+            restoreInitContainer:
+              enabled: false
           warm:
+            backupSidecar:
+              dest: gcs://banyandb-backup/backup/warn-$(ORDINAL_NUMBER)
+              enabled: false
+              resources:
+                limits:
+                - key: cpu
+                  value: 500m
+                - key: memory
+                  value: 512Mi
+                requests:
+                - key: cpu
+                  value: 200m
+                - key: memory
+                  value: 128Mi
             env:
             - name: GOMEMLIMIT
               value: 3GiB
+            hasMetaRole: false
             lifecycleSidecar:
               enabled: true
+              resources:
+                limits:
+                - key: cpu
+                  value: 500m
+                - key: memory
+                  value: 512Mi
+                requests:
+                - key: cpu
+                  value: 200m
+                - key: memory
+                  value: 128Mi
               schedule: '@daily'
+            restoreInitContainer:
+              enabled: false
       enabled: true
-      etcdEndpoints: []
+      fodc:
+        agent:
+          config:
+            heartbeatInterval: 10s
+            ktmEnabled: true
+            pollClusterStateInterval: 30s
+            pollMetricsInterval: 15s
+            reconnectInterval: 10s
+          containerSecurityContext: {}
+          env: []
+          image:
+            pullPolicy: IfNotPresent
+            repository: ghcr.io/apache/skywalking-banyandb-fodc-agent
+            tag: ""
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          metricsPort: 9090
+          readinessProbe:
+            failureThreshold: 12
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+            - key: cpu
+              value: 500m
+            - key: memory
+              value: 256Mi
+            requests:
+            - key: cpu
+              value: 200m
+            - key: memory
+              value: 128Mi
+          startupProbe:
+            failureThreshold: 60
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+        enabled: true
+        proxy:
+          affinity: {}
+          config:
+            agentCleanupTimeout: 5m
+            agentHeartbeatTimeout: 30s
+            grpcMaxMsgSize: 4194304
+            heartbeatInterval: 10s
+            httpReadTimeout: 60s
+            httpWriteTimeout: 60s
+            maxAgents: 1000
+          containerSecurityContext: {}
+          env: []
+          grpcSvc:
+            annotations: {}
+            labels: {}
+            port: 17912
+          httpSvc:
+            annotations: {}
+            externalIPs: []
+            labels: {}
+            loadBalancerSourceRanges: []
+            port: 17913
+            type: ClusterIP
+          image:
+            pullPolicy: IfNotPresent
+            repository: ghcr.io/apache/skywalking-banyandb-fodc-proxy
+            tag: ""
+          ingress:
+            annotations: {}
+            enabled: false
+            labels: {}
+            rules: []
+            tls: []
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          nodeSelector: []
+          podAffinityPreset: ""
+          podAnnotations: {}
+          podAntiAffinityPreset: soft
+          podDisruptionBudget: {}
+          priorityClassName: ""
+          readinessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            limits:
+            - key: cpu
+              value: 500m
+            - key: memory
+              value: 256Mi
+            requests:
+            - key: cpu
+              value: 200m
+            - key: memory
+              value: 128Mi
+          securityContext: {}
+          startupProbe:
+            failureThreshold: 60
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          tolerations: []
       liaison:
         affinity: {}
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
         env:
+        - name: GOMEMLIMIT
+          value: 3GiB
         - name: BYDB_DATA_NODE_SELECTOR
           value: type=hot
         grpcSvc:
@@ -444,7 +864,6 @@ skywalking:
           annotations: {}
           externalIPs: []
           labels: {}
-          loadBalancerIP: null
           loadBalancerSourceRanges: []
           port: 17913
           type: ClusterIP
@@ -465,6 +884,7 @@ skywalking:
         podAnnotations: {}
         podAntiAffinityPreset: soft
         podDisruptionBudget: {}
+        podManagementPolicy: Parallel
         priorityClassName: ""
         readinessProbe:
           failureThreshold: 5
@@ -474,9 +894,21 @@ skywalking:
           timeoutSeconds: 5
         replicas: 2
         resources:
-          limits: []
-          requests: []
-        securityContext: {}
+          limits:
+          - key: cpu
+            value: 4
+          - key: memory
+            value: 4Gi
+          requests:
+          - key: cpu
+            value: 100m
+          - key: memory
+            value: 1Gi
+        securityContext:
+          fsGroup: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
+        sidecar: []
         startupProbe:
           failureThreshold: 60
           initialDelaySeconds: 0
@@ -486,9 +918,51 @@ skywalking:
         tolerations: []
         updateStrategy:
           rollingUpdate:
-            maxSurge: 1
             maxUnavailable: 1
           type: RollingUpdate
+        volumePermissions:
+          chownGroup: 1000
+          chownUser: 1000
+          enabled: true
+          image: busybox:1.36
+      nodeDiscovery:
+        dns:
+          fetchInitDuration: 5m
+          fetchInitInterval: 5s
+          fetchInterval: 15s
+          grpcTimeout: 5s
+        file:
+          configMap:
+            content: ""
+            existingName: ""
+            key: nodes.yaml
+          fetchInterval: 5m
+          grpcTimeout: 5s
+          retryInitialInterval: 1s
+          retryMaxInterval: 2m
+          retryMultiplier: 2
+        mode: dns
+      schemaStorage:
+        mode: property
+        property:
+          clientMaxRecvMsgSize: ""
+          clientSyncInterval: 30s
+          server:
+            expireDeleteTimeout: 168h
+            flushTimeout: 5s
+            grpcHost: ""
+            grpcPort: 17916
+            maxFileSnapshotNum: ""
+            maxRecvMsgSize: ""
+            minFileSnapshotAge: 1h
+            repairBuildTreeCron: '@every 1h'
+            repairQuickBuildTreeTime: 10m
+            repairTreeSlotCount: ""
+            tls:
+              secretName: ""
+          serverRepairCron: '@every 10m'
+          tls:
+            secretName: ""
       ui:
         standalone:
           affinity: {}
@@ -497,7 +971,6 @@ skywalking:
             annotations: {}
             externalIPs: []
             labels: {}
-            loadBalancerIP: null
             loadBalancerSourceRanges: []
             port: 17913
             type: LoadBalancer
@@ -548,201 +1021,12 @@ skywalking:
       httpAddress: banyandb-http:17913
     enabled: true
     etcd:
-      affinity: {}
-      args: []
       auth:
-        client:
-          caFilename: ""
-          certFilename: tls.crt
-          certKeyFilename: tls.key
-          enableAuthentication: false
-          existingSecret: ""
-          secureTransport: false
-          useAutoTLS: false
-        peer:
-          caFilename: ""
-          certFilename: cert.pem
-          certKeyFilename: key.pem
-          enableAuthentication: false
-          existingSecret: ""
-          secureTransport: false
-          useAutoTLS: false
         rbac:
           allowNoneAuthentication: false
           create: true
-          existingSecret: ""
-          existingSecretPasswordKey: ""
           rootPassword: banyandb
-        token:
-          enabled: true
-          privateKey:
-            existingSecret: ""
-            filename: jwt-token.pem
-          signMethod: RS256
-          ttl: 10m
-          type: simple
-      autoCompactionMode: periodic
-      autoCompactionRetention: "1"
-      automountServiceAccountToken: false
-      clusterDomain: cluster.local
-      command: []
-      common:
-        exampleValue: common-chart
-        global:
-          compatibility:
-            openshift:
-              adaptSecurityContext: auto
-          defaultStorageClass: ""
-          imagePullSecrets: []
-          imageRegistry: ""
-          security:
-            allowInsecureImages: false
-          storageClass: ""
-      commonAnnotations: {}
-      commonLabels: {}
-      configuration: ""
-      containerPorts:
-        client: 2379
-        metrics: 9090
-        peer: 2380
-      containerSecurityContext:
-        allowPrivilegeEscalation: false
-        capabilities:
-          drop:
-          - ALL
-        enabled: true
-        privileged: false
-        readOnlyRootFilesystem: true
-        runAsGroup: 1001
-        runAsNonRoot: true
-        runAsUser: 1001
-        seLinuxOptions: {}
-        seccompProfile:
-          type: RuntimeDefault
-      customLivenessProbe: {}
-      customReadinessProbe: {}
-      customStartupProbe: {}
-      defrag:
-        cronjob:
-          activeDeadlineSeconds: ""
-          annotations: {}
-          args: []
-          command: []
-          concurrencyPolicy: Forbid
-          containerSecurityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            enabled: true
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          failedJobsHistoryLimit: 1
-          labels: {}
-          nodeSelector: {}
-          podAnnotations: {}
-          podLabels: {}
-          podSecurityContext:
-            enabled: true
-            fsGroup: 1001
-            fsGroupChangePolicy: Always
-            supplementalGroups: []
-            sysctls: []
-          resources: {}
-          resourcesPreset: nano
-          restartPolicy: OnFailure
-          schedule: 0 0 * * *
-          serviceAccountName: ""
-          startingDeadlineSeconds: ""
-          successfulJobsHistoryLimit: 1
-          suspend: false
-          tolerations: []
-        enabled: true
-      diagnosticMode:
-        args:
-        - infinity
-        command:
-        - sleep
-        enabled: false
-      disasterRecovery:
-        cronjob:
-          command: []
-          containerSecurityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            enabled: true
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          historyLimit: 1
-          nodeSelector: {}
-          podAnnotations: {}
-          podLabels: {}
-          podSecurityContext:
-            enabled: true
-            fsGroup: 1001
-            fsGroupChangePolicy: Always
-            supplementalGroups: []
-            sysctls: []
-          resources: {}
-          resourcesPreset: nano
-          schedule: '*/30 * * * *'
-          serviceAccountName: ""
-          snapshotHistoryLimit: 1
-          snapshotsDir: /snapshots
-          tolerations: []
-        enabled: false
-        pvc:
-          existingClaim: ""
-          size: 2Gi
-          storageClassName: nfs
-          subPath: ""
       enabled: true
-      existingConfigmap: ""
-      extraDeploy: []
-      extraEnvVars: []
-      extraEnvVarsCM: ""
-      extraEnvVarsSecret: ""
-      extraVolumeClaimTemplates: []
-      extraVolumeMounts: []
-      extraVolumes: []
-      fullnameOverride: ""
-      global:
-        compatibility:
-          openshift:
-            adaptSecurityContext: auto
-        defaultStorageClass: ""
-        imagePullSecrets: []
-        imageRegistry: ""
-        security:
-          allowInsecureImages: false
-        storageClass: ""
-      hostAliases: []
-      image:
-        debug: false
-        digest: ""
-        pullPolicy: IfNotPresent
-        pullSecrets: []
-        registry: docker.io
-        repository: bitnami/etcd
-        tag: 3.5.21-debian-12-r1
-      initContainers: []
-      initialClusterToken: etcd-cluster-k8s
-      kubeVersion: ""
-      lifecycleHooks: {}
       livenessProbe:
         enabled: true
         failureThreshold: 5
@@ -750,107 +1034,11 @@ skywalking:
         periodSeconds: 30
         successThreshold: 1
         timeoutSeconds: 5
-      logLevel: info
-      maxProcs: ""
-      metrics:
-        enabled: false
-        podAnnotations:
-          prometheus.io/port: '{{ .Values.metrics.useSeparateEndpoint | ternary .Values.containerPorts.metrics
-            .Values.containerPorts.client }}'
-          prometheus.io/scrape: "true"
-        podMonitor:
-          additionalLabels: {}
-          enabled: false
-          interval: 30s
-          namespace: monitoring
-          relabelings: []
-          scheme: http
-          scrapeTimeout: 30s
-          tlsConfig: {}
-        prometheusRule:
-          additionalLabels: {}
-          enabled: false
-          namespace: ""
-          rules: []
-        useSeparateEndpoint: false
-      nameOverride: ""
-      networkPolicy:
-        allowExternal: true
-        allowExternalEgress: true
-        enabled: true
-        extraEgress: []
-        extraIngress: []
-        ingressNSMatchLabels: {}
-        ingressNSPodMatchLabels: {}
-      nodeAffinityPreset:
-        key: ""
-        type: ""
-        values: []
-      nodeSelector: {}
-      pdb:
-        create: true
-        maxUnavailable: ""
-        minAvailable: 51%
       persistence:
-        accessModes:
-        - ReadWriteOnce
-        annotations: {}
-        enabled: true
-        labels: {}
-        selector: {}
         size: 5Gi
-        storageClass: ""
-      persistentVolumeClaimRetentionPolicy:
-        enabled: false
-        whenDeleted: Retain
-        whenScaled: Retain
-      podAffinityPreset: ""
-      podAnnotations: {}
-      podAntiAffinityPreset: soft
-      podLabels: {}
-      podManagementPolicy: Parallel
-      podSecurityContext:
-        enabled: true
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      preUpgradeJob:
-        annotations: {}
-        containerSecurityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            add: []
-            drop:
-            - ALL
-          enabled: true
-          privileged: false
-          readOnlyRootFilesystem: true
-          runAsGroup: 1001
-          runAsNonRoot: true
-          runAsUser: 1001
-          seLinuxOptions: {}
-          seccompProfile:
-            type: RuntimeDefault
-        enabled: true
-        podAnnotations: {}
-        podLabels: {}
-        podSecurityContext:
-          enabled: true
-          fsGroup: 1001
-          fsGroupChangePolicy: Always
-          supplementalGroups: []
-          sysctls: []
-        resources: {}
-        resourcesPreset: micro
-      priorityClassName: ""
+        storageClass: null
       readinessProbe:
         enabled: false
-        failureThreshold: 5
-        initialDelaySeconds: 10
-        periodSeconds: 10
-        successThreshold: 1
-        timeoutSeconds: 5
       replicaCount: 1
       resources:
         limits:
@@ -859,47 +1047,6 @@ skywalking:
         requests:
           cpu: 100m
           memory: 256Mi
-      resourcesPreset: micro
-      runtimeClassName: ""
-      schedulerName: ""
-      service:
-        annotations: {}
-        clientPortNameOverride: ""
-        clusterIP: ""
-        enabled: true
-        externalIPs: []
-        externalTrafficPolicy: Cluster
-        extraPorts: []
-        headless:
-          annotations: {}
-        loadBalancerClass: ""
-        loadBalancerIP: ""
-        loadBalancerSourceRanges: []
-        metricsPortNameOverride: ""
-        nodePorts:
-          client: ""
-          metrics: ""
-          peer: ""
-        peerPortNameOverride: ""
-        ports:
-          client: 2379
-          metrics: 9090
-          peer: 2380
-        sessionAffinity: None
-        sessionAffinityConfig: {}
-        type: ClusterIP
-      serviceAccount:
-        annotations: {}
-        automountServiceAccountToken: false
-        create: true
-        labels: {}
-        name: ""
-      shareProcessNamespace: false
-      sidecars: []
-      startFromSnapshot:
-        enabled: false
-        existingClaim: ""
-        snapshotFilename: ""
       startupProbe:
         enabled: true
         failureThreshold: 60
@@ -907,29 +1054,26 @@ skywalking:
         periodSeconds: 10
         successThreshold: 1
         timeoutSeconds: 5
-      terminationGracePeriodSeconds: ""
-      tolerations: []
-      topologySpreadConstraints: []
-      updateStrategy:
-        type: RollingUpdate
-      usePasswordFiles: true
-      volumePermissions:
-        enabled: false
-        image:
-          digest: ""
-          pullPolicy: IfNotPresent
-          pullSecrets: []
-          registry: docker.io
-          repository: bitnami/os-shell
-          tag: 12-debian-12-r40
-        resources: {}
-        resourcesPreset: nano
+    etcd-client:
+      auth:
+        password: ""
+        tls:
+          caFilename: ca.crt
+          certFilename: tls.crt
+          enabled: false
+          keyFilename: tls.key
+          secretName: ""
+        username: ""
+      endpoints: []
+      fullSyncInterval: 30m
+      namespace: banyandb
+      nodeDiscoveryTimeout: 2m
     fullnameOverride: ""
     global: {}
     image:
       pullPolicy: IfNotPresent
       repository: ghcr.io/apache/skywalking-banyandb
-      tag: a4842eeacdb2aa6022c4101e547904698062d67a
+      tag: c2d925e4eae4d77edda94e1fd438243483960150
     nameOverride: banyandb
     serviceAccount:
       annotations: {}
@@ -937,6 +1081,7 @@ skywalking:
       name: ""
     standalone:
       affinity: {}
+      containerSecurityContext: {}
       enabled: false
       env: []
       grpcSvc:
@@ -947,7 +1092,6 @@ skywalking:
         annotations: {}
         externalIPs: []
         labels: {}
-        loadBalancerIP: null
         loadBalancerSourceRanges: []
         port: 17913
         type: LoadBalancer
@@ -982,181 +1126,152 @@ skywalking:
         periodSeconds: 10
         successThreshold: 1
         timeoutSeconds: 5
+      tls: {}
       tolerations: []
+      volumePermissions:
+        chownGroup: 1000
+        chownUser: 1000
+        enabled: false
+        image: busybox:1.36
     storage:
-      enabled: true
-      persistentVolumeClaims:
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-stream-data
-        mountTargets:
-        - stream
-        nodeRole: hot
-        size: 10Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-measure-data
-        mountTargets:
-        - measure
-        nodeRole: hot
-        size: 10Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: hot-property-data
-        mountTargets:
-        - property
-        nodeRole: hot
-        size: 2Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: warm-data
-        mountTargets:
-        - stream
-        - measure
-        nodeRole: warm
-        size: 50Gi
-        storageClass: ""
-        volumeMode: Filesystem
-      - accessModes:
-        - ReadWriteOnce
-        claimName: cold-data
-        mountTargets:
-        - stream
-        - measure
-        nodeRole: cold
-        size: 100Gi
-        storageClass: ""
-        volumeMode: Filesystem
+      data:
+        enabled: true
+        persistentVolumeClaims:
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-stream-data
+          mountTargets:
+          - stream
+          nodeRole: hot
+          size: 10Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-measure-data
+          mountTargets:
+          - measure
+          nodeRole: hot
+          size: 10Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-property-data
+          mountTargets:
+          - property
+          nodeRole: hot
+          size: 5Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-trace-data
+          mountTargets:
+          - trace
+          nodeRole: hot
+          size: 50Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: hot-schema-property-data
+          mountTargets:
+          - schema-property
+          nodeRole: hot
+          size: 5Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: warm-data
+          mountTargets:
+          - stream
+          - measure
+          - property
+          - trace
+          nodeRole: warm
+          size: 100Gi
+          volumeMode: Filesystem
+        - accessModes:
+          - ReadWriteOnce
+          claimName: cold-data
+          mountTargets:
+          - stream
+          - measure
+          - property
+          - trace
+          nodeRole: cold
+          size: 500Gi
+          volumeMode: Filesystem
+      liaison:
+        enabled: true
+        persistentVolumeClaims:
+        - accessModes:
+          - ReadWriteOnce
+          claimName: liaison-data
+          mountTargets:
+          - measure
+          - stream
+          - trace
+          size: 10Gi
+          volumeMode: Filesystem
+      standalone:
+        enabled: false
+        persistentVolumeClaims:
+        - accessModes:
+          - ReadWriteOnce
+          claimName: standalone-data
+          mountTargets:
+          - measure
+          - stream
+          - metadata
+          - property
+          - trace
+          - schema-property
+          size: 200Gi
+          storageClass: null
+          volumeMode: Filesystem
   elasticsearch:
+    annotations: {}
     antiAffinity: soft
-    antiAffinityTopologyKey: kubernetes.io/hostname
-    clusterHealthCheckParams: wait_for_status=green&timeout=1s
-    clusterName: elasticsearch
     config:
       host: elasticsearch
-      password: xxx
+      password: ""
       port:
         http: 9200
-      user: xxx
+      user: ""
     enabled: false
-    esConfig: {}
-    esJavaOpts: -Xmx1g -Xms1g
-    esMajorVersion: ""
-    extraEnvs: []
-    extraInitContainers: ""
-    extraVolumeMounts: ""
-    extraVolumes: ""
-    fsGroup: ""
     fullnameOverride: ""
-    httpPort: 9200
-    image: null
+    http:
+      tls:
+        selfSignedCertificate:
+          disabled: true
     imagePullPolicy: IfNotPresent
-    imagePullSecrets: []
-    imageTag: null
     ingress:
       annotations: {}
       enabled: false
       hosts:
-      - chart-example.local
-      path: /
-      tls: []
-    initResources: {}
-    keystore: []
+      - host: chart-example.local
+        path: /
+      tls:
+        enabled: false
     labels: {}
-    lifecycle: {}
-    masterService: ""
-    masterTerminationFix: false
-    maxUnavailable: 1
-    minimumMasterNodes: 2
-    nameOverride: ""
-    networkHost: 0.0.0.0
-    nodeAffinity: {}
-    nodeGroup: master
-    nodeSelector: {}
-    persistence:
-      annotations: {}
-      enabled: false
-    podAnnotations: {}
-    podManagementPolicy: Parallel
-    podSecurityContext:
-      fsGroup: 1000
-      runAsUser: 1000
-    podSecurityPolicy:
-      create: false
-      name: ""
-      spec:
-        fsGroup:
-          rule: RunAsAny
-        privileged: true
-        runAsUser:
-          rule: RunAsAny
-        seLinux:
-          rule: RunAsAny
-        supplementalGroups:
-          rule: RunAsAny
-        volumes:
-        - secret
-        - configMap
-        - persistentVolumeClaim
-    priorityClassName: ""
-    protocol: http
-    rbac:
-      create: false
-      serviceAccountName: ""
-    readinessProbe:
-      failureThreshold: 3
-      initialDelaySeconds: 10
-      periodSeconds: 10
-      successThreshold: 3
-      timeoutSeconds: 5
-    replicas: 3
-    resources:
-      limits:
-        cpu: 1000m
-        memory: 2Gi
-      requests:
-        cpu: 100m
-        memory: 2Gi
-    roles:
-      data: "true"
-      ingest: "true"
-      master: "true"
-    schedulerName: ""
-    secretMounts: []
-    securityContext:
-      capabilities:
-        drop:
-        - ALL
-      runAsNonRoot: true
-      runAsUser: 1000
-    service:
-      annotations: {}
-      httpPortName: http
-      labels: {}
-      labelsHeadless: {}
-      nodePort: ""
-      transportPortName: transport
-      type: ClusterIP
-    sidecarResources: {}
-    sysctlInitContainer:
-      enabled: true
-    sysctlVmMaxMapCount: 262144
-    terminationGracePeriod: 120
-    tolerations: []
-    transportPort: 9300
-    updateStrategy: RollingUpdate
-    volumeClaimTemplate:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 30Gi
+    nodeSets:
+    - config:
+        node.store.allow_mmap: false
+      count: 3
+      name: default
+      podTemplate:
+        metadata: {}
+        spec:
+          containers:
+          - name: elasticsearch
+            resources:
+              limits:
+                memory: 2Gi
+              requests:
+                cpu: 100m
+                memory: 2Gi
+    secureSettings: []
+    updateStrategy: {}
+    version: 8.18.8
+    volumeClaimDeletePolicy: ""
   fullnameOverride: demo
   global: {}
   grafana:
@@ -1213,7 +1328,6 @@ skywalking:
       SW_AI_PIPELINE_URI_RECOGNITION_SERVER_PORT: "17128"
       SW_CONFIGURATION: k8s-configmap
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
-      SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT: 85
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
       SW_ENABLE_ON_DEMAND_POD_LOG: "true"
       SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
@@ -1222,31 +1336,71 @@ skywalking:
       SW_HEALTH_CHECKER: default
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent
       SW_OTEL_RECEIVER: default
-      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*,banyandb/*
       SW_QUERY_ZIPKIN: default
       SW_RECEIVER_ZIPKIN: default
       SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_COLD_SHARD_NUM: "1"
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_SHARD_NUM: "1"
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_WARM_SHARD_NUM: "1"
+      SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: 0.9,0.10
+      SW_STORAGE_BANYANDB_LOG_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_LOG_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_LOG_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_METADATA_TTL_DAYS: "60"
+      SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS: "30"
+      SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_DAY_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_METRICS_DAY_WARM_TTL_DAYS: "7"
+      SW_STORAGE_BANYANDB_METRICS_HOUR_COLD_TTL_DAYS: "30"
+      SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_HOUR_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_METRICS_HOUR_WARM_TTL_DAYS: "7"
+      SW_STORAGE_BANYANDB_METRICS_MINUTE_COLD_TTL_DAYS: "30"
+      SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_METRICS_MINUTE_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_METRICS_MINUTE_WARM_TTL_DAYS: "7"
+      SW_STORAGE_BANYANDB_RECORDS_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_RECORDS_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_RECORDS_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_TRACE_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_TRACE_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_TRACE_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_TTL_DAYS: "1"
       SW_STORAGE_ES_INDEX_SHARDS_NUMBER: "6"
       SW_STORAGE_ES_RESPONSE_TIMEOUT: "50000"
       SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
       SW_TELEMETRY: prometheus
+      SW_TRACEQL: default
+      SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true"
+      SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true"
     image:
       pullPolicy: IfNotPresent
       repository: ghcr.io/apache/skywalking/oap
-      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+      tag: c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
     javaOpts: -Xmx2g -Xms2g
     livenessProbe: {}
     name: oap
     nodeAffinity: {}
     nodeSelector: {}
     ports:
+      admin: 17128
       grpc: 11800
       logql: 3100
       metrics: 1234
       promql: 9090
       rest: 12800
-      zipkin: 9411
+      traceql: 3200
       zipkin-query: 9412
+      zipkin-receiver: 9411
     readinessProbe: {}
     replicas: 2
     resources: {}
@@ -1294,7 +1448,7 @@ skywalking:
     image:
       pullPolicy: IfNotPresent
       repository: ghcr.io/apache/skywalking-satellite/skywalking-satellite
-      tag: v8778e3e8a4ab4962102502ffc9ba7a3c73270609
+      tag: v3cfaf59a755e7ffcd900d6695a8bc4174397cace
     name: satellite
     nodeAffinity: {}
     nodeSelector: {}
@@ -1320,27 +1474,73 @@ skywalking:
       create: true
       name: ""
   ui:
-    env:
-      SW_ZIPKIN_ADDRESS: http://demo-oap.skywalking-showcase.svc:9412
+    config:
+      auth:
+        backend: local
+        local:
+          users:
+          - passwordHash: $argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM
+            roles:
+            - admin
+            username: admin
+          - passwordHash: $argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q
+            roles:
+            - viewer
+            - maintainer
+            username: skywalking
+      oap:
+        timeoutMs: 15000
+      rbac:
+        enabled: true
+      server:
+        host: 0.0.0.0
+        port: 8081
+      session:
+        cookieName: horizon_sid
+        cookieSecure: false
+        ttlMinutes: 60
+    enabled: true
+    envFromSecret: ""
+    extraEnv: []
     image:
       pullPolicy: IfNotPresent
-      repository: ghcr.io/apache/skywalking/ui
-      tag: 3739add599a4e213071d68b1f2e9fbae31b7a6bf
+      repository: ghcr.io/apache/skywalking-horizon-ui
+      tag: cc41af231112b6ef7fbbec6c6c1247692e740562
     ingress:
       annotations: {}
       enabled: false
       hosts: []
       path: /
       tls: []
+    livenessProbe:
+      initialDelaySeconds: 30
+      periodSeconds: 20
+      tcpSocket:
+        port: 8081
     name: ui
     nodeAffinity: {}
     nodeSelector: {}
+    persistence:
+      accessModes:
+      - ReadWriteOnce
+      annotations: {}
+      enabled: false
+      size: 1Gi
+    readinessProbe:
+      failureThreshold: 6
+      httpGet:
+        path: /api/auth/health
+        port: 8081
+      initialDelaySeconds: 10
+      periodSeconds: 10
     replicas: 1
-    securityContext: {}
+    resources: {}
+    securityContext:
+      fsGroup: 101
     service:
       annotations: {}
       externalPort: 80
-      internalPort: 8080
+      internalPort: 8081
       type: ClusterIP
     tolerations: []
 swck:
@@ -1348,120 +1548,10 @@ swck:
     enabled: true
   fullnameOverride: swck-demo
   image:
-    repository: docker.io/apache/skywalking-swck
-    tag: v0.7.0
+    repository: ghcr.io/apache/skywalking-swck/operator
+    tag: d299bc05ee230f5f366584054db5b099ca60166f
 
 HOOKS:
----
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/preupgrade-hook-job.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: demo-etcd-pre-upgrade
-  namespace: "skywalking-showcase"
-  labels:
-    app.kubernetes.io/instance: demo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd-pre-upgrade-job
-  annotations:
-    helm.sh/hook: pre-upgrade
-    helm.sh/hook-delete-policy: before-hook-creation
-spec:
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: demo
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: etcd
-        app.kubernetes.io/version: 3.5.21
-        helm.sh/chart: etcd-11.2.4
-        app.kubernetes.io/component: etcd-pre-upgrade-job
-      annotations:
-    spec:
-      
-      automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: demo
-                    app.kubernetes.io/name: etcd
-                    app.kubernetes.io/component: etcd-pre-upgrade-job
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      restartPolicy: Never
-      containers:
-        - name: pre-upgrade-job
-          image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add: []
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          command: [ "/opt/bitnami/scripts/etcd/entrypoint.sh" ]
-          args: [ "/opt/bitnami/scripts/etcd/preupgrade.sh" ]
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: ETCD_ON_K8S
-              value: "yes"
-            - name: ETCD_DATA_DIR
-              value: "/bitnami/etcd/data"
-            - name: ETCD_ROOT_PASSWORD_FILE
-              value: /opt/bitnami/etcd/secrets/etcd-root-password
-            - name: ETCD_INITIAL_CLUSTER
-              value: "demo-etcd-0=http://demo-etcd-0.demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379"
-          envFrom:
-          resources:
-            limits:
-              cpu: 375m
-              ephemeral-storage: 2Gi
-              memory: 384Mi
-            requests:
-              cpu: 250m
-              ephemeral-storage: 50Mi
-              memory: 256Mi
-          volumeMounts:
-            - name: empty-dir
-              mountPath: /opt/bitnami/etcd/conf/
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: etcd-secrets
-              mountPath: /opt/bitnami/etcd/secrets
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: etcd-secrets
-          projected:
-            sources:
-              - secret:
-                  name:  demo-etcd
 ---
 # Source: skywalking-showcase/charts/skywalking/templates/oap-init.job.yaml
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -1487,7 +1577,7 @@ metadata:
   name: "demo-oap-init"
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "demo-job"
     heritage: Helm
     release: demo
@@ -1513,7 +1603,7 @@ spec:
         command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
       containers:
       - name: oap
-        image: ghcr.io/apache/skywalking/oap:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        image: ghcr.io/apache/skywalking/oap:c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
         imagePullPolicy: IfNotPresent
         env:
         - name: JAVA_OPTS
@@ -1530,8 +1620,6 @@ spec:
           value: "k8s-configmap"
         - name: SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI
           value: "false"
-        - name: SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT
-          value: "85"
         - name: SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR
           value: "3000"
         - name: SW_ENABLE_ON_DEMAND_POD_LOG
@@ -1549,13 +1637,83 @@ spec:
         - name: SW_OTEL_RECEIVER
           value: "default"
         - name: SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES
-          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*"
+          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*,banyandb/*"
         - name: SW_QUERY_ZIPKIN
           value: "default"
         - name: SW_RECEIVER_ZIPKIN
           value: "default"
         - name: SW_SLOW_DB_THRESHOLD
           value: "default:0,mongodb:100"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_COLD_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_WARM_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS
+          value: "0.9,0.10"
+        - name: SW_STORAGE_BANYANDB_LOG_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_LOG_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_LOG_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METADATA_TTL_DAYS
+          value: "60"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_RECORDS_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_RECORDS_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_RECORDS_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_TRACE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_TRACE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_TRACE_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_TTL_DAYS
+          value: "1"
         - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
           value: "6"
         - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
@@ -1564,28 +1722,36 @@ spec:
           value: "2"
         - name: SW_TELEMETRY
           value: "prometheus"
+        - name: SW_TRACEQL
+          value: "default"
+        - name: SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING
+          value: "true"
+        - name: SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN
+          value: "true"
 
         volumeMounts:
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/alarm-settings.yml
-            subPath: alarm-settings.yml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/cilium-rules/exclude.yaml
-            subPath: cilium-rules-exclude.yaml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
-            subPath: cilium-rules-metadata-service-mapping.yaml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/core.default.log4j-xml
-            subPath: core.default.log4j-xml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/metadata-service-mapping.yaml
-            subPath: metadata-service-mapping.yaml
+        
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/alarm-settings.yml
+          subPath: alarm-settings.yml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/cilium-rules/exclude.yaml
+          subPath: cilium-rules-exclude.yaml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
+          subPath: cilium-rules-metadata-service-mapping.yaml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/core.default.log4j-xml
+          subPath: core.default.log4j-xml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/metadata-service-mapping.yaml
+          subPath: metadata-service-mapping.yaml
 
       volumes:
-        - name: skywalking-oap-override
-          configMap:
-            name: demo-oap-cm-override
+      
+      - name: skywalking-oap-override
+        configMap:
+          name: demo-oap-cm-override
 MANIFEST:
 ---
 # Source: skywalking-showcase/templates/feature-agent/resources.yaml
@@ -1596,70 +1762,17 @@ metadata:
   labels:
     istio-injection: enabled
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/networkpolicy.yaml
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
-  labels:
-    app.kubernetes.io/instance: demo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: demo
-      app.kubernetes.io/name: etcd
-      app.kubernetes.io/component: etcd
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - {}
-  ingress:
-    # Allow inbound connections
-    - ports:
-        - port: 2379
-        - port: 2380
----
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
-  labels:
-    app.kubernetes.io/instance: demo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
-spec:
-  minAvailable: 51%
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: demo
-      app.kubernetes.io/name: etcd
-      app.kubernetes.io/component: etcd
----
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/serviceaccount.yaml
+# Source: skywalking-showcase/charts/opentelemetry-collector/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
-automountServiceAccountToken: false
 metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
+  name: demo-opentelemetry-collector
   labels:
+    helm.sh/chart: opentelemetry-collector-0.51.1
+    app.kubernetes.io/name: opentelemetry-collector
     app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "0.74.0"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
 ---
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/serviceaccount.yaml
 apiVersion: v1
@@ -1667,7 +1780,7 @@ kind: ServiceAccount
 metadata:
   name: demo-banyandb
   labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -1692,28 +1805,11 @@ kind: ServiceAccount
 metadata:
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "oap"
     heritage: Helm
     release: demo
   name: demo-oap
----
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
-  labels:
-    app.kubernetes.io/instance: demo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
-type: Opaque
-data:
-  etcd-root-password: "YmFueWFuZGI="
 ---
 # Source: skywalking-showcase/charts/skywalking/templates/oap-cm-override.yaml
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -1780,6 +1876,61 @@ data:
  metadata-service-mapping.yaml: |
     serviceName: mesh-svr::${LABELS."service.istio.io/canonical-name",LABELS."app.kubernetes.io/name",LABELS.app}.${NAMESPACE}
     serviceInstanceName: ${NAME}
+---
+# Source: skywalking-showcase/charts/skywalking/templates/ui-configmap.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-ui
+  labels:
+    app: demo
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
+    component: "ui"
+    heritage: Helm
+    release: demo
+data:
+  horizon.yaml: |
+    auth:
+      backend: local
+      local:
+        users:
+        - passwordHash: $argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM
+          roles:
+          - admin
+          username: admin
+        - passwordHash: $argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q
+          roles:
+          - viewer
+          - maintainer
+          username: skywalking
+    oap:
+      adminUrl: http://demo-oap:17128
+      queryUrl: http://demo-oap:12800
+      timeoutMs: 15000
+      zipkinUrl: http://demo-oap:9412/zipkin
+    rbac:
+      enabled: true
+    server:
+      host: 0.0.0.0
+      port: 8081
+    session:
+      cookieName: horizon_sid
+      cookieSecure: false
+      ttlMinutes: 60
 ---
 # Source: skywalking-showcase/templates/feature-agent/resources.yaml
 apiVersion: v1
@@ -1941,6 +2092,89 @@ data:
     rules:
     - pattern: ".*"
 ---
+# Source: skywalking-showcase/templates/otel-collector-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+data:
+  config.yaml: |
+    receivers:
+      prometheus/15:
+        config:
+          scrape_configs:            
+            
+            # @feature: banyandb-monitor; SWIP-15 BanyanDB self-observability.
+            # Scrape the FODC proxy (component=fodc-proxy) on its HTTP port: the proxy re-exposes every
+            # BanyanDB node's Prometheus metrics, aggregated and already stamped with the identity labels the
+            # SWIP-15 MAL rules key on (container_name / node_role / node_type / pod_name). SkyWalking only
+            # needs to inject the single `cluster` label. Do NOT scrape the per-node :2121 endpoints — they
+            # do not carry those identity labels. The Prometheus `job` becomes service.name, which OAP maps to
+            # the `job_name` tag the rules filter on, so it MUST stay 'banyandb-monitoring'.
+            - job_name: 'banyandb-monitoring'
+              metrics_path: '/metrics'
+              # Scrape faster than the default 60s: the SWIP-15 rules compute many `.rate('PT15S')`
+              # write/query/error rates, which read 0 if the scrape interval is coarser than the rate window.
+              scrape_interval: 10s
+              kubernetes_sd_configs:
+                - role: pod
+              relabel_configs:
+                - source_labels: [ __meta_kubernetes_pod_label_app_kubernetes_io_component, __meta_kubernetes_pod_container_port_name ]
+                  action: keep
+                  regex: fodc-proxy;http
+                - source_labels: [ ]
+                  target_label: cluster
+                  replacement: showcase-banyandb
+
+    exporters:
+      otlp/15:
+        endpoint: "demo-oap.skywalking-showcase.svc.cluster.local:11800"
+        tls:
+          insecure: true
+      logging:
+        verbosity: detailed
+
+    extensions:
+      # The health_check extension is mandatory for this chart.
+      # Without the health_check extension the collector will fail the readiness and liveliness probes.
+      # The health_check extension can be modified, but should never be removed.
+      health_check: {}
+
+    service:
+      pipelines:
+        metrics/15:
+          receivers: 
+            - prometheus/15
+          exporters: [ otlp/15,logging ]
+      extensions:
+        - health_check
+---
+# Source: skywalking-showcase/charts/opentelemetry-collector/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: demo-opentelemetry-collector
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.51.1
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "0.74.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - endpoints
+    - pods
+    - services
+    - nodes
+    - nodes/metrics
+    - nodes/proxy
+    verbs:
+    - get
+    - watch
+    - list
+---
 # Source: skywalking-showcase/charts/skywalking/templates/oap-clusterrole.yaml
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -1962,7 +2196,7 @@ metadata:
   name: demo
   labels:
     app: demo
-    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    chart: "skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23"
     release: "demo"
     heritage: "Helm"
 rules:
@@ -1975,6 +2209,26 @@ rules:
 - apiGroups: ["networking.istio.io"]
   resources: ["serviceentries"]
   verbs: ["get", "watch", "list"]
+---
+# Source: skywalking-showcase/charts/opentelemetry-collector/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: demo-opentelemetry-collector
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.51.1
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "0.74.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: demo-opentelemetry-collector
+subjects:
+- kind: ServiceAccount
+  name: demo-opentelemetry-collector
+  namespace: skywalking-showcase
 ---
 # Source: skywalking-showcase/charts/skywalking/templates/oap-clusterrolebinding.yaml
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -1997,7 +2251,7 @@ metadata:
   name: demo
   labels:
     app: demo
-    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    chart: "skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23"
     release: "demo"
     heritage: "Helm"
 roleRef:
@@ -2030,7 +2284,7 @@ metadata:
   name: demo
   labels:
     app: demo
-    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    chart: "skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23"
     release: "demo"
     heritage: "Helm"
 rules:
@@ -2059,7 +2313,7 @@ metadata:
   name: demo
   labels:
     app: demo
-    chart: "skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09"
+    chart: "skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23"
     release: "demo"
     heritage: "Helm"
 roleRef:
@@ -2071,66 +2325,199 @@ subjects:
     name: demo-oap
     namespace: skywalking-showcase
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/svc-headless.yaml
+# Source: skywalking-showcase/charts/opentelemetry-collector/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: demo-etcd-headless
-  namespace: "skywalking-showcase"
+  name: demo-opentelemetry-collector
   labels:
+    helm.sh/chart: opentelemetry-collector-0.51.1
+    app.kubernetes.io/name: opentelemetry-collector
     app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "0.74.0"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
-  annotations:
-    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    component: standalone-collector
 spec:
   type: ClusterIP
+  ports: 
+    
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: UDP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-thrift
+      port: 14268
+      targetPort: 14268
+      protocol: TCP
+    - name: otlp
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: demo
+    component: standalone-collector
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_headless_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-data-cold-headless
+  labels: 
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: cold
+spec:
   clusterIP: None
   publishNotReadyAddresses: true
   ports:
-    - name: client
-      port: 2379
-      targetPort: client
-    - name: peer
-      port: 2380
-      targetPort: peer
-  selector:
+    - port: 17912
+      name: grpc
+      targetPort: grpc
+  selector: 
+    app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/component: etcd
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: cold
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/svc.yaml
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_headless_service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
-  labels:
+  name: demo-banyandb-data-hot-headless
+  labels: 
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: hot
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: 17912
+      name: grpc
+      targetPort: grpc
+  selector: 
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: hot
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_headless_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-data-warm-headless
+  labels: 
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: warm
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: 17912
+      name: grpc
+      targetPort: grpc
+  selector: 
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: data
+    app.kubernetes.io/role: warm
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_fodc_proxy_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-fodc-proxy-grpc
+  labels:
+
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: fodc-proxy
+  annotations:
 spec:
   type: ClusterIP
-  sessionAffinity: None
   ports:
-    - name: "client"
-      port: 2379
-      targetPort: client
-      nodePort: null
-    - name: "peer"
-      port: 2380
-      targetPort: peer
-      nodePort: null
+    - port: 17912
+      name: grpc
+      targetPort: grpc
   selector:
+
+    app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/component: etcd
+    app.kubernetes.io/component: fodc-proxy
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_fodc_proxy_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-fodc-proxy-http
+  labels:
+
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: fodc-proxy
+  annotations:
+spec:
+  type: ClusterIP
+  ports:
+    - port: 17913
+      name: http
+      targetPort: http
+  selector:
+
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: fodc-proxy
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_liaison_headless_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-banyandb-liaison-headless
+  labels: 
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: liaison
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: 18912
+      name: internal-grpc
+      targetPort: internal-grpc
+  selector: 
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/component: liaison
 ---
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/grpc_service.yaml
 apiVersion: v1
@@ -2138,7 +2525,7 @@ kind: Service
 metadata:
   name: demo-banyandb-grpc
   labels:  
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -2160,7 +2547,7 @@ kind: Service
 metadata:
   name: demo-banyandb-http
   labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -2198,13 +2585,15 @@ metadata:
   name: demo-oap
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "oap"
     heritage: Helm
     release: demo
 spec:
   type: ClusterIP
   ports:
+  - port: 17128
+    name: admin
   - port: 11800
     name: grpc
   - port: 3100
@@ -2215,10 +2604,12 @@ spec:
     name: promql
   - port: 12800
     name: rest
-  - port: 9411
-    name: zipkin
+  - port: 3200
+    name: traceql
   - port: 9412
     name: zipkin-query
+  - port: 9411
+    name: zipkin-receiver
   selector:
     app: demo
     component: "oap"
@@ -2239,13 +2630,12 @@ spec:
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "ui"
     heritage: Helm
     release: demo
@@ -2254,7 +2644,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 8080
+      targetPort: 8081
       protocol: TCP
 
   selector:
@@ -2360,106 +2750,198 @@ spec:
       port: 80
       targetPort: 80
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_liaison_deployment.yaml
+# Source: skywalking-showcase/charts/opentelemetry-collector/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
-    app.kubernetes.io/name: banyandb
+  name: demo-opentelemetry-collector
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.51.1
+    app.kubernetes.io/name: opentelemetry-collector
     app.kubernetes.io/instance: demo
+    app.kubernetes.io/version: "0.74.0"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: liaison
-  name: demo-banyandb-liaison
 spec:
-  replicas: 2
+  replicas: 1
+  revisionHistoryLimit: 10
   selector:
-    matchLabels: 
-      app.kubernetes.io/name: banyandb
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
       app.kubernetes.io/instance: demo
-      app.kubernetes.io/component: liaison
-  strategy: 
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+      component: standalone-collector
+  strategy:
     type: RollingUpdate
   template:
     metadata:
-      labels: 
-        helm.sh/chart: banyandb-0.5.0-rc0
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        
+      labels:
+        app.kubernetes.io/name: opentelemetry-collector
+        app.kubernetes.io/instance: demo
+        component: standalone-collector
+        
+    spec:
+      
+      serviceAccountName: demo-opentelemetry-collector
+      securityContext:
+        {}
+      containers:
+        - name: opentelemetry-collector
+          command:
+            - /otelcol
+            - --config=/conf/config.yaml
+          securityContext:
+            {}
+          image: "otel/opentelemetry-collector:0.102.1"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: jaeger-compact
+              containerPort: 6831
+              protocol: UDP
+            - name: jaeger-grpc
+              containerPort: 14250
+              protocol: TCP
+            - name: jaeger-thrift
+              containerPort: 14268
+              protocol: TCP
+            - name: otlp
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: zipkin
+              containerPort: 9411
+              protocol: TCP
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          resources:
+            limits:
+              cpu: 1024m
+              memory: 2Gi
+          volumeMounts:
+            - mountPath: /conf
+              name: otelcol-configmap
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: otel-collector-config
+          name: otelcol-configmap
+      hostNetwork: false
+---
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_fodc_proxy_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-banyandb-fodc-proxy
+  labels:
+
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
+    app.kubernetes.io/instance: demo
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: fodc-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: fodc-proxy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+
+        helm.sh/chart: banyandb-0.6.0
         app.kubernetes.io/name: banyandb
         app.kubernetes.io/instance: demo
         app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: liaison
+        app.kubernetes.io/component: fodc-proxy
     spec:
       serviceAccountName: demo-banyandb
       priorityClassName: 
       containers:
-        - name: liaison
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a
+        - name: fodc-proxy
+          image: ghcr.io/apache/skywalking-banyandb-fodc-proxy:c2d925e4eae4d77edda94e1fd438243483960150
           imagePullPolicy: IfNotPresent
           env:
-            - name: BYDB_DATA_NODE_SELECTOR
-              value: type=hot
-            - name: BYDB_ETCD_USERNAME
-              value: "root"
-            - name: BYDB_ETCD_PASSWORD
-              value: banyandb
-            
-            - name: BYDB_ETCD_ENDPOINTS
-              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
           args:
-            - liaison
+            - --grpc-listen-addr=:17912
+            - --http-listen-addr=:17913
+            - --agent-heartbeat-timeout=30s
+            - --agent-cleanup-timeout=5m
+            - --max-agents=1000
+            - --http-read-timeout=60s
+            - --http-write-timeout=60s
+            - --heartbeat-interval=10s
           ports:
-            - containerPort: 17912
-              name: grpc
-            - containerPort: 17913
-              name: http
-            - containerPort: 6060
-              name: pprof
-            - containerPort: 2121
-              name: observebility
+            - name: grpc
+              containerPort: 17912
+            - name: http
+              containerPort: 17913
           readinessProbe:
             httpGet:
-              path: /api/healthz
+              path: /health
               port: 17913
-              scheme: HTTP
-            initialDelaySeconds: 20
+            initialDelaySeconds: 10
             periodSeconds: 30
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
           livenessProbe:
             httpGet:
-              path: /api/healthz
+              path: /health
               port: 17913
-              scheme: HTTP
-            initialDelaySeconds: 20
+            initialDelaySeconds: 10
             periodSeconds: 30
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 5
           startupProbe:
             httpGet:
-              path: /api/healthz
+              path: /health
               port: 17913
-              scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 60
           resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
             - weight: 100
               podAffinityTerm:
                 labelSelector:
-                  matchLabels: 
+                  matchLabels:
+
                     app.kubernetes.io/name: banyandb
                     app.kubernetes.io/instance: demo
-                    app.kubernetes.io/component: liaison
                 topologyKey: kubernetes.io/hostname
 ---
 # Source: skywalking-showcase/charts/skywalking/templates/oap-deployment.yaml
@@ -2483,7 +2965,7 @@ kind: Deployment
 metadata:
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "oap"
     heritage: Helm
     release: demo
@@ -2522,7 +3004,7 @@ spec:
         command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
       containers:
       - name: oap
-        image: ghcr.io/apache/skywalking/oap:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        image: ghcr.io/apache/skywalking/oap:c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
         imagePullPolicy: IfNotPresent
         livenessProbe:
           tcpSocket:
@@ -2542,6 +3024,8 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 10
         ports:
+        - containerPort: 17128
+          name: admin
         - containerPort: 11800
           name: grpc
         - containerPort: 3100
@@ -2552,11 +3036,21 @@ spec:
           name: promql
         - containerPort: 12800
           name: rest
-        - containerPort: 9411
-          name: zipkin
+        - containerPort: 3200
+          name: traceql
         - containerPort: 9412
           name: zipkin-query
+        - containerPort: 9411
+          name: zipkin-receiver
         env:
+        - name: SW_RECEIVER_ZIPKIN
+          value: default
+        - name: SW_RECEIVER_ZIPKIN_REST_PORT
+          value: "9411"
+        - name: SW_QUERY_ZIPKIN
+          value: default
+        - name: SW_QUERY_ZIPKIN_REST_PORT
+          value: "9412"
         - name: JAVA_OPTS
           value: "-Dmode=no-init -Xmx2g -Xms2g"
         - name: SW_CLUSTER
@@ -2581,8 +3075,6 @@ spec:
           value: "k8s-configmap"
         - name: SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI
           value: "false"
-        - name: SW_CORE_MAX_HEAP_MEMORY_USAGE_PERCENT
-          value: "85"
         - name: SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR
           value: "3000"
         - name: SW_ENABLE_ON_DEMAND_POD_LOG
@@ -2600,13 +3092,83 @@ spec:
         - name: SW_OTEL_RECEIVER
           value: "default"
         - name: SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES
-          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*"
+          value: "vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*,banyandb/*"
         - name: SW_QUERY_ZIPKIN
           value: "default"
         - name: SW_RECEIVER_ZIPKIN
           value: "default"
         - name: SW_SLOW_DB_THRESHOLD
           value: "default:0,mongodb:100"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_COLD_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_WARM_SHARD_NUM
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS
+          value: "0.9,0.10"
+        - name: SW_STORAGE_BANYANDB_LOG_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_LOG_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_LOG_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METADATA_TTL_DAYS
+          value: "60"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_DAY_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_HOUR_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_COLD_TTL_DAYS
+          value: "30"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_METRICS_MINUTE_WARM_TTL_DAYS
+          value: "7"
+        - name: SW_STORAGE_BANYANDB_RECORDS_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_RECORDS_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_RECORDS_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_TRACE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_TRACE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_TRACE_TTL_DAYS
+          value: "1"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_COLD_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_ENABLE_WARM_STAGE
+          value: "true"
+        - name: SW_STORAGE_BANYANDB_ZIPKIN_TRACE_TTL_DAYS
+          value: "1"
         - name: SW_STORAGE_ES_INDEX_SHARDS_NUMBER
           value: "6"
         - name: SW_STORAGE_ES_RESPONSE_TIMEOUT
@@ -2615,28 +3177,36 @@ spec:
           value: "2"
         - name: SW_TELEMETRY
           value: "prometheus"
+        - name: SW_TRACEQL
+          value: "default"
+        - name: SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING
+          value: "true"
+        - name: SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN
+          value: "true"
 
         volumeMounts:
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/alarm-settings.yml
-            subPath: alarm-settings.yml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/cilium-rules/exclude.yaml
-            subPath: cilium-rules-exclude.yaml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
-            subPath: cilium-rules-metadata-service-mapping.yaml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/core.default.log4j-xml
-            subPath: core.default.log4j-xml
-          - name: skywalking-oap-override
-            mountPath: /skywalking/config/metadata-service-mapping.yaml
-            subPath: metadata-service-mapping.yaml
+        
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/alarm-settings.yml
+          subPath: alarm-settings.yml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/cilium-rules/exclude.yaml
+          subPath: cilium-rules-exclude.yaml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/cilium-rules/metadata-service-mapping.yaml
+          subPath: cilium-rules-metadata-service-mapping.yaml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/core.default.log4j-xml
+          subPath: core.default.log4j-xml
+        - name: skywalking-oap-override
+          mountPath: /skywalking/config/metadata-service-mapping.yaml
+          subPath: metadata-service-mapping.yaml
 
       volumes:
-        - name: skywalking-oap-override
-          configMap:
-            name: demo-oap-cm-override
+      
+      - name: skywalking-oap-override
+        configMap:
+          name: demo-oap-cm-override
 ---
 # Source: skywalking-showcase/charts/skywalking/templates/ui-deployment.yaml
 # Licensed to the Apache Software Foundation (ASF) under one or more
@@ -2653,19 +3223,23 @@ spec:
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: demo-ui
   labels:
     app: demo
-    chart: skywalking-0.0.0-ea789a5633ad02ab704ddabb92aa067ee7705b09
+    chart: skywalking-0.0.0-9a97f2d6f0291a580b00f13ddcc1a03079a23b23
     component: "ui"
     heritage: Helm
     release: demo
 spec:
   replicas: 1
+  # Horizon UI's BFF holds the session table in memory. Recreate (not
+  # RollingUpdate) avoids the brief window of two pods serving traffic with
+  # disjoint session state.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: demo
@@ -2677,21 +3251,50 @@ spec:
         app: demo
         component: "ui"
         release: demo
+      annotations:
+        # Roll the pod when horizon.yaml changes — ConfigMap subPath mounts
+        # don't auto-update at runtime.
+        checksum/config: 1eb3c4604c23d7089990e07f63c35a1bd18d29d41dc6efec7e6b481bc98b3145
     spec:
+      securityContext:
+        fsGroup: 101
 
       affinity:
       containers:
       - name: ui
-        image: ghcr.io/apache/skywalking/ui:3739add599a4e213071d68b1f2e9fbae31b7a6bf
+        image: ghcr.io/apache/skywalking-horizon-ui:cc41af231112b6ef7fbbec6c6c1247692e740562
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - containerPort: 8081
           name: page
-        env:
-        - name: SW_OAP_ADDRESS
-          value: "http://demo-oap:12800"
-        - name: SW_ZIPKIN_ADDRESS
-          value: "http://demo-oap.skywalking-showcase.svc:9412"
+        livenessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          tcpSocket:
+            port: 8081
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /api/auth/health
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        volumeMounts:
+        - name: horizon-config
+          mountPath: /app/horizon.yaml
+          subPath: horizon.yaml
+          readOnly: true
+        - name: horizon-data
+          mountPath: /data
+      volumes:
+      - name: horizon-config
+        configMap:
+          name: demo-ui
+          items:
+          - key: horizon.yaml
+            path: horizon.yaml
+      - name: horizon-data
+        emptyDir: {}
 ---
 # Source: skywalking-showcase/templates/feature-agent/resources.yaml
 apiVersion: apps/v1
@@ -2723,7 +3326,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: "ghcr.io/apache/skywalking-showcase/gateway-service:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/gateway-service:98c98f9"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -2764,7 +3367,7 @@ spec:
     spec:
       containers:
         - name: songs
-          image: "ghcr.io/apache/skywalking-showcase/songs-service:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/songs-service:98c98f9"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -2801,7 +3404,7 @@ spec:
     spec:
       containers:
         - name: recommendation
-          image: "ghcr.io/apache/skywalking-showcase/recommendation-service:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/recommendation-service:98c98f9"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -2833,7 +3436,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: "ghcr.io/apache/skywalking-showcase/app:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/app:98c98f9"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -2867,7 +3470,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: "ghcr.io/apache/skywalking-showcase/load-gen:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/load-gen:98c98f9"
           imagePullPolicy: IfNotPresent
 ---
 # Source: skywalking-showcase/templates/feature-agent/resources.yaml
@@ -2892,7 +3495,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: "ghcr.io/apache/skywalking-showcase/frontend:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/frontend:98c98f9"
           imagePullPolicy: IfNotPresent
           resources:
             limits:
@@ -2994,7 +3597,7 @@ spec:
     spec:
       containers:
         - name: rating
-          image: "ghcr.io/apache/skywalking-showcase/rating-service:3e3d5c3"
+          image: "ghcr.io/apache/skywalking-showcase/rating-service:98c98f9"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -3004,197 +3607,12 @@ spec:
             - name: SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE
               value: demo-oap.skywalking-showcase.svc.cluster.local:11800
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/statefulset.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: demo-etcd
-  namespace: "skywalking-showcase"
-  labels:
-    app.kubernetes.io/instance: demo
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
-    app.kubernetes.io/component: etcd
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: demo
-      app.kubernetes.io/name: etcd
-      app.kubernetes.io/component: etcd
-  serviceName: demo-etcd-headless
-  podManagementPolicy: Parallel
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: demo
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: etcd
-        app.kubernetes.io/version: 3.5.21
-        helm.sh/chart: etcd-11.2.4
-        app.kubernetes.io/component: etcd
-      annotations:
-    spec:
-      
-      automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: demo
-                    app.kubernetes.io/name: etcd
-                    app.kubernetes.io/component: etcd
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      serviceAccountName: "demo-etcd"
-      containers:
-        - name: etcd
-          image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: MY_POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_STS_NAME
-              value: "demo-etcd"
-            - name: ETCDCTL_API
-              value: "3"
-            - name: ETCD_ON_K8S
-              value: "yes"
-            - name: ETCD_START_FROM_SNAPSHOT
-              value: "no"
-            - name: ETCD_DISASTER_RECOVERY
-              value: "no"
-            - name: ETCD_NAME
-              value: "$(MY_POD_NAME)"
-            - name: ETCD_DATA_DIR
-              value: "/bitnami/etcd/data"
-            - name: ETCD_LOG_LEVEL
-              value: "info"
-            - name: ALLOW_NONE_AUTHENTICATION
-              value: "no"
-            - name: ETCD_ROOT_PASSWORD_FILE
-              value: /opt/bitnami/etcd/secrets/etcd-root-password
-            - name: ETCD_AUTH_TOKEN
-              value: "simple"
-            - name: ETCD_ADVERTISE_CLIENT_URLS
-              value: "http://$(MY_POD_NAME).demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379,http://demo-etcd.skywalking-showcase.svc.cluster.local:2379"
-            - name: ETCD_LISTEN_CLIENT_URLS
-              value: "http://0.0.0.0:2379"
-            - name: ETCD_INITIAL_ADVERTISE_PEER_URLS
-              value: "http://$(MY_POD_NAME).demo-etcd-headless.skywalking-showcase.svc.cluster.local:2380"
-            - name: ETCD_LISTEN_PEER_URLS
-              value: "http://0.0.0.0:2380"
-            - name: ETCD_AUTO_COMPACTION_MODE
-              value: "periodic"
-            - name: ETCD_AUTO_COMPACTION_RETENTION
-              value: "1"
-            - name: ETCD_CLUSTER_DOMAIN
-              value: "demo-etcd-headless.skywalking-showcase.svc.cluster.local"
-          envFrom:
-          ports:
-            - name: client
-              containerPort: 2379
-              protocol: TCP
-            - name: peer
-              containerPort: 2380
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              port: 2379
-              path: /livez
-              scheme: "HTTP"
-            initialDelaySeconds: 0
-            periodSeconds: 30
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 5
-          startupProbe:
-            exec:
-              command:
-                - /opt/bitnami/scripts/etcd/healthcheck.sh
-            initialDelaySeconds: 20
-            periodSeconds: 10
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 60
-          resources:
-            limits:
-              cpu: 4096m
-              memory: 1Gi
-            requests:
-              cpu: 100m
-              memory: 256Mi
-          volumeMounts:
-            - name: empty-dir
-              mountPath: /opt/bitnami/etcd/conf/
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: data
-              mountPath: /bitnami/etcd
-            - name: etcd-secrets
-              mountPath: /opt/bitnami/etcd/secrets
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: etcd-secrets
-          projected:
-            sources:
-              - secret:
-                  name:  demo-etcd
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "5Gi"
----
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -3202,7 +3620,7 @@ metadata:
     app.kubernetes.io/role: cold
   name: demo-banyandb-data-cold
 spec:
-  serviceName: banyandb
+  serviceName: demo-banyandb-data-cold-headless
   replicas: 1
   selector:
     matchLabels: 
@@ -3216,7 +3634,7 @@ spec:
   template:
     metadata:
       labels: 
-        helm.sh/chart: banyandb-0.5.0-rc0
+        helm.sh/chart: banyandb-0.6.0
         app.kubernetes.io/name: banyandb
         app.kubernetes.io/instance: demo
         app.kubernetes.io/managed-by: Helm
@@ -3224,30 +3642,91 @@ spec:
         app.kubernetes.io/role: cold
     spec:
       serviceAccountName: demo-banyandb
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
       priorityClassName: 
       initContainers:
+        - name: volume-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -euo pipefail
+              mkdir -p /mnt/cold-data/stream
+              chown -R 1000:1000 /mnt/cold-data/stream
+              chmod -R 0770 /mnt/cold-data/stream
+              mkdir -p /mnt/cold-data/measure
+              chown -R 1000:1000 /mnt/cold-data/measure
+              chmod -R 0770 /mnt/cold-data/measure
+              mkdir -p /mnt/cold-data/property
+              chown -R 1000:1000 /mnt/cold-data/property
+              chmod -R 0770 /mnt/cold-data/property
+              mkdir -p /mnt/cold-data/trace
+              chown -R 1000:1000 /mnt/cold-data/trace
+              chmod -R 0770 /mnt/cold-data/trace
+          volumeMounts:
+            - mountPath: /mnt/cold-data
+              name: cold-data
       containers:
         - name: data
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a-slim
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150-slim
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           env:
-            - name: GOMEMLIMIT
-              value: 6GiB
-            - name: BYDB_DATA_NODE_ROLE
-              value: cold
-            - name: BYDB_ETCD_USERNAME
-              value: "root"
-            - name: BYDB_ETCD_PASSWORD
-              value: banyandb
-            
-            - name: BYDB_ETCD_ENDPOINTS
-              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
-            - name: BYDB_NODE_HOST_PROVIDER
-              value: "ip"
-            - name: BYDB_NODE_HOST
+            # Pod metadata for hostname construction
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Hostname configuration for headless service
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "flag"
+            - name: BYDB_NODE_HOST
+              value: "$(POD_NAME).demo-banyandb-data-cold-headless.$(POD_NAMESPACE)"
+            - name: BYDB_NODE_LABELS
+              value: "type=cold"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            - name: BYDB_HAS_META_ROLE
+              value: "false"
+            
+            - name: BYDB_SCHEMA_PROPERTY_CLIENT_SYNC_INTERVAL
+              value: "30s"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
+            - name: GOMEMLIMIT
+              value: "6GiB"
+           
           args:
             - data 
           ports:
@@ -3258,7 +3737,7 @@ spec:
             - containerPort: 6060
               name: pprof
             - containerPort: 2121
-              name: observebility
+              name: observability
           readinessProbe:
             httpGet:
               path: /api/healthz
@@ -3303,6 +3782,47 @@ spec:
             - mountPath: /tmp/measure
               name: cold-data
               subPath: measure
+            - mountPath: /tmp/property
+              name: cold-data
+              subPath: property
+            - mountPath: /tmp/trace
+              name: cold-data
+              subPath: trace
+        - name: fodc-agent
+          image: ghcr.io/apache/skywalking-banyandb-fodc-agent:c2d925e4eae4d77edda94e1fd438243483960150
+          imagePullPolicy: IfNotPresent
+          args:
+            - --proxy-addr=demo-banyandb-fodc-proxy-grpc:17912
+            - --pod-name=$(POD_NAME)
+            - --container-names=data,lifecycle
+            - --poll-metrics-ports=2121,17915
+            - --cluster-state-ports=17912,17914
+            - --lifecycle-port=17912
+            - --poll-metrics-interval=15s
+            - --cluster-state-poll-interval=30s
+            - --prometheus-listen-addr=:9090
+            - --max-metrics-memory-usage-percentage=20
+            - --heartbeat-interval=10s
+            - --reconnect-interval=10s
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - name: fodc-agent-http
+              containerPort: 9090
+          resources:
+            requests:
+                cpu: 200m
+                memory: 128Mi
+            limits:
+                cpu: 500m
+                memory: 256Mi
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -3323,7 +3843,7 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 100Gi
+            storage: 500Gi
         volumeMode: Filesystem
 ---
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
@@ -3331,7 +3851,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -3339,7 +3859,7 @@ metadata:
     app.kubernetes.io/role: hot
   name: demo-banyandb-data-hot
 spec:
-  serviceName: banyandb
+  serviceName: demo-banyandb-data-hot-headless
   replicas: 2
   selector:
     matchLabels: 
@@ -3353,7 +3873,7 @@ spec:
   template:
     metadata:
       labels: 
-        helm.sh/chart: banyandb-0.5.0-rc0
+        helm.sh/chart: banyandb-0.6.0
         app.kubernetes.io/name: banyandb
         app.kubernetes.io/instance: demo
         app.kubernetes.io/managed-by: Helm
@@ -3361,30 +3881,115 @@ spec:
         app.kubernetes.io/role: hot
     spec:
       serviceAccountName: demo-banyandb
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
       priorityClassName: 
       initContainers:
+        - name: volume-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -euo pipefail
+              mkdir -p /mnt/hot-stream-data/stream
+              chown -R 1000:1000 /mnt/hot-stream-data/stream
+              chmod -R 0770 /mnt/hot-stream-data/stream
+              mkdir -p /mnt/hot-measure-data/measure
+              chown -R 1000:1000 /mnt/hot-measure-data/measure
+              chmod -R 0770 /mnt/hot-measure-data/measure
+              mkdir -p /mnt/hot-property-data/property
+              chown -R 1000:1000 /mnt/hot-property-data/property
+              chmod -R 0770 /mnt/hot-property-data/property
+              mkdir -p /mnt/hot-trace-data/trace
+              chown -R 1000:1000 /mnt/hot-trace-data/trace
+              chmod -R 0770 /mnt/hot-trace-data/trace
+              mkdir -p /mnt/hot-schema-property-data/schema-property
+              chown -R 1000:1000 /mnt/hot-schema-property-data/schema-property
+              chmod -R 0770 /mnt/hot-schema-property-data/schema-property
+          volumeMounts:
+            - mountPath: /mnt/hot-stream-data
+              name: hot-stream-data
+            - mountPath: /mnt/hot-measure-data
+              name: hot-measure-data
+            - mountPath: /mnt/hot-property-data
+              name: hot-property-data
+            - mountPath: /mnt/hot-trace-data
+              name: hot-trace-data
+            - mountPath: /mnt/hot-schema-property-data
+              name: hot-schema-property-data
       containers:
         - name: data
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a-slim
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150-slim
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           env:
-            - name: GOMEMLIMIT
-              value: 3GiB
-            - name: BYDB_DATA_NODE_ROLE
-              value: hot
-            - name: BYDB_ETCD_USERNAME
-              value: "root"
-            - name: BYDB_ETCD_PASSWORD
-              value: banyandb
-            
-            - name: BYDB_ETCD_ENDPOINTS
-              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
-            - name: BYDB_NODE_HOST_PROVIDER
-              value: "ip"
-            - name: BYDB_NODE_HOST
+            # Pod metadata for hostname construction
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Hostname configuration for headless service
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "flag"
+            - name: BYDB_NODE_HOST
+              value: "$(POD_NAME).demo-banyandb-data-hot-headless.$(POD_NAMESPACE)"
+            - name: BYDB_NODE_LABELS
+              value: "type=hot"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            
+            - name: BYDB_SCHEMA_PROPERTY_REPAIR_TRIGGER_CRON
+              value: "@every 10m"
+            - name: BYDB_SCHEMA_SERVER_GRPC_PORT
+              value: "17916"
+            - name: BYDB_SCHEMA_SERVER_FLUSH_TIMEOUT
+              value: "5s"
+            - name: BYDB_SCHEMA_SERVER_EXPIRE_DELETE_TIMEOUT
+              value: "168h"
+            - name: BYDB_SCHEMA_SERVER_REPAIR_BUILD_TREE_CRON
+              value: "@every 1h"
+            - name: BYDB_SCHEMA_SERVER_REPAIR_QUICK_BUILD_TREE_TIME
+              value: "10m"
+            - name: BYDB_SCHEMA_SERVER_MIN_FILE_SNAPSHOT_AGE
+              value: "1h"
+            
+            - name: BYDB_SCHEMA_PROPERTY_CLIENT_SYNC_INTERVAL
+              value: "30s"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
+            - name: GOMEMLIMIT
+              value: "3GiB"
+           
           args:
             - data 
           ports:
@@ -3395,7 +4000,7 @@ spec:
             - containerPort: 6060
               name: pprof
             - containerPort: 2121
-              name: observebility
+              name: observability
           readinessProbe:
             httpGet:
               path: /api/healthz
@@ -3443,9 +4048,75 @@ spec:
             - mountPath: /tmp/property
               name: hot-property-data
               subPath: property
-        - name: lifecycle
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a-slim
+            - mountPath: /tmp/trace
+              name: hot-trace-data
+              subPath: trace
+            - mountPath: /tmp/schema-property
+              name: hot-schema-property-data
+              subPath: schema-property
+        - name: fodc-agent
+          image: ghcr.io/apache/skywalking-banyandb-fodc-agent:c2d925e4eae4d77edda94e1fd438243483960150
           imagePullPolicy: IfNotPresent
+          args:
+            - --proxy-addr=demo-banyandb-fodc-proxy-grpc:17912
+            - --pod-name=$(POD_NAME)
+            - --container-names=data,lifecycle
+            - --poll-metrics-ports=2121,17915
+            - --cluster-state-ports=17912,17914
+            - --lifecycle-port=17912
+            - --lifecycle-report-dir=/tmp/lifecycle-reports
+            - --poll-metrics-interval=15s
+            - --cluster-state-poll-interval=30s
+            - --prometheus-listen-addr=:9090
+            - --max-metrics-memory-usage-percentage=20
+            - --heartbeat-interval=10s
+            - --reconnect-interval=10s
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - name: fodc-agent-http
+              containerPort: 9090
+          resources:
+            requests:
+                cpu: 200m
+                memory: 128Mi
+            limits:
+                cpu: 500m
+                memory: 256Mi
+          volumeMounts:
+            - name: lifecycle-report-shared
+              mountPath: /tmp/lifecycle-reports
+        - name: lifecycle
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150-slim
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BYDB_NODE_LABELS
+              value: "type=hot"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
           command:
             - "/lifecycle"
             - "--schedule=@daily"
@@ -3459,6 +4130,24 @@ spec:
             - mountPath: /tmp/property
               name: hot-property-data
               subPath: property
+            - mountPath: /tmp/trace
+              name: hot-trace-data
+              subPath: trace
+            - mountPath: /tmp/schema-property
+              name: hot-schema-property-data
+              subPath: schema-property
+            - name: lifecycle-report-shared
+              mountPath: /tmp/lifecycle-reports
+          resources:
+            requests:
+                cpu: 200m
+                memory: 128Mi
+            limits:
+                cpu: 500m
+                memory: 512Mi
+      volumes:
+        - name: lifecycle-report-shared
+          emptyDir: {}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -3497,7 +4186,25 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 2Gi
+            storage: 5Gi
+        volumeMode: Filesystem
+    - metadata:
+        name: hot-trace-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+        volumeMode: Filesystem
+    - metadata:
+        name: hot-schema-property-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
         volumeMode: Filesystem
 ---
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_data_statefulset.yaml
@@ -3505,7 +4212,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels: 
-    helm.sh/chart: banyandb-0.5.0-rc0
+    helm.sh/chart: banyandb-0.6.0
     app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
@@ -3513,7 +4220,7 @@ metadata:
     app.kubernetes.io/role: warm
   name: demo-banyandb-data-warm
 spec:
-  serviceName: banyandb
+  serviceName: demo-banyandb-data-warm-headless
   replicas: 2
   selector:
     matchLabels: 
@@ -3527,7 +4234,7 @@ spec:
   template:
     metadata:
       labels: 
-        helm.sh/chart: banyandb-0.5.0-rc0
+        helm.sh/chart: banyandb-0.6.0
         app.kubernetes.io/name: banyandb
         app.kubernetes.io/instance: demo
         app.kubernetes.io/managed-by: Helm
@@ -3535,30 +4242,91 @@ spec:
         app.kubernetes.io/role: warm
     spec:
       serviceAccountName: demo-banyandb
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
       priorityClassName: 
       initContainers:
+        - name: volume-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -euo pipefail
+              mkdir -p /mnt/warm-data/stream
+              chown -R 1000:1000 /mnt/warm-data/stream
+              chmod -R 0770 /mnt/warm-data/stream
+              mkdir -p /mnt/warm-data/measure
+              chown -R 1000:1000 /mnt/warm-data/measure
+              chmod -R 0770 /mnt/warm-data/measure
+              mkdir -p /mnt/warm-data/property
+              chown -R 1000:1000 /mnt/warm-data/property
+              chmod -R 0770 /mnt/warm-data/property
+              mkdir -p /mnt/warm-data/trace
+              chown -R 1000:1000 /mnt/warm-data/trace
+              chmod -R 0770 /mnt/warm-data/trace
+          volumeMounts:
+            - mountPath: /mnt/warm-data
+              name: warm-data
       containers:
         - name: data
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a-slim
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150-slim
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
           env:
-            - name: GOMEMLIMIT
-              value: 3GiB
-            - name: BYDB_DATA_NODE_ROLE
-              value: warm
-            - name: BYDB_ETCD_USERNAME
-              value: "root"
-            - name: BYDB_ETCD_PASSWORD
-              value: banyandb
-            
-            - name: BYDB_ETCD_ENDPOINTS
-              value: "demo-etcd-0.demo-etcd-headless.skywalking-showcase:2379"
-            - name: BYDB_NODE_HOST_PROVIDER
-              value: "ip"
-            - name: BYDB_NODE_HOST
+            # Pod metadata for hostname construction
+            - name: POD_NAME
               valueFrom:
                 fieldRef:
-                  fieldPath: status.podIP
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Hostname configuration for headless service
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "flag"
+            - name: BYDB_NODE_HOST
+              value: "$(POD_NAME).demo-banyandb-data-warm-headless.$(POD_NAMESPACE)"
+            - name: BYDB_NODE_LABELS
+              value: "type=warm"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            - name: BYDB_HAS_META_ROLE
+              value: "false"
+            
+            - name: BYDB_SCHEMA_PROPERTY_CLIENT_SYNC_INTERVAL
+              value: "30s"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
+            - name: GOMEMLIMIT
+              value: "3GiB"
+           
           args:
             - data 
           ports:
@@ -3569,7 +4337,7 @@ spec:
             - containerPort: 6060
               name: pprof
             - containerPort: 2121
-              name: observebility
+              name: observability
           readinessProbe:
             httpGet:
               path: /api/healthz
@@ -3614,9 +4382,75 @@ spec:
             - mountPath: /tmp/measure
               name: warm-data
               subPath: measure
-        - name: lifecycle
-          image: ghcr.io/apache/skywalking-banyandb:a4842eeacdb2aa6022c4101e547904698062d67a-slim
+            - mountPath: /tmp/property
+              name: warm-data
+              subPath: property
+            - mountPath: /tmp/trace
+              name: warm-data
+              subPath: trace
+        - name: fodc-agent
+          image: ghcr.io/apache/skywalking-banyandb-fodc-agent:c2d925e4eae4d77edda94e1fd438243483960150
           imagePullPolicy: IfNotPresent
+          args:
+            - --proxy-addr=demo-banyandb-fodc-proxy-grpc:17912
+            - --pod-name=$(POD_NAME)
+            - --container-names=data,lifecycle
+            - --poll-metrics-ports=2121,17915
+            - --cluster-state-ports=17912,17914
+            - --lifecycle-port=17912
+            - --lifecycle-report-dir=/tmp/lifecycle-reports
+            - --poll-metrics-interval=15s
+            - --cluster-state-poll-interval=30s
+            - --prometheus-listen-addr=:9090
+            - --max-metrics-memory-usage-percentage=20
+            - --heartbeat-interval=10s
+            - --reconnect-interval=10s
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - name: fodc-agent-http
+              containerPort: 9090
+          resources:
+            requests:
+                cpu: 200m
+                memory: 128Mi
+            limits:
+                cpu: 500m
+                memory: 256Mi
+          volumeMounts:
+            - name: lifecycle-report-shared
+              mountPath: /tmp/lifecycle-reports
+        - name: lifecycle
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150-slim
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BYDB_NODE_LABELS
+              value: "type=warm"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
           command:
             - "/lifecycle"
             - "--schedule=@daily"
@@ -3627,6 +4461,24 @@ spec:
             - mountPath: /tmp/measure
               name: warm-data
               subPath: measure
+            - mountPath: /tmp/property
+              name: warm-data
+              subPath: property
+            - mountPath: /tmp/trace
+              name: warm-data
+              subPath: trace
+            - name: lifecycle-report-shared
+              mountPath: /tmp/lifecycle-reports
+          resources:
+            requests:
+                cpu: 200m
+                memory: 128Mi
+            limits:
+                cpu: 500m
+                memory: 512Mi
+      volumes:
+        - name: lifecycle-report-shared
+          emptyDir: {}
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -3647,88 +4499,242 @@ spec:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 50Gi
+            storage: 100Gi
         volumeMode: Filesystem
 ---
-# Source: skywalking-showcase/charts/skywalking/charts/banyandb/charts/etcd/templates/cronjob-defrag.yaml
-apiVersion: batch/v1
-kind: CronJob
+# Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/cluster_liaison_statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
 metadata:
-  name: demo-etcd-defrag
-  namespace: "skywalking-showcase"
-  labels:
+  labels: 
+    helm.sh/chart: banyandb-0.6.0
+    app.kubernetes.io/name: banyandb
     app.kubernetes.io/instance: demo
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: etcd
-    app.kubernetes.io/version: 3.5.21
-    helm.sh/chart: etcd-11.2.4
+    app.kubernetes.io/component: liaison
+  name: demo-banyandb-liaison
 spec:
-  concurrencyPolicy: Forbid
-  schedule: "0 0 * * *"
-  suspend: false
-  successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 1
-  jobTemplate:
+  serviceName: demo-banyandb-liaison-headless
+  replicas: 2
+  selector:
+    matchLabels: 
+      app.kubernetes.io/name: banyandb
+      app.kubernetes.io/instance: demo
+      app.kubernetes.io/component: liaison
+  updateStrategy: 
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels: 
+        helm.sh/chart: banyandb-0.6.0
+        app.kubernetes.io/name: banyandb
+        app.kubernetes.io/instance: demo
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: liaison
     spec:
-      template:
-        metadata:
-          labels:
-            app.kubernetes.io/instance: demo
-            app.kubernetes.io/managed-by: Helm
-            app.kubernetes.io/name: etcd
-            app.kubernetes.io/version: 3.5.21
-            helm.sh/chart: etcd-11.2.4
-        spec:
-          restartPolicy: OnFailure
+      serviceAccountName: demo-banyandb
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      priorityClassName: 
+      initContainers:
+        - name: volume-permissions
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
           securityContext:
-            fsGroup: 1001
-            fsGroupChangePolicy: Always
-            supplementalGroups: []
-            sysctls: []
-          containers:
-            - name: etcd-defrag
-              image: docker.io/bitnami/etcd:3.5.21-debian-12-r1
-              imagePullPolicy: "IfNotPresent"
-              securityContext:
-                allowPrivilegeEscalation: false
-                capabilities:
-                  drop:
-                  - ALL
-                privileged: false
-                readOnlyRootFilesystem: true
-                runAsGroup: 1001
-                runAsNonRoot: true
-                runAsUser: 1001
-                seLinuxOptions: {}
-                seccompProfile:
-                  type: RuntimeDefault
-              env:
-                - name: BITNAMI_DEBUG
-                  value: "false"
-                - name: ETCD_ROOT_PASSWORD_FILE
-                  value: /opt/bitnami/etcd/secrets/etcd-root-password
-                - name: ETCDCTL_USER
-                  value: "root:$(ETCD_ROOT_PASSWORD)"
-              command: ["etcdctl"]
-              args:
-                - defrag
-                - --cluster
-                - --endpoints=[http://demo-etcd-0.demo-etcd-headless.skywalking-showcase.svc.cluster.local:2379]
-              resources:
-                limits:
-                  cpu: 150m
-                  ephemeral-storage: 2Gi
-                  memory: 192Mi
-                requests:
-                  cpu: 100m
-                  ephemeral-storage: 50Mi
-                  memory: 128Mi
-          volumes:
-            - name: etcd-secrets
-              projected:
-                sources:
-                  - secret:
-                      name:  demo-etcd
+            runAsUser: 0
+          command:
+            - sh
+            - -c
+            - |
+              set -euo pipefail
+              CHOWN_USER=1000
+              CHOWN_GROUP=1000
+              mkdir -p /mnt/liaison-data/measure
+              chown -R ${CHOWN_USER}:${CHOWN_GROUP} /mnt/liaison-data/measure
+              chmod -R 0770 /mnt/liaison-data/measure
+              mkdir -p /mnt/liaison-data/stream
+              chown -R ${CHOWN_USER}:${CHOWN_GROUP} /mnt/liaison-data/stream
+              chmod -R 0770 /mnt/liaison-data/stream
+              mkdir -p /mnt/liaison-data/trace
+              chown -R ${CHOWN_USER}:${CHOWN_GROUP} /mnt/liaison-data/trace
+              chmod -R 0770 /mnt/liaison-data/trace
+          volumeMounts:
+            - mountPath: /mnt/liaison-data
+              name: liaison-data
+      containers:
+        - name: liaison
+          image: ghcr.io/apache/skywalking-banyandb:c2d925e4eae4d77edda94e1fd438243483960150
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          env:
+            # Pod metadata for hostname construction
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Hostname configuration for headless service
+            - name: BYDB_NODE_HOST_PROVIDER
+              value: "flag"
+            - name: BYDB_NODE_HOST
+              value: "$(POD_NAME).demo-banyandb-liaison-headless.$(POD_NAMESPACE)"
+            
+            - name: BYDB_SCHEMA_REGISTRY_MODE
+              value: "property"
+            
+            - name: BYDB_SCHEMA_PROPERTY_CLIENT_SYNC_INTERVAL
+              value: "30s"
+            
+            
+            
+            - name: BYDB_NODE_DISCOVERY_MODE
+              value: "dns"
+            - name: BYDB_NODE_DISCOVERY_DNS_SRV_ADDRESSES
+              value: "_internal-grpc._tcp.demo-banyandb-liaison-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-cold-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-hot-headless.skywalking-showcase.svc.cluster.local,_grpc._tcp.demo-banyandb-data-warm-headless.skywalking-showcase.svc.cluster.local"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_INTERVAL
+              value: "5s"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INIT_DURATION
+              value: "5m"
+            - name: BYDB_NODE_DISCOVERY_DNS_FETCH_INTERVAL
+              value: "15s"
+            - name: BYDB_NODE_DISCOVERY_GRPC_TIMEOUT
+              value: "5s"
+            - name: BYDB_DATA_NODE_LIST
+              value: "demo-banyandb-data-hot-0.demo-banyandb-data-hot-headless.skywalking-showcase:17912,demo-banyandb-data-hot-1.demo-banyandb-data-hot-headless.skywalking-showcase:17912"
+            - name: GOMEMLIMIT
+              value: 3GiB
+            - name: BYDB_DATA_NODE_SELECTOR
+              value: type=hot
+          args:
+            - liaison
+          ports:
+            - containerPort: 17912
+              name: grpc
+            - containerPort: 17913
+              name: http
+            - containerPort: 18912
+              name: internal-grpc
+            - containerPort: 6060
+              name: pprof
+            - containerPort: 2121
+              name: observability
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          startupProbe:
+            httpGet:
+              path: /api/healthz
+              port: 17913
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 60
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1Gi
+            limits:
+              cpu: 4
+              memory: 4Gi
+          volumeMounts:
+            - mountPath: /tmp/measure
+              name: liaison-data
+              subPath: measure
+            - mountPath: /tmp/stream
+              name: liaison-data
+              subPath: stream
+            - mountPath: /tmp/trace
+              name: liaison-data
+              subPath: trace
+        - name: fodc-agent
+          image: ghcr.io/apache/skywalking-banyandb-fodc-agent:c2d925e4eae4d77edda94e1fd438243483960150
+          imagePullPolicy: IfNotPresent
+          args:
+            - --proxy-addr=demo-banyandb-fodc-proxy-grpc:17912
+            - --pod-name=$(POD_NAME)
+            - --container-names=liaison
+            - --poll-metrics-ports=2121
+            - --cluster-state-ports=18912
+            - --lifecycle-port=18912
+            - --cluster-state-poll-interval=30s
+            - --poll-metrics-interval=15s
+            - --prometheus-listen-addr=:9090
+            - --max-metrics-memory-usage-percentage=20
+            - --heartbeat-interval=10s
+            - --reconnect-interval=10s
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+            - name: fodc-agent-http
+              containerPort: 9090
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: 
+                    app.kubernetes.io/name: banyandb
+                    app.kubernetes.io/instance: demo
+                    app.kubernetes.io/component: liaison
+                topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+    - metadata:
+        name: liaison-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
 ---
 # Source: skywalking-showcase/charts/skywalking/charts/banyandb/templates/pdb.yaml
 ---
@@ -3861,6 +4867,22 @@ spec:
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ---
+# Source: skywalking-showcase/charts/skywalking/templates/ui-pvc.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
 # Source: skywalking-showcase/templates/feature-activemq-monitor/opentelemetry-config.yaml
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -3917,6 +4939,22 @@ spec:
 # specific language governing permissions and limitations
 # under the License.
 #
+---
+# Source: skywalking-showcase/templates/feature-banyandb-monitor/opentelemetry-config.yaml
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 ---
 # Source: skywalking-showcase/templates/feature-baseline/deployment.yml
 #  Copyright 2025 SkyAPM org
@@ -4616,6 +5654,33 @@ spec:
 # specific language governing permissions and limitations
 # under the License.
 #
+---
+# Source: skywalking-showcase/templates/swck-eventexporter-extras.yaml
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# Workaround for a gap in apache/skywalking-helm: the chart at the version
+# pinned in Chart.yaml does not ship the EventExporter CRD or RBAC, but the
+# pinned swck-operator image (Makefile.in: SWCK_OPERATOR_IMAGE_TAG) registers
+# an EventExporterReconciler unconditionally. Without these, the operator
+# fails cache sync and crashlooops, which takes its mutating webhook down
+# and blocks pod creation in sample-services.
+#
+# Remove this file once apache/skywalking-helm ships EventExporter natively.
 
 NOTES:
 *************************************************************************
@@ -4629,6 +5694,5 @@ Thank you for installing skywalking-showcase.
 Your release is named demo.
 
 Get the UI URL by running these commands:
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl port-forward svc/demo-ui 8080:80 --namespace skywalking-showcase
-make[1]: Leaving directory '/mnt/ssd/skywalking-showcase/deploy/platform/kubernetes'
+  echo "Visit http://127.0.0.1:8081 to use your application"
+  kubectl port-forward svc/demo-ui 8081:80 --namespace skywalking-showcase
