@@ -1,4 +1,4 @@
-helm -n skywalking-showcase upgrade --install demo . --create-namespace --timeout=20m --set skywalking.fullnameOverride=demo --set skywalking.banyandb.image.repository=ghcr.io/apache/skywalking-banyandb --set skywalking.banyandb.image.tag=c2d925e4eae4d77edda94e1fd438243483960150 --set-json 'skywalking.banyandb.storage.liaison.persistentVolumeClaims[0]={"mountTargets":["measure","stream","trace"],"claimName":"liaison-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[0]={"mountTargets":["stream"],"nodeRole":"hot","claimName":"hot-stream-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[1]={"mountTargets":["measure"],"nodeRole":"hot","claimName":"hot-measure-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[2]={"mountTargets":["property"],"nodeRole":"hot","claimName":"hot-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[3]={"mountTargets":["trace"],"nodeRole":"hot","claimName":"hot-trace-data","size":"50Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[4]={"mountTargets":["schema-property"],"nodeRole":"hot","claimName":"hot-schema-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[5]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"warm","claimName":"warm-data","size":"100Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[6]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"cold","claimName":"cold-data","size":"500Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set skywalking.oap.image.repository=ghcr.io/apache/skywalking/oap --set skywalking.oap.image.tag=c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4 --set skywalking.ui.image.repository=ghcr.io/apache/skywalking-horizon-ui --set skywalking.ui.image.tag=cc41af231112b6ef7fbbec6c6c1247692e740562 --set skywalking.satellite.image.repository=ghcr.io/apache/skywalking-satellite/skywalking-satellite --set skywalking.satellite.image.tag=v3cfaf59a755e7ffcd900d6695a8bc4174397cace --set swck.image.repository=ghcr.io/apache/skywalking-swck/operator --set swck.image.tag=d299bc05ee230f5f366584054db5b099ca60166f --set sampleServices.hub=ghcr.io/apache/skywalking-showcase --set sampleServices.tag=98c98f9 --set sampleServices.namespace=sample-services --set ciliumServices.hub=ghcr.io/apache/skywalking-showcase --set ciliumServices.tag=98c98f9 --set ciliumServices.namespace=cilium-services --set opentelemetry-collector.image.repository=otel/opentelemetry-collector --set opentelemetry-collector.image.tag=0.102.1 --set features.rover.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.traceProfiling.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.event.exporter.image=ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22 --set features.javaAgentInjector.agentImage=ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8 --set features.rover.image=ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3 --set features.grafana.image=grafana/grafana:12.4.2 --set skywalking.grafana.plugin.version=0.1.0 --set features.r3.image=ghcr.io/skyapm/r3:0.1.0 --set features.baseline.image=ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150 --set sampleServices.scaller.enabled=false --set skywalking.oap.replicas=2 --set skywalking.oap.storageType=banyandb --set skywalking.banyandb.enabled=true --set features.banyandbMonitor.enabled=true --set opentelemetry.enabled=true --dry-run --debug
+helm -n skywalking-showcase upgrade --install demo . --create-namespace --timeout=20m --set skywalking.fullnameOverride=demo --set skywalking.banyandb.image.repository=ghcr.io/apache/skywalking-banyandb --set skywalking.banyandb.image.tag=c2d925e4eae4d77edda94e1fd438243483960150 --set-json 'skywalking.banyandb.storage.liaison.persistentVolumeClaims[0]={"mountTargets":["measure","stream","trace"],"claimName":"liaison-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[0]={"mountTargets":["stream"],"nodeRole":"hot","claimName":"hot-stream-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[1]={"mountTargets":["measure"],"nodeRole":"hot","claimName":"hot-measure-data","size":"10Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[2]={"mountTargets":["property"],"nodeRole":"hot","claimName":"hot-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[3]={"mountTargets":["trace"],"nodeRole":"hot","claimName":"hot-trace-data","size":"50Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[4]={"mountTargets":["schema-property"],"nodeRole":"hot","claimName":"hot-schema-property-data","size":"5Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[5]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"warm","claimName":"warm-data","size":"100Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[6]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"cold","claimName":"cold-data","size":"500Gi","accessModes":["ReadWriteOnce"],"volumeMode":"Filesystem"}' --set skywalking.oap.image.repository=ghcr.io/apache/skywalking/oap --set skywalking.oap.image.tag=53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316 --set skywalking.ui.image.repository=ghcr.io/apache/skywalking-horizon-ui --set skywalking.ui.image.tag=b94cdf3c5e268813eae45b50907490f38759c14b --set skywalking.satellite.image.repository=ghcr.io/apache/skywalking-satellite/skywalking-satellite --set skywalking.satellite.image.tag=v3cfaf59a755e7ffcd900d6695a8bc4174397cace --set swck.image.repository=ghcr.io/apache/skywalking-swck/operator --set swck.image.tag=d299bc05ee230f5f366584054db5b099ca60166f --set sampleServices.hub=ghcr.io/apache/skywalking-showcase --set sampleServices.tag=98c98f9 --set sampleServices.namespace=sample-services --set ciliumServices.hub=ghcr.io/apache/skywalking-showcase --set ciliumServices.tag=98c98f9 --set ciliumServices.namespace=cilium-services --set opentelemetry-collector.image.repository=otel/opentelemetry-collector --set opentelemetry-collector.image.tag=0.102.1 --set features.rover.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.traceProfiling.swctl.image=ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae --set features.event.exporter.image=ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22 --set features.javaAgentInjector.agentImage=ghcr.io/apache/skywalking-java/skywalking-java:26ef911aea908759795bb6f5f2f6be56370d30cc-java8 --set features.rover.image=ghcr.io/apache/skywalking-rover/skywalking-rover:67622c352b98fd32782a3e7afc7d3fbd6d6ec8e3 --set features.grafana.image=grafana/grafana:12.4.2 --set skywalking.grafana.plugin.version=0.1.0 --set features.r3.image=ghcr.io/skyapm/r3:0.1.0 --set features.baseline.image=ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150 --set sampleServices.scaller.enabled=false --set skywalking.oap.replicas=2 --set skywalking.oap.storageType=banyandb --set skywalking.banyandb.enabled=true --set features.banyandbMonitor.enabled=true --set opentelemetry.enabled=true --dry-run --debug
 Release "demo" does not exist. Installing it now.
 NAME: demo
 LAST DEPLOYED: Thu Jun 11 17:18:40 2026
@@ -134,7 +134,7 @@ skywalking:
   oap:
     image:
       repository: ghcr.io/apache/skywalking/oap
-      tag: c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
+      tag: 53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316
     replicas: 2
     storageType: banyandb
   satellite:
@@ -144,7 +144,7 @@ skywalking:
   ui:
     image:
       repository: ghcr.io/apache/skywalking-horizon-ui
-      tag: cc41af231112b6ef7fbbec6c6c1247692e740562
+      tag: b94cdf3c5e268813eae45b50907490f38759c14b
 swck:
   image:
     repository: ghcr.io/apache/skywalking-swck/operator
@@ -1385,7 +1385,7 @@ skywalking:
     image:
       pullPolicy: IfNotPresent
       repository: ghcr.io/apache/skywalking/oap
-      tag: c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
+      tag: 53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316
     javaOpts: -Xmx2g -Xms2g
     livenessProbe: {}
     name: oap
@@ -1505,7 +1505,7 @@ skywalking:
     image:
       pullPolicy: IfNotPresent
       repository: ghcr.io/apache/skywalking-horizon-ui
-      tag: cc41af231112b6ef7fbbec6c6c1247692e740562
+      tag: b94cdf3c5e268813eae45b50907490f38759c14b
     ingress:
       annotations: {}
       enabled: false
@@ -1603,7 +1603,7 @@ spec:
         command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
       containers:
       - name: oap
-        image: ghcr.io/apache/skywalking/oap:c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
+        image: ghcr.io/apache/skywalking/oap:53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316
         imagePullPolicy: IfNotPresent
         env:
         - name: JAVA_OPTS
@@ -3004,7 +3004,7 @@ spec:
         command: ['sh', '-c', 'for i in $(seq 1 60); do curl -k demo-banyandb-http:17913/api/healthz && exit 0 || sleep 5; done; exit 1']
       containers:
       - name: oap
-        image: ghcr.io/apache/skywalking/oap:c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
+        image: ghcr.io/apache/skywalking/oap:53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316
         imagePullPolicy: IfNotPresent
         livenessProbe:
           tcpSocket:
@@ -3262,7 +3262,7 @@ spec:
       affinity:
       containers:
       - name: ui
-        image: ghcr.io/apache/skywalking-horizon-ui:cc41af231112b6ef7fbbec6c6c1247692e740562
+        image: ghcr.io/apache/skywalking-horizon-ui:b94cdf3c5e268813eae45b50907490f38759c14b
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8081
