@@ -33,7 +33,7 @@ ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= c9f816a4de32c53e87d4ac27ec2f54c6c1cbe8a4
+SW_OAP_IMAGE_TAG ?= 53cc332752d5b5aa84a0eddf66ccd2a5c1b7d316
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 SW_UI_IMAGE_TAG ?= cc41af231112b6ef7fbbec6c6c1247692e740562
