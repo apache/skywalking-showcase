@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-FROM node:10
+FROM node:18
 
 WORKDIR /app
 
