@@ -96,6 +96,13 @@ skywalking:
       SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS: "30"
       SW_STORAGE_BANYANDB_METADATA_TTL_DAYS: "60"
       SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.9,0.10"
+      # Trace tail sampling: enabling a group's pipeline is what activates the sampler, since OAP
+      # pushes it onto that group as a TracePipelineConfig and the data node loads the matching
+      # .so (sw-trace-sampler.so / zipkin-trace-sampler.so). Everything else — the events, the
+      # grace windows and the sampler rules — is left at OAP's bydb.yml defaults. Needs
+      # skywalking.banyandb.plugins.enabled above, or the config is accepted and never applied.
+      SW_STORAGE_BANYANDB_TRACE_PIPELINE_ENABLED: "true"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_PIPELINE_ENABLED: "true"
       SW_TRACEQL: default
       SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true"
       SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true"
@@ -174,6 +181,12 @@ skywalking:
     image:
       repository: ~
       tag: ~
+    # Trace tail sampling: switch the data nodes to the "-plugins" host image, mount the lockstep
+    # "-plugins-carrier" .so at /plugins, and pass the two loader flags. Liaison never hosts
+    # plugins. This only makes the node capable of filtering; the OAP env below is what activates
+    # it per group. Requires a BanyanDB subchart with sampler-plugin support.
+    plugins:
+      enabled: true
     standalone:
       enabled: false
     cluster:
