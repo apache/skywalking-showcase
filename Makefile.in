@@ -30,7 +30,7 @@ BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
 # must exist AND the carrier must ship the first-party samplers (sw-trace-sampler.so,
 # zipkin-trace-sampler.so), which land in d552528a — an earlier tag carries only the reference
 # latencystatussampler.so, and the sampler then fails to load with "realpath failed".
-BANYANDB_IMAGE_TAG ?= aca1bf9945a2e73029fffc768e25016a77374afa
+BANYANDB_IMAGE_TAG ?= 3b4e4d973136ef2a37873f84872072b987a78a02
 STORAGE_CLASS ?= ""
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
