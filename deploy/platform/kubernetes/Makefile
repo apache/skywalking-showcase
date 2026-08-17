@@ -102,6 +102,7 @@ feature-postgresql:
 feature-banyandb:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=banyandb)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.canopy.enabled=true)
 
 .PHONY: feature-so11y
 feature-so11y:

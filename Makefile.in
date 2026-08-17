@@ -30,7 +30,7 @@ BANYANDB_IMAGE ?= ghcr.io/apache/skywalking-banyandb
 # must exist AND the carrier must ship the first-party samplers (sw-trace-sampler.so,
 # zipkin-trace-sampler.so), which land in d552528a — an earlier tag carries only the reference
 # latencystatussampler.so, and the sampler then fails to load with "realpath failed".
-BANYANDB_IMAGE_TAG ?= abc7e08adfb67a642c0c2e2e74248a0d7d879a04
+BANYANDB_IMAGE_TAG ?= d134f8db3b439b27f4ff2e70e6a237ad9293c9b2
 STORAGE_CLASS ?= ""
 
 ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
@@ -38,10 +38,11 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-SW_OAP_IMAGE_TAG ?= c59f7b410b20596a1effa09161d334cb081eea33
+SW_OAP_IMAGE_TAG ?= 521b2ab5d665d91fb9771258cbb95db33aa6cd16
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= e1c1363fe6c598a148648531653e9f72a423614e
+# v0.7.0 - Browser logs tab and source-map de-obfuscation
+SW_UI_IMAGE_TAG ?= a6b8ff44bf75bf32add7fc8281132f0db05127b0
 
 SW_CLI_IMAGE ?= ghcr.io/apache/skywalking-cli/skywalking-cli:bce7faaabbd57ed1f40156af8a8eb6c3eccea4ae
 SW_EVENT_EXPORTER_IMAGE ?= ghcr.io/apache/skywalking-kubernetes-event-exporter/skywalking-kubernetes-event-exporter:8a012a3f968cb139f817189afb9b3748841bba22

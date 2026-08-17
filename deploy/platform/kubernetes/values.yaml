@@ -187,6 +187,9 @@ skywalking:
     # it per group. Requires a BanyanDB subchart with sampler-plugin support.
     plugins:
       enabled: true
+    canopy:
+      enabled: true
+      podAnnotations: {}
     standalone:
       enabled: false
     cluster:
