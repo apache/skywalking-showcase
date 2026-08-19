@@ -192,15 +192,11 @@ skywalking:
       podAnnotations: {}
       resources:
         requests:
-          - key: cpu
-            value: 100m
-          - key: memory
-            value: 128Mi
+          cpu: 100m
+          memory: 128Mi
         limits:
-          - key: cpu
-            value: 500m
-          - key: memory
-            value: 256Mi
+          cpu: 500m
+          memory: 1Gi
     standalone:
       enabled: false
     cluster:
