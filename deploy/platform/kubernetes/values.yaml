@@ -190,6 +190,17 @@ skywalking:
     canopy:
       enabled: true
       podAnnotations: {}
+      resources:
+        requests:
+          - key: cpu
+            value: 100m
+          - key: memory
+            value: 128Mi
+        limits:
+          - key: cpu
+            value: 500m
+          - key: memory
+            value: 256Mi
     standalone:
       enabled: false
     cluster:
