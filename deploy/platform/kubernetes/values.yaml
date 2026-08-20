@@ -160,25 +160,28 @@ skywalking:
       repository: ~
       tag: ~
       pullPolicy: IfNotPresent
-    # Every credential is supplied out of band, so no secret is committed to
-    # this repo. The `${...}` refs below read them from the env at startup:
+    # Commented out on purpose: with the literal-hash users below and SSO off,
+    # nothing reads a `${VAR}`, and `envFrom` naming a Secret that does not
+    # exist is a HARD pod failure (CreateContainerConfigError) — so leaving it
+    # set would break `make deploy.kubernetes` on any cluster without it.
+    #
+    # Uncomment it, together with either commented block below, to keep every
+    # credential out of this repo:
     #   kubectl create secret generic horizon-secrets -n skywalking-showcase \
+    #     --from-literal=HORIZON_ADMIN_PASSWORD_HASH='<argon2id hash>' \
+    #     --from-literal=HORIZON_SKYWALKING_PASSWORD_HASH='<argon2id hash>' \
     #     --from-literal=HORIZON_GITHUB_CLIENT_ID=<client-id> \
     #     --from-literal=HORIZON_GITHUB_CLIENT_SECRET=<secret> \
     #     --from-literal=HORIZON_GOOGLE_CLIENT_ID=<client-id> \
     #     --from-literal=HORIZON_GOOGLE_CLIENT_SECRET=<secret>
-    # The two HORIZON_*_PASSWORD_HASH keys are only read if the local-auth
-    # block below is uncommented; mint one with `pnpm --filter bff cli:hash`.
-    # Every ref is `${VAR}` with no `:default`, so an unset var expands to
-    # empty and the schema rejects the whole config at boot (passwordHash and
-    # clientId are both min(1)) rather than leaving auth half-configured until
-    # someone tries to log in. Interpolation runs before the YAML parse and
+    # Mint a hash with `pnpm --filter bff cli:hash`. Each ref is `${VAR}` with
+    # no `:default`, so an unset var expands to empty and the schema rejects
+    # the config at boot (passwordHash and clientId are both min(1)) rather
+    # than half-configuring auth. Interpolation runs before the YAML parse and
     # substitutes through a replacer function, so the `$` characters in an
     # argon2 hash survive intact.
-    envFromSecret: horizon-secrets
-    # The Secret above must exist before `make deploy.kubernetes` — an unset
-    # ${VAR} expands to empty and the schema rejects the config at boot. The
-    # hosted demo environment overrides this via demo-env-installer's
+    # envFromSecret: horizon-secrets
+    # The hosted demo environment overrides these via demo-env-installer's
     # demo-values.yaml.
     config:
       server:
@@ -189,18 +192,28 @@ skywalking:
         # that same form so the state cookie and the callback share a host.
         publicUrl: http://127.0.0.1:8081
       auth:
-        # Password login is OFF. `backend` defaults to `local` and
-        # `local.users` to [], so the block below can simply stay commented:
-        # with zero local users and SSO configured the BFF logs an info line
-        # ("the provider buttons are the way in") rather than an error, and
-        # the login page does NOT show "Auth not configured" — a configured
-        # provider is what satisfies that check.
+        # Two PUBLICLY-KNOWN demo accounts — the passwords are `admin` and
+        # `skywalking`, and the hashes are published in this repo and in
+        # chart/skywalking/values.yaml. Fine for the showcase on a trusted
+        # network; not credentials. Swap them for the Secret variant below
+        # before this is reachable by anyone else.
         #
-        # Uncomment for a break-glass account for the day a provider is
-        # unreachable; the hashes are already in the horizon-secrets Secret.
-        # A local username must NOT be an email address — local roles win over
-        # SSO, so it would silently answer for the SSO identity at the same
-        # address (the BFF drops such users and logs an error).
+        # Setting `users: []` disables password login: the BFF still starts
+        # and serves the login page with a setup-required banner, and only
+        # login is refused. That is the right choice when the SSO block below
+        # is enabled and you want the provider buttons to be the only way in.
+        backend: local
+        local:
+          users:
+            - username: admin            # password: admin
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
+              roles: [ admin ]
+            - username: skywalking       # password: skywalking
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
+              roles: [ viewer, maintainer ]
+        # Same two users, but with the hashes read from the horizon-secrets
+        # Secret instead of committed here. Swap to this (and uncomment
+        # `envFromSecret` above) for anything beyond a local demo:
         # backend: local
         # local:
         #   users:
@@ -210,70 +223,72 @@ skywalking:
         #     - username: skywalking
         #       passwordHash: "${HORIZON_SKYWALKING_PASSWORD_HASH}"
         #       roles: [ viewer, maintainer ]
-        # Single sign-on — Horizon as the CLIENT, sending the operator out to
-        # an identity provider. With local auth commented out above, these
-        # providers are the ONLY way in — a provider outage locks everyone
-        # out until a local user is restored. Both share ONE callback,
-        # /api/auth/oidc/callback; `state` carries which one is returning.
-        # GitHub never adopted OIDC, hence `kind: oauth2` and the endpoints
-        # configured by hand instead of read from a discovery document.
-        # `emailsEndpoint` is required: /user reports `email: null` unless the
-        # account publishes an address on its public profile, and it is also
-        # what proves the address is verified (entries carry `verified`).
-        sso:
-          providers:
-            - id: github
-              displayName: GitHub
-              kind: oauth2
-              authorizationEndpoint: https://github.com/login/oauth/authorize
-              tokenEndpoint: https://github.com/login/oauth/access_token
-              userinfoEndpoint: https://api.github.com/user
-              emailsEndpoint: https://api.github.com/user/emails
-              scopes: ["user:email"]
-              emailPath: email
-              namePath: login
-              clientId: "${HORIZON_GITHUB_CLIENT_ID}"
-              clientSecret: "${HORIZON_GITHUB_CLIENT_SECRET}"
-              # Empty admits anyone with a GitHub account. That is the right
-              # call for a public demo — every visitor is a viewer anyway, and
-              # a real identity in the server log beats a shared login. List
-              # domains here to confine it to an organisation.
-              allowedDomains: []
-            # Google speaks OIDC, so everything vendor-specific is read from
-            # <issuer>/.well-known/openid-configuration at runtime — no
-            # endpoints to configure by hand, and `openid email profile` are
-            # added to the scopes automatically. Identity is a SIGNED id token
-            # rather than a userinfo lookup, which makes this a stronger proof
-            # than the GitHub oauth2 path above.
-            - id: google
-              displayName: Google
-              kind: oidc
-              issuer: https://accounts.google.com
-              clientId: "${HORIZON_GOOGLE_CLIENT_ID}"
-              clientSecret: "${HORIZON_GOOGLE_CLIENT_SECRET}"
-              # Matches the address GOOGLE reports — the Google account's own
-              # address, not a domain that merely forwards mail to it.
-              allowedDomains: []
-          # A provider says WHO you are, never what you may do here. ONE table
-          # for every provider — roles re-resolve from the address on each
-          # request, when there is no record of which provider authenticated
-          # it. Most specific wins: exact address > domain > default — and the
-          # first tier that matches WINS OUTRIGHT, tiers are not merged, so a
-          # domain hit of [admin] does NOT also carry defaultRoles.
-          roles:
-            defaultRoles: [viewer, maintainer]
-            # Exact domain, case-insensitive; a leading @ is optional.
-            # Subdomains do NOT match — eng.example.com would need its own
-            # entry. A shared issuer like accounts.google.com serves every
-            # Workspace tenant without a claim naming which, so a suffix rule
-            # would let whoever controls a delegated label under the domain
-            # stand up a tenant and inherit the parent's roles.
-            #            roleByDomain:
-            #              example.com: [admin]
-            # Exact address, case-insensitive. Checked FIRST, so an entry
-            # here overrides whatever roleByDomain would otherwise grant.
-            roleByEmail:
-              "your@example.com": [admin]
+        # Single sign-on, kept as a REFERENCE — commented out so the showcase
+        # ships with password login only. To enable it: uncomment the block,
+        # create the horizon-secrets Secret with the four client-credential
+        # keys, uncomment `ui.envFromSecret` above, and register
+        # `<publicUrl>/api/auth/oidc/callback` on each provider.
+        #
+        # SSO is ADDITIVE to `backend: local` above — password login keeps
+        # working alongside it, so a broken provider never locks anyone out.
+        # Both providers share ONE callback; `state` carries which one is
+        # returning. GitHub never adopted OIDC, hence `kind: oauth2` and the
+        # endpoints configured by hand rather than read from a discovery
+        # document; `emailsEndpoint` is required because /user reports
+        # `email: null` unless the account publishes an address on its public
+        # profile, and it is also what proves the address is verified.
+        # Google speaks OIDC, so its endpoints come from
+        # <issuer>/.well-known/openid-configuration at runtime and
+        # `openid email profile` are added to the scopes automatically.
+        #
+        # A local username must NOT be an email address — local roles win over
+        # SSO, so it would silently answer for the SSO identity at the same
+        # address (the BFF drops such users and logs an error).
+        #
+        # sso:
+        #   providers:
+        #     - id: github
+        #       displayName: GitHub
+        #       kind: oauth2
+        #       authorizationEndpoint: https://github.com/login/oauth/authorize
+        #       tokenEndpoint: https://github.com/login/oauth/access_token
+        #       userinfoEndpoint: https://api.github.com/user
+        #       emailsEndpoint: https://api.github.com/user/emails
+        #       scopes: ["user:email"]
+        #       emailPath: email
+        #       namePath: login
+        #       clientId: "${HORIZON_GITHUB_CLIENT_ID}"
+        #       clientSecret: "${HORIZON_GITHUB_CLIENT_SECRET}"
+        #       # Empty admits anyone with a GitHub account; list domains to
+        #       # confine it to an organisation. Exact match — a subdomain is
+        #       # a different domain.
+        #       allowedDomains: []
+        #     - id: google
+        #       displayName: Google
+        #       kind: oidc
+        #       issuer: https://accounts.google.com
+        #       clientId: "${HORIZON_GOOGLE_CLIENT_ID}"
+        #       clientSecret: "${HORIZON_GOOGLE_CLIENT_SECRET}"
+        #       # Matches the address GOOGLE reports — the account's own
+        #       # address, not a domain that merely forwards mail to it.
+        #       allowedDomains: []
+        #   # A provider says WHO you are, never what you may do here. ONE
+        #   # table for every provider — roles re-resolve from the address on
+        #   # each request, when there is no record of which provider
+        #   # authenticated it. Most specific wins: exact address > domain >
+        #   # default, and the first tier that matches WINS OUTRIGHT — tiers
+        #   # are not merged, so a domain hit of [admin] does NOT also carry
+        #   # defaultRoles.
+        #   roles:
+        #     defaultRoles: [viewer]
+        #     roleByEmail:
+        #       "you@example.com": [admin]
+        #     # Exact domain, case-insensitive; a leading @ is optional.
+        #     # Subdomains do NOT match — eng.example.com needs its own entry,
+        #     # because a shared issuer like accounts.google.com serves every
+        #     # Workspace tenant without a claim naming which.
+        #     roleByDomain:
+        #       example.com: [maintainer]
   banyandb:
     enabled: false
     image:
