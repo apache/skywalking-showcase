@@ -48,7 +48,6 @@ skywalking:
       K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
       SW_CONFIGURATION: k8s-configmap
       SW_ENVOY_METRIC_ALS_TCP_ANALYSIS: "mx-mesh"
-      SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
       SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
       SW_ENABLE_ON_DEMAND_POD_LOG: "true"
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent
@@ -161,21 +160,120 @@ skywalking:
       repository: ~
       tag: ~
       pullPolicy: IfNotPresent
-    # Minimal default so `make deploy.kubernetes` works for local dev — the
-    # upstream Horizon UI BFF refuses to start without at least one user.
-    # The hosted demo environment overrides this via demo-env-installer's
-    # demo-values.yaml; rotate before exposing outside trusted networks.
+    # Every credential is supplied out of band, so no secret is committed to
+    # this repo. The `${...}` refs below read them from the env at startup:
+    #   kubectl create secret generic horizon-secrets -n skywalking-showcase \
+    #     --from-literal=HORIZON_GITHUB_CLIENT_ID=<client-id> \
+    #     --from-literal=HORIZON_GITHUB_CLIENT_SECRET=<secret> \
+    #     --from-literal=HORIZON_GOOGLE_CLIENT_ID=<client-id> \
+    #     --from-literal=HORIZON_GOOGLE_CLIENT_SECRET=<secret>
+    # The two HORIZON_*_PASSWORD_HASH keys are only read if the local-auth
+    # block below is uncommented; mint one with `pnpm --filter bff cli:hash`.
+    # Every ref is `${VAR}` with no `:default`, so an unset var expands to
+    # empty and the schema rejects the whole config at boot (passwordHash and
+    # clientId are both min(1)) rather than leaving auth half-configured until
+    # someone tries to log in. Interpolation runs before the YAML parse and
+    # substitutes through a replacer function, so the `$` characters in an
+    # argon2 hash survive intact.
+    envFromSecret: horizon-secrets
+    # The Secret above must exist before `make deploy.kubernetes` — an unset
+    # ${VAR} expands to empty and the schema rejects the config at boot. The
+    # hosted demo environment overrides this via demo-env-installer's
+    # demo-values.yaml.
     config:
+      server:
+        # Used to build the SSO callback, so it must match a redirect URI
+        # registered on EACH provider exactly — the string is compared, so
+        # 127.0.0.1 and localhost are NOT interchangeable. This is the address
+        # NOTES.txt prints for `port-forward svc/<release>-ui 8081:80`; browse
+        # that same form so the state cookie and the callback share a host.
+        publicUrl: http://127.0.0.1:8081
       auth:
-        backend: local
-        local:
-          users:
-            - username: admin            # password: admin
-              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
-              roles: [admin]
-            - username: skywalking       # password: skywalking
-              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-              roles: [ viewer, maintainer ]
+        # Password login is OFF. `backend` defaults to `local` and
+        # `local.users` to [], so the block below can simply stay commented:
+        # with zero local users and SSO configured the BFF logs an info line
+        # ("the provider buttons are the way in") rather than an error, and
+        # the login page does NOT show "Auth not configured" — a configured
+        # provider is what satisfies that check.
+        #
+        # Uncomment for a break-glass account for the day a provider is
+        # unreachable; the hashes are already in the horizon-secrets Secret.
+        # A local username must NOT be an email address — local roles win over
+        # SSO, so it would silently answer for the SSO identity at the same
+        # address (the BFF drops such users and logs an error).
+        # backend: local
+        # local:
+        #   users:
+        #     - username: admin
+        #       passwordHash: "${HORIZON_ADMIN_PASSWORD_HASH}"
+        #       roles: [admin]
+        #     - username: skywalking
+        #       passwordHash: "${HORIZON_SKYWALKING_PASSWORD_HASH}"
+        #       roles: [ viewer, maintainer ]
+        # Single sign-on — Horizon as the CLIENT, sending the operator out to
+        # an identity provider. With local auth commented out above, these
+        # providers are the ONLY way in — a provider outage locks everyone
+        # out until a local user is restored. Both share ONE callback,
+        # /api/auth/oidc/callback; `state` carries which one is returning.
+        # GitHub never adopted OIDC, hence `kind: oauth2` and the endpoints
+        # configured by hand instead of read from a discovery document.
+        # `emailsEndpoint` is required: /user reports `email: null` unless the
+        # account publishes an address on its public profile, and it is also
+        # what proves the address is verified (entries carry `verified`).
+        sso:
+          providers:
+            - id: github
+              displayName: GitHub
+              kind: oauth2
+              authorizationEndpoint: https://github.com/login/oauth/authorize
+              tokenEndpoint: https://github.com/login/oauth/access_token
+              userinfoEndpoint: https://api.github.com/user
+              emailsEndpoint: https://api.github.com/user/emails
+              scopes: ["user:email"]
+              emailPath: email
+              namePath: login
+              clientId: "${HORIZON_GITHUB_CLIENT_ID}"
+              clientSecret: "${HORIZON_GITHUB_CLIENT_SECRET}"
+              # Empty admits anyone with a GitHub account. That is the right
+              # call for a public demo — every visitor is a viewer anyway, and
+              # a real identity in the server log beats a shared login. List
+              # domains here to confine it to an organisation.
+              allowedDomains: []
+            # Google speaks OIDC, so everything vendor-specific is read from
+            # <issuer>/.well-known/openid-configuration at runtime — no
+            # endpoints to configure by hand, and `openid email profile` are
+            # added to the scopes automatically. Identity is a SIGNED id token
+            # rather than a userinfo lookup, which makes this a stronger proof
+            # than the GitHub oauth2 path above.
+            - id: google
+              displayName: Google
+              kind: oidc
+              issuer: https://accounts.google.com
+              clientId: "${HORIZON_GOOGLE_CLIENT_ID}"
+              clientSecret: "${HORIZON_GOOGLE_CLIENT_SECRET}"
+              # Matches the address GOOGLE reports — the Google account's own
+              # address, not a domain that merely forwards mail to it.
+              allowedDomains: []
+          # A provider says WHO you are, never what you may do here. ONE table
+          # for every provider — roles re-resolve from the address on each
+          # request, when there is no record of which provider authenticated
+          # it. Most specific wins: exact address > domain > default — and the
+          # first tier that matches WINS OUTRIGHT, tiers are not merged, so a
+          # domain hit of [admin] does NOT also carry defaultRoles.
+          roles:
+            defaultRoles: [viewer, maintainer]
+            # Exact domain, case-insensitive; a leading @ is optional.
+            # Subdomains do NOT match — eng.example.com would need its own
+            # entry. A shared issuer like accounts.google.com serves every
+            # Workspace tenant without a claim naming which, so a suffix rule
+            # would let whoever controls a delegated label under the domain
+            # stand up a tenant and inherit the parent's roles.
+            #            roleByDomain:
+            #              example.com: [admin]
+            # Exact address, case-insensitive. Checked FIRST, so an entry
+            # here overrides whatever roleByDomain would otherwise grant.
+            roleByEmail:
+              "your@example.com": [admin]
   banyandb:
     enabled: false
     image:
