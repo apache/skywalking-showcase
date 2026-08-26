@@ -98,11 +98,25 @@ feature-postgresql:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=postgresql)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.postgresql.enabled=true)
 
+# Horizon's login audit rides along with this feature, in the very BanyanDB the stack already
+# runs for OAP: it keeps its records in groups of its own (horizon_audit, horizon_audit_metrics),
+# so nothing it writes can collide with OAP's data. Wired here rather than in values.yaml because
+# the liaison service name is derived from $(RELEASE), and because there is no BanyanDB to write
+# to under the elasticsearch / postgresql storage features.
+#   allowCleartext: the liaison is reached over the cluster network with no TLS, and a
+#   non-loopback address without it is refused at boot (the records carry usernames and
+#   source addresses). Fine for the showcase; not for anything reachable by anyone else.
+#   retentionDays: 7, in the spirit of the short TTLs the demo gives OAP's own groups.
 .PHONY: feature-banyandb
 feature-banyandb:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=banyandb)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.canopy.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.provider=banyandb)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.address=$(RELEASE)-banyandb-grpc:17912)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.allowCleartext=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.retentionDays=7)
 
 .PHONY: feature-so11y
 feature-so11y:
