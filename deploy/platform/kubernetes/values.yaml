@@ -94,7 +94,7 @@ skywalking:
       SW_STORAGE_BANYANDB_METRICS_DAY_WARM_TTL_DAYS: "7"
       SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS: "30"
       SW_STORAGE_BANYANDB_METADATA_TTL_DAYS: "60"
-      SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.9,0.10"
+      SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.10,0.11"
       # Trace tail sampling: enabling a group's pipeline is what activates the sampler, since OAP
       # pushes it onto that group as a TracePipelineConfig and the data node loads the matching
       # .so (sw-trace-sampler.so / zipkin-trace-sampler.so). Everything else — the events, the
@@ -289,6 +289,18 @@ skywalking:
         #     # Workspace tenant without a claim naming which.
         #     roleByDomain:
         #       example.com: [maintainer]
+      # Login audit — a durable record of who signed in, on the Admin → Login audit
+      # page. NOT set here: the `banyandb` storage feature wires it (see the Makefile),
+      # because the liaison address it writes to is derived from $(RELEASE), and the
+      # elasticsearch / postgresql features deploy no BanyanDB for it to write to.
+      # It lands in this same block as:
+      #   audit:
+      #     enabled: true
+      #     provider: banyandb
+      #     banyandb:
+      #       address: <release>-banyandb-grpc:17912
+      #       allowCleartext: true
+      #       retentionDays: 7
   banyandb:
     enabled: false
     image:
