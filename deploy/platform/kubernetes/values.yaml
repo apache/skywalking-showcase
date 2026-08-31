@@ -181,8 +181,7 @@ skywalking:
     # substitutes through a replacer function, so the `$` characters in an
     # argon2 hash survive intact.
     # envFromSecret: horizon-secrets
-    # The hosted demo environment overrides these via demo-env-installer's
-    # demo-values.yaml.
+    # The hosted demo environment overrides these with its own values file.
     config:
       server:
         # Used to build the SSO callback, so it must match a redirect URI
@@ -696,9 +695,6 @@ swck:
   image:
     repository: ~
     tag: ~
-  # @feature: java-agent-injector; the swck operator depends on the certificate management of the cert-manager
-  cert-manager:
-    enabled: true
   fullnameOverride: "swck-demo"
 
 istio:

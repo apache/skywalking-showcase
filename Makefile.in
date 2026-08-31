@@ -57,7 +57,7 @@ SW_SATELLITE_IMAGE_TAG ?= v3cfaf59a755e7ffcd900d6695a8bc4174397cace
 SW_ROVER_IMAGE ?= ghcr.io/apache/skywalking-rover/skywalking-rover:b77436d99566aae0f766358d359145c77073ef11
 
 SWCK_OPERATOR_IMAGE ?= ghcr.io/apache/skywalking-swck/operator
-SWCK_OPERATOR_IMAGE_TAG ?= d299bc05ee230f5f366584054db5b099ca60166f
+SWCK_OPERATOR_IMAGE_TAG ?= 7ce378f6c01a62fd42ff47f4c98e1e95b54a40ca
 
 SW_GRAFANA_PLUGIN_VERSION ?= 0.1.0
 GRAFANA_IMAGE ?= grafana/grafana:12.4.2
@@ -70,6 +70,12 @@ SW_R3_IMAGE_TAG ?= 0.1.0
 
 CILIUM_VERSION ?= 1.13.4
 CILIUM_CLI_VERSION ?= v0.15.0
+
+# cert-manager is installed as a release of its own -- see the `cert-manager` target in
+# deploy/platform/kubernetes/Makefile for why it is not a chart dependency. Where the
+# target cluster already runs cert-manager, keep this pin in step with it so the install
+# is a no-op rather than a version flap.
+CERT_MANAGER_VERSION ?= v1.16.0
 
 SW_PREDICTOR_IMAGE ?= ghcr.io/skyapm/skypredictor:66cd881d8316e7bd958a2172a99d2fc33f707150
 
