@@ -73,9 +73,44 @@ endif
 helm:
 	@helm version >/dev/null 2>&1 || (echo "No helm in PATH, please make sure helm is available in PATH."; exit 1)
 
+# The swck operator serves its admission webhooks -- the java agent injector among them
+# -- over TLS from a certificate cert-manager mints, and the skywalking-swck chart
+# expects cert-manager to already be in the cluster. (It used to arrive as a subchart of
+# the operator chart; that chart dropped the dependency.)
+#
+# Installed out of band as its own release rather than as a chart dependency of the
+# showcase, the same way `cilium` below is. cert-manager's six CRDs are cluster-scoped
+# and NOT release-name-prefixed -- certificates.cert-manager.io and friends -- so a copy
+# vendored into the showcase release refuses to install on any cluster that already runs
+# cert-manager: "cannot be imported into the current release: invalid ownership
+# metadata". A shared cluster commonly does run one already -- an ingress ClusterIssuer is
+# the usual reason. Using the conventional release name and namespace means such an
+# install is adopted as a no-op instead of collided with; keep CERT_MANAGER_VERSION in
+# step with whatever version that cluster is on.
+#
+# Deliberately not torn down by `undeploy`: other releases on the cluster may hold
+# Certificates that cert-manager has to keep renewing.
+.PHONY: cert-manager
+cert-manager:
+# DEBUG=true puts `deploy` in --dry-run, so this must not touch the cluster either --
+# otherwise a dry run silently installs cert-manager for real.
+ifeq ($(DEBUG),true)
+	@echo "DEBUG=true: skipping cert-manager (would install $(CERT_MANAGER_VERSION) as release 'cert-manager' in namespace 'cert-manager')"
+else
+	@helm upgrade --install cert-manager cert-manager \
+		--repo https://charts.jetstack.io \
+		--version $(CERT_MANAGER_VERSION) \
+		--namespace cert-manager --create-namespace \
+		--set crds.enabled=true \
+		--wait --timeout=5m
+endif
+
 # @feature: java-agent-injector; use the java agent injector to inject the java agent more natively
+# `cert-manager` runs first, as a prerequisite: the showcase release contains an Issuer
+# and a Certificate, and those are rejected by admission until cert-manager's own webhook
+# is serving. `--wait` above is what makes that ordering real.
 .PHONY: feature-java-agent-injector
-feature-java-agent-injector:
+feature-java-agent-injector: cert-manager
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.enabled=true)
 
 .PHONY: feature-single-node
