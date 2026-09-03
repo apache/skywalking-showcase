@@ -209,7 +209,9 @@ skywalking:
               roles: [ admin ]
             - username: skywalking       # password: skywalking
               passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
-              roles: [ viewer, maintainer ]
+              # `template-viewer` is defined under `rbac` below; it adds
+              # read-only access to the Dashboard-setup pages.
+              roles: [ viewer, maintainer, template-viewer ]
         # Same two users, but with the hashes read from the horizon-secrets
         # Secret instead of committed here. Swap to this (and uncomment
         # `envFromSecret` above) for anything beyond a local demo:
@@ -221,7 +223,7 @@ skywalking:
         #       roles: [admin]
         #     - username: skywalking
         #       passwordHash: "${HORIZON_SKYWALKING_PASSWORD_HASH}"
-        #       roles: [ viewer, maintainer ]
+        #       roles: [ viewer, maintainer, template-viewer ]
         # Single sign-on, kept as a REFERENCE — commented out so the showcase
         # ships with password login only. To enable it: uncomment the block,
         # create the horizon-secrets Secret with the four client-credential
@@ -288,6 +290,31 @@ skywalking:
         #     # Workspace tenant without a claim naming which.
         #     roleByDomain:
         #       example.com: [maintainer]
+      # Roles. `builtinRoles: keep` layers this block ONTO the four built-ins
+      # (viewer / maintainer / operator / admin) instead of replacing them, so
+      # only what the showcase ADDS is written here and the built-ins keep
+      # tracking the image. Without `keep`, naming `roles` at all would drop
+      # every role not listed — `admin` included.
+      rbac:
+        builtinRoles: keep
+        roles:
+          # Read-only access to the six Dashboard-setup pages (overview
+          # templates, layer dashboards, translations, alert page, 3D infra
+          # map, global defaults): each opens with the stored configuration
+          # visible and every publish control disabled. No `:write` anywhere —
+          # the BFF refuses the write regardless of what the interface shows.
+          # Granted BESIDE `viewer` (see the `skywalking` user above) rather
+          # than alone: a user's verbs are the union of their roles', and
+          # `viewer` carries the data reads the reviewed dashboards render from.
+          template-viewer:
+            - overview-template:read
+            - layer-template:read
+            - translation:read
+            - alarm-setup:read
+            - infra-3d-setup:read
+            - setup:read
+        landingByRole:
+          template-viewer: /
       # Login audit — a durable record of who signed in, on the Admin → Login audit
       # page. NOT set here: the `banyandb` storage feature wires it (see the Makefile),
       # because the liaison address it writes to is derived from $(RELEASE), and the
