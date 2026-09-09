@@ -1,0 +1,92 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Trace tail sampling: BanyanDB drops whole traces AFTER they are stored, during its own
+# compaction, using a native sampler plugin loaded in the data node (the standalone service
+# also satisfies the data-node role). Unlike the ingest-side trace sampling this reclaims
+# space already written and sees the whole trace rather than one segment as it arrives; the
+# two are independent gates, so enabling both multiplies the drop rate.
+#
+# Use with the `single-node` feature, listing this flag after it so this overlay wins the merge.
+# It does not apply to `cluster`: a no-init OAP defers all boot-time DDL to the dedicated init
+# OAP, so there it is oap-init that creates the group and therefore pushes the pipeline config —
+# the settings below would have to move onto that service to take effect.
+version: '2.1'
+
+services:
+  # Delivers the sampler .so into a shared volume and exits. Must be the "-plugins-carrier"
+  # image at the SAME tag as the host image below: plugin.Open requires the .so and the host
+  # binary to share an exact toolchain/module-graph/libc, and both are built from one commit in
+  # one CI run. A tag skew is rejected at load time (fail-open, so nothing gets dropped).
+  banyandb-plugin-carrier:
+    image: ${BANYANDB_IMAGE}:${BANYANDB_IMAGE_TAG}-plugins-carrier
+    networks: [ sw ]
+    command: sh -c "cp /plugins/*.so /shared/ && ls -l /shared"
+    volumes:
+      - banyandb-plugins:/shared
+
+  banyandb:
+    # The plugin-capable host image. Go plugins need a CGO-enabled, dynamically linked host, so
+    # the default and "-slim" images (static, CGO_ENABLED=0) can load no plugin at all — they
+    # ignore the pipeline config silently. This one ships /plugins empty; the carrier fills it.
+    image: ${BANYANDB_IMAGE}:${BANYANDB_IMAGE_TAG}-plugins
+    # The last two flags exist only to make the verdict observable in a demo, and are not
+    # representative of a real deployment: the filter runs during compaction, and compaction is
+    # driven by part count, so with node defaults a low-traffic showcase can go a long time
+    # before any trace is judged at all. Merging as soon as a second part lands makes a filtering
+    # merge fire promptly instead. Upstream's e2e for this feature uses the same two knobs.
+    command: >-
+      standalone
+      --trace-pipeline-native-plugin-enabled=true
+      --trace-pipeline-trusted-plugin-dir=/plugins
+      --trace-max-merge-parts=2
+      --trace-flush-timeout=500ms
+    volumes:
+      - banyandb-plugins:/plugins
+    # The "-plugins" image is distroless (no shell, no nc), so the inherited healthcheck cannot
+    # run. Dependents wait on service_started instead — see the oap override below.
+    healthcheck:
+      disable: true
+    depends_on:
+      banyandb-plugin-carrier:
+        condition: service_completed_successfully
+
+  oap:
+    environment:
+      # The only settings the showcase overrides: enabling a group's pipeline in bydb.yml is what
+      # activates the plugin, since OAP then pushes it onto that group as a TracePipelineConfig and
+      # the data node reconciles and loads the .so. Everything else — which events run the chain,
+      # the grace windows, and the sampler rules (duration threshold, keepErrors, healthy sample
+      # rate) — is left at OAP's own bydb.yml defaults, so this overlay demonstrates the
+      # out-of-the-box behaviour rather than a tuned one. See the BanyanDB storage guide for the
+      # full SW_STORAGE_BANYANDB_{TRACE,ZIPKIN_TRACE}_{PIPELINE,SAMPLER}_* list.
+      #
+      # The two groups are independent, each with its own plugin: sw-trace-sampler.so reads the
+      # native segment columns (is_error, the flattened "tags" array), zipkin-trace-sampler.so
+      # reads the Zipkin span schema ("query" array, error-as-tag). Both ship in the carrier.
+      SW_STORAGE_BANYANDB_TRACE_PIPELINE_ENABLED: "true"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_PIPELINE_ENABLED: "true"
+    depends_on:
+      banyandb:
+        condition: service_started
+
+volumes:
+  banyandb-plugins:
+
+networks:
+  sw:

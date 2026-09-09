@@ -30,13 +30,10 @@ skywalking:
       promql: 9090
       logql: 3100
       traceql: 3200
-      zipkin: 9411
+      zipkin-receiver: 9411
       zipkin-query: 9412
       metrics: 1234
     env:
-      SW_ADMIN_SERVER: default
-      SW_DSL_DEBUGGING: default
-      SW_RECEIVER_RUNTIME_RULE: default
       SW_HEALTH_CHECKER: default
       SW_OTEL_RECEIVER: default # @feature: so11y;,mysql;kubernetes-monitor enable OpenTelemetry receiver to receive OpenTelemetry metrics
       # @feature: vm; enable vm rules to analyze VM metrics
@@ -51,7 +48,6 @@ skywalking:
       K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
       SW_CONFIGURATION: k8s-configmap
       SW_ENVOY_METRIC_ALS_TCP_ANALYSIS: "mx-mesh"
-      SW_ENABLE_UPDATE_UI_TEMPLATE: "false"
       SW_SLOW_DB_THRESHOLD: default:0,mongodb:100
       SW_ENABLE_ON_DEMAND_POD_LOG: "true"
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,network-profiling,go-runtime,python-runtime,spring-micrometer,continuous-profiling,java-agent,go-agent
@@ -98,7 +94,14 @@ skywalking:
       SW_STORAGE_BANYANDB_METRICS_DAY_WARM_TTL_DAYS: "7"
       SW_STORAGE_BANYANDB_METRICS_DAY_COLD_TTL_DAYS: "30"
       SW_STORAGE_BANYANDB_METADATA_TTL_DAYS: "60"
-      SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.9,0.10"
+      SW_STORAGE_BANYANDB_COMPATIBLE_SERVER_API_VERSIONS: "0.10,0.11"
+      # Trace tail sampling: enabling a group's pipeline is what activates the sampler, since OAP
+      # pushes it onto that group as a TracePipelineConfig and the data node loads the matching
+      # .so (sw-trace-sampler.so / zipkin-trace-sampler.so). Everything else — the events, the
+      # grace windows and the sampler rules — is left at OAP's bydb.yml defaults. Needs
+      # skywalking.banyandb.plugins.enabled above, or the config is accepted and never applied.
+      SW_STORAGE_BANYANDB_TRACE_PIPELINE_ENABLED: "true"
+      SW_STORAGE_BANYANDB_ZIPKIN_TRACE_PIPELINE_ENABLED: "true"
       SW_TRACEQL: default
       SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true"
       SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true"
@@ -157,13 +160,194 @@ skywalking:
       repository: ~
       tag: ~
       pullPolicy: IfNotPresent
-    env:
-      SW_ZIPKIN_ADDRESS: ""
+    # Commented out on purpose: with the literal-hash users below and SSO off,
+    # nothing reads a `${VAR}`, and `envFrom` naming a Secret that does not
+    # exist is a HARD pod failure (CreateContainerConfigError) — so leaving it
+    # set would break `make deploy.kubernetes` on any cluster without it.
+    #
+    # Uncomment it, together with either commented block below, to keep every
+    # credential out of this repo:
+    #   kubectl create secret generic horizon-secrets -n skywalking-showcase \
+    #     --from-literal=HORIZON_ADMIN_PASSWORD_HASH='<argon2id hash>' \
+    #     --from-literal=HORIZON_SKYWALKING_PASSWORD_HASH='<argon2id hash>' \
+    #     --from-literal=HORIZON_GITHUB_CLIENT_ID=<client-id> \
+    #     --from-literal=HORIZON_GITHUB_CLIENT_SECRET=<secret> \
+    #     --from-literal=HORIZON_GOOGLE_CLIENT_ID=<client-id> \
+    #     --from-literal=HORIZON_GOOGLE_CLIENT_SECRET=<secret>
+    # Mint a hash with `pnpm --filter bff cli:hash`. Each ref is `${VAR}` with
+    # no `:default`, so an unset var expands to empty and the schema rejects
+    # the config at boot (passwordHash and clientId are both min(1)) rather
+    # than half-configuring auth. Interpolation runs before the YAML parse and
+    # substitutes through a replacer function, so the `$` characters in an
+    # argon2 hash survive intact.
+    # envFromSecret: horizon-secrets
+    # The hosted demo environment overrides these with its own values file.
+    config:
+      server:
+        # Used to build the SSO callback, so it must match a redirect URI
+        # registered on EACH provider exactly — the string is compared, so
+        # 127.0.0.1 and localhost are NOT interchangeable. This is the address
+        # NOTES.txt prints for `port-forward svc/<release>-ui 8081:80`; browse
+        # that same form so the state cookie and the callback share a host.
+        publicUrl: http://127.0.0.1:8081
+      auth:
+        # Two PUBLICLY-KNOWN demo accounts — the passwords are `admin` and
+        # `skywalking`, and the hashes are published in this repo and in
+        # chart/skywalking/values.yaml. Fine for the showcase on a trusted
+        # network; not credentials. Swap them for the Secret variant below
+        # before this is reachable by anyone else.
+        #
+        # Setting `users: []` disables password login: the BFF still starts
+        # and serves the login page with a setup-required banner, and only
+        # login is refused. That is the right choice when the SSO block below
+        # is enabled and you want the provider buttons to be the only way in.
+        backend: local
+        local:
+          users:
+            - username: admin            # password: admin
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$eemqy1r72oSXR58y8VpRqw$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM"
+              roles: [ admin ]
+            - username: skywalking       # password: skywalking
+              passwordHash: "$argon2id$v=19$m=65536,t=3,p=4$Zqj8HhQDqm8d5c2MipHYZw$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q"
+              # `template-viewer` is defined under `rbac` below; it adds
+              # read-only access to the Dashboard-setup pages.
+              roles: [ viewer, maintainer, template-viewer ]
+        # Same two users, but with the hashes read from the horizon-secrets
+        # Secret instead of committed here. Swap to this (and uncomment
+        # `envFromSecret` above) for anything beyond a local demo:
+        # backend: local
+        # local:
+        #   users:
+        #     - username: admin
+        #       passwordHash: "${HORIZON_ADMIN_PASSWORD_HASH}"
+        #       roles: [admin]
+        #     - username: skywalking
+        #       passwordHash: "${HORIZON_SKYWALKING_PASSWORD_HASH}"
+        #       roles: [ viewer, maintainer, template-viewer ]
+        # Single sign-on, kept as a REFERENCE — commented out so the showcase
+        # ships with password login only. To enable it: uncomment the block,
+        # create the horizon-secrets Secret with the four client-credential
+        # keys, uncomment `ui.envFromSecret` above, and register
+        # `<publicUrl>/api/auth/oidc/callback` on each provider.
+        #
+        # SSO is ADDITIVE to `backend: local` above — password login keeps
+        # working alongside it, so a broken provider never locks anyone out.
+        # Both providers share ONE callback; `state` carries which one is
+        # returning. GitHub never adopted OIDC, hence `kind: oauth2` and the
+        # endpoints configured by hand rather than read from a discovery
+        # document; `emailsEndpoint` is required because /user reports
+        # `email: null` unless the account publishes an address on its public
+        # profile, and it is also what proves the address is verified.
+        # Google speaks OIDC, so its endpoints come from
+        # <issuer>/.well-known/openid-configuration at runtime and
+        # `openid email profile` are added to the scopes automatically.
+        #
+        # A local username must NOT be an email address — local roles win over
+        # SSO, so it would silently answer for the SSO identity at the same
+        # address (the BFF drops such users and logs an error).
+        #
+        # sso:
+        #   providers:
+        #     - id: github
+        #       displayName: GitHub
+        #       kind: oauth2
+        #       authorizationEndpoint: https://github.com/login/oauth/authorize
+        #       tokenEndpoint: https://github.com/login/oauth/access_token
+        #       userinfoEndpoint: https://api.github.com/user
+        #       emailsEndpoint: https://api.github.com/user/emails
+        #       scopes: ["user:email"]
+        #       emailPath: email
+        #       namePath: login
+        #       clientId: "${HORIZON_GITHUB_CLIENT_ID}"
+        #       clientSecret: "${HORIZON_GITHUB_CLIENT_SECRET}"
+        #       # Empty admits anyone with a GitHub account; list domains to
+        #       # confine it to an organisation. Exact match — a subdomain is
+        #       # a different domain.
+        #       allowedDomains: []
+        #     - id: google
+        #       displayName: Google
+        #       kind: oidc
+        #       issuer: https://accounts.google.com
+        #       clientId: "${HORIZON_GOOGLE_CLIENT_ID}"
+        #       clientSecret: "${HORIZON_GOOGLE_CLIENT_SECRET}"
+        #       # Matches the address GOOGLE reports — the account's own
+        #       # address, not a domain that merely forwards mail to it.
+        #       allowedDomains: []
+        #   # A provider says WHO you are, never what you may do here. ONE
+        #   # table for every provider — roles re-resolve from the address on
+        #   # each request, when there is no record of which provider
+        #   # authenticated it. Most specific wins: exact address > domain >
+        #   # default, and the first tier that matches WINS OUTRIGHT — tiers
+        #   # are not merged, so a domain hit of [admin] does NOT also carry
+        #   # defaultRoles.
+        #   roles:
+        #     defaultRoles: [viewer]
+        #     roleByEmail:
+        #       "you@example.com": [admin]
+        #     # Exact domain, case-insensitive; a leading @ is optional.
+        #     # Subdomains do NOT match — eng.example.com needs its own entry,
+        #     # because a shared issuer like accounts.google.com serves every
+        #     # Workspace tenant without a claim naming which.
+        #     roleByDomain:
+        #       example.com: [maintainer]
+      # Roles. `builtinRoles: keep` layers this block ONTO the four built-ins
+      # (viewer / maintainer / operator / admin) instead of replacing them, so
+      # only what the showcase ADDS is written here and the built-ins keep
+      # tracking the image. Without `keep`, naming `roles` at all would drop
+      # every role not listed — `admin` included.
+      rbac:
+        builtinRoles: keep
+        roles:
+          # Read-only access to the six Dashboard-setup pages (overview
+          # templates, layer dashboards, translations, alert page, 3D infra
+          # map, global defaults): each opens with the stored configuration
+          # visible and every publish control disabled. No `:write` anywhere —
+          # the BFF refuses the write regardless of what the interface shows.
+          # Granted BESIDE `viewer` (see the `skywalking` user above) rather
+          # than alone: a user's verbs are the union of their roles', and
+          # `viewer` carries the data reads the reviewed dashboards render from.
+          template-viewer:
+            - overview-template:read
+            - layer-template:read
+            - translation:read
+            - alarm-setup:read
+            - infra-3d-setup:read
+            - setup:read
+        landingByRole:
+          template-viewer: /
+      # Login audit — a durable record of who signed in, on the Admin → Login audit
+      # page. NOT set here: the `banyandb` storage feature wires it (see the Makefile),
+      # because the liaison address it writes to is derived from $(RELEASE), and the
+      # elasticsearch / postgresql features deploy no BanyanDB for it to write to.
+      # It lands in this same block as:
+      #   audit:
+      #     enabled: true
+      #     provider: banyandb
+      #     banyandb:
+      #       address: <release>-banyandb-grpc:17912
+      #       allowCleartext: true
+      #       retentionDays: 7
   banyandb:
     enabled: false
     image:
       repository: ~
       tag: ~
+    # Trace tail sampling: switch the data nodes to the "-plugins" host image, mount the lockstep
+    # "-plugins-carrier" .so at /plugins, and pass the two loader flags. Liaison never hosts
+    # plugins. This only makes the node capable of filtering; the OAP env below is what activates
+    # it per group. Requires a BanyanDB subchart with sampler-plugin support.
+    plugins:
+      enabled: true
+    canopy:
+      enabled: true
+      podAnnotations: {}
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
     standalone:
       enabled: false
     cluster:
@@ -353,6 +537,9 @@ skywalking:
             restoreInitContainer:
               enabled: false
       fodc:
+        # FODC (agent + proxy) is enabled by default in the chart; kept explicit so the
+        # banyandb-monitor feature always has an aggregated /metrics scrape target.
+        enabled: true
         agent:
           env:
           - name: BYDB_LOGGING_LEVEL
@@ -386,6 +573,10 @@ skywalking:
           config:
             httpReadTimeout: 60s
             httpWriteTimeout: 60s
+          # The otel collector scrapes the proxy pod in-cluster (component=fodc-proxy, port http),
+          # so expose it as ClusterIP instead of the chart default LoadBalancer (no external LB).
+          httpSvc:
+            type: ClusterIP
     storage:
       liaison:
         enabled: true
@@ -554,9 +745,6 @@ swck:
   image:
     repository: ~
     tag: ~
-  # @feature: java-agent-injector; the swck operator depends on the certificate management of the cert-manager
-  cert-manager:
-    enabled: true
   fullnameOverride: "swck-demo"
 
 istio:

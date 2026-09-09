@@ -44,7 +44,6 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.per
 HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'skywalking.banyandb.storage.data.persistentVolumeClaims[6]={"mountTargets":["stream","measure","property","trace"],"nodeRole":"cold","claimName":"cold-data","size":"500Gi","accessModes":["ReadWriteOnce"]$(PVC_STORAGE_CLASS_FIELD),"volumeMode":"Filesystem"}'
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.image.repository=$(SW_OAP_IMAGE) --set skywalking.oap.image.tag=$(SW_OAP_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.image.repository=$(SW_UI_IMAGE) --set skywalking.ui.image.tag=$(SW_UI_IMAGE_TAG)
-HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.env.SW_ZIPKIN_ADDRESS=http://$(RELEASE)-oap.$(NAMESPACE).svc:9412
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.satellite.image.repository=$(SW_SATELLITE_IMAGE) --set skywalking.satellite.image.tag=$(SW_SATELLITE_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set swck.image.repository=$(SWCK_OPERATOR_IMAGE) --set swck.image.tag=$(SWCK_OPERATOR_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.hub=$(HUB) --set sampleServices.tag=$(TAG) --set sampleServices.namespace=$(SAMPLE_SERVICES_NAMESPACE)
@@ -74,9 +73,44 @@ endif
 helm:
 	@helm version >/dev/null 2>&1 || (echo "No helm in PATH, please make sure helm is available in PATH."; exit 1)
 
+# The swck operator serves its admission webhooks -- the java agent injector among them
+# -- over TLS from a certificate cert-manager mints, and the skywalking-swck chart
+# expects cert-manager to already be in the cluster. (It used to arrive as a subchart of
+# the operator chart; that chart dropped the dependency.)
+#
+# Installed out of band as its own release rather than as a chart dependency of the
+# showcase, the same way `cilium` below is. cert-manager's six CRDs are cluster-scoped
+# and NOT release-name-prefixed -- certificates.cert-manager.io and friends -- so a copy
+# vendored into the showcase release refuses to install on any cluster that already runs
+# cert-manager: "cannot be imported into the current release: invalid ownership
+# metadata". A shared cluster commonly does run one already -- an ingress ClusterIssuer is
+# the usual reason. Using the conventional release name and namespace means such an
+# install is adopted as a no-op instead of collided with; keep CERT_MANAGER_VERSION in
+# step with whatever version that cluster is on.
+#
+# Deliberately not torn down by `undeploy`: other releases on the cluster may hold
+# Certificates that cert-manager has to keep renewing.
+.PHONY: cert-manager
+cert-manager:
+# DEBUG=true puts `deploy` in --dry-run, so this must not touch the cluster either --
+# otherwise a dry run silently installs cert-manager for real.
+ifeq ($(DEBUG),true)
+	@echo "DEBUG=true: skipping cert-manager (would install $(CERT_MANAGER_VERSION) as release 'cert-manager' in namespace 'cert-manager')"
+else
+	@helm upgrade --install cert-manager cert-manager \
+		--repo https://charts.jetstack.io \
+		--version $(CERT_MANAGER_VERSION) \
+		--namespace cert-manager --create-namespace \
+		--set crds.enabled=true \
+		--wait --timeout=5m
+endif
+
 # @feature: java-agent-injector; use the java agent injector to inject the java agent more natively
+# `cert-manager` runs first, as a prerequisite: the showcase release contains an Issuer
+# and a Certificate, and those are rejected by admission until cert-manager's own webhook
+# is serving. `--wait` above is what makes that ordering real.
 .PHONY: feature-java-agent-injector
-feature-java-agent-injector:
+feature-java-agent-injector: cert-manager
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.javaAgentInjector.enabled=true)
 
 .PHONY: feature-single-node
@@ -99,10 +133,25 @@ feature-postgresql:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=postgresql)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.postgresql.enabled=true)
 
+# Horizon's login audit rides along with this feature, in the very BanyanDB the stack already
+# runs for OAP: it keeps its records in groups of its own (horizon_audit, horizon_audit_metrics),
+# so nothing it writes can collide with OAP's data. Wired here rather than in values.yaml because
+# the liaison service name is derived from $(RELEASE), and because there is no BanyanDB to write
+# to under the elasticsearch / postgresql storage features.
+#   allowCleartext: the liaison is reached over the cluster network with no TLS, and a
+#   non-loopback address without it is refused at boot (the records carry usernames and
+#   source addresses). Fine for the showcase; not for anything reachable by anyone else.
+#   retentionDays: 7, in the spirit of the short TTLs the demo gives OAP's own groups.
 .PHONY: feature-banyandb
 feature-banyandb:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.storageType=banyandb)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.banyandb.canopy.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.provider=banyandb)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.address=$(RELEASE)-banyandb-grpc:17912)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.allowCleartext=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.audit.banyandb.retentionDays=7)
 
 .PHONY: feature-so11y
 feature-so11y:

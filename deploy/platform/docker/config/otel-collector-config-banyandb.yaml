@@ -13,6 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# SWIP-15 BanyanDB self-observability for the docker-compose showcase (single standalone node).
+# There is no FODC proxy/sidecar in docker-compose, so the collector scrapes the node's own :2121
+# Prometheus endpoint directly and injects the FODC-equivalent identity labels the SWIP-15 MAL rules
+# key on (cluster / container_name / node_role / node_type / pod_name) as static per-scrape-job
+# labels — the same mechanism the previous config used to inject host_name. On a real FODC cluster
+# deployment these are stamped by the proxy; here the standalone node plays every role, so it is
+# modeled as a single node in a one-node cluster. The OTel Prometheus receiver maps the Prometheus
+# `job` to service.name, which OAP maps back to the `job_name` tag the rules filter on
+# ("banyandb-monitoring"); all other static labels arrive as datapoint attributes (tags).
 receivers:
   prometheus:
     config:
@@ -22,7 +31,11 @@ receivers:
           static_configs:
             - targets: ["banyandb:2121"]
               labels:
-                host_name: root[root]
+                cluster: showcase-banyandb
+                container_name: standalone
+                node_role: standalone
+                node_type: n/a
+                pod_name: banyandb-0
 
 processors:
   batch:
@@ -32,8 +45,6 @@ exporters:
     endpoint: "oap:11800"
     tls:
       insecure: true
-  debug:
-    verbosity: detailed
 
 service:
   pipelines:

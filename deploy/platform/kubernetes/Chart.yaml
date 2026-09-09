@@ -28,11 +28,16 @@ dependencies:
     repository: oci://ghcr.io/apache/skywalking-helm
 
     # @feature: java-agent-injector; the java agent injector is a component of the swck operator, so we need to deploy the swck operator firstly
-  - name: skywalking-helm-swck-operator
+    # The operator chart moved out of apache/skywalking-helm and is now released from
+    # apache/skywalking-swck itself, under a new name and a new OCI repository.
+  - name: skywalking-swck
     alias: swck
-    version: 0.0.0-158f116af32e8824ec897c0c6d3022136e7481bb
-    repository: oci://ghcr.io/apache/skywalking-helm
+    version: 0.0.0-7ce378f6c01a62fd42ff47f4c98e1e95b54a40ca
+    repository: oci://ghcr.io/apache/skywalking-swck/helm
     condition: features.javaAgentInjector.enabled
+    # NOTE: this chart needs cert-manager in the cluster; the Makefile's `cert-manager`
+    # target installs it out of band. See the comment there for why it is not a
+    # dependency here.
 
   - name: kube-state-metrics
     version: 5.0.1

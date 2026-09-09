@@ -23,12 +23,13 @@ build:
 
 .PHONY: docker docker.build docker.push
 
+# Multi-arch because chromium-base aborts under x86_64 QEMU on ARM hosts (SSE3 check vs /proc/cpuinfo).
+LOAD_GEN_PLATFORMS ?= linux/amd64,linux/arm64
+
 docker: docker.build
 
 docker.build:
 	docker build . -t $(HUB)/load-gen:$(TAG) -t $(HUB)/load-gen:$(TAG)-agentless
 
-docker.push: docker.build
-	docker push $(HUB)/load-gen:$(TAG)
-	docker tag $(HUB)/load-gen:$(TAG) $(HUB)/load-gen:$(TAG)-agentless
-	docker push $(HUB)/load-gen:$(TAG)-agentless
+docker.push:
+	docker buildx build --platform $(LOAD_GEN_PLATFORMS) --push . -t $(HUB)/load-gen:$(TAG) -t $(HUB)/load-gen:$(TAG)-agentless
