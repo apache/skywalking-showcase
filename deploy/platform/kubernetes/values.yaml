@@ -359,6 +359,8 @@ skywalking:
           value: "3GiB"
         - name: BYDB_DATA_NODE_SELECTOR
           value: "type=hot"
+        - name: BYDB_LOGGING_LEVEL
+          value: "error"
         httpSvc:
           type: ClusterIP
         resources:
@@ -390,6 +392,21 @@ skywalking:
       data:
         nodeTemplate:
           replicas: 2
+          env:
+          - name: BYDB_LOGGING_LEVEL
+            value: "error"
+          backupSidecar:
+            env:
+            - name: BYDB_LOGGING_LEVEL
+              value: "error"
+          lifecycleSidecar:
+            env:
+            - name: BYDB_LOGGING_LEVEL
+              value: "error"
+          restoreInitContainer:
+            env:
+            - name: BYDB_LOGGING_LEVEL
+              value: "error"
           resources:
             requests:
             - key: cpu
@@ -524,6 +541,9 @@ skywalking:
         # banyandb-monitor feature always has an aggregated /metrics scrape target.
         enabled: true
         agent:
+          env:
+          - name: BYDB_LOGGING_LEVEL
+            value: "error"
           resources:
             requests:
               - key: cpu
@@ -536,6 +556,9 @@ skywalking:
               - key: memory
                 value: 256Mi
         proxy:
+          env:
+          - name: BYDB_LOGGING_LEVEL
+            value: "error"
           resources:
             requests:
               - key: cpu
