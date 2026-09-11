@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if or .Values.features.agent.enabled .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
-
+# The namespace is created whatever the features. rating, below, sits outside the sample-services guard, and
+# the r3, rover, event and trace-profiling features place resources here too.
 ---
 apiVersion: v1
 kind: Namespace
@@ -26,9 +26,10 @@ metadata:
   {{- if .Values.features.javaAgentInjector.enabled }}
     swck-injection: enabled
   {{- end }}
-  {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
+  {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}
     istio-injection: enabled
   {{- end }}
+{{- if or .Values.features.agent.enabled .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}
 
 ---
 apiVersion: v1
@@ -64,7 +65,7 @@ spec:
         swck-java-agent-injected: "true"
         app: gateway
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "gateway"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -124,7 +125,7 @@ spec:
         swck-java-agent-injected: "true"
         app: songs
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -193,7 +194,7 @@ spec:
       labels:
         app: recommendation
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: recommendation
@@ -239,7 +240,7 @@ spec:
       labels:
         app: app
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: app
@@ -273,7 +274,7 @@ spec:
       labels:
         app: loadgen
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: app
@@ -458,7 +459,7 @@ spec:
       labels:
         app: frontend
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: frontend
@@ -608,7 +609,7 @@ spec:
       labels:
         app: rating
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: rating

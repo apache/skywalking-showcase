@@ -58,6 +58,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.image=$(GRAFANA_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRAFANA_PLUGIN_VERSION)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.image=$(SW_R3_IMAGE):$(SW_R3_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.image=$(SW_PREDICTOR_IMAGE)
+HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.image=$(SW_ASZ_IMAGE):$(SW_ASZ_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.scaller.enabled=$(SCALLER_ENABLE)
 
 ifeq ($(DEBUG),true)
@@ -258,6 +259,15 @@ feature-grafana:
 	@mkdir -p ./generated/dashboard-configs/
 	@cp ../config/grafana/dashboards/*.json ./generated/dashboard-configs/
 
+# @feature: asz; deploy the SkyWalking AI Sessionizer. No real Claude Code runs in the showcase, so
+# asz's scenario feed generates the conversations, and asz collects them and pushes them to the OAP
+# under the AI_AGENT layer.
+.PHONY: feature-asz
+feature-asz:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.enabled=true)
+	@mkdir -p ./generated/asz-scenarios/
+	@cp ../config/asz/scenarios/*.yaml ./generated/asz-scenarios/
+
 .PHONY: feature-mesh-with-agent
 feature-mesh-with-agent:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.meshWithAgent.enabled=true)
@@ -308,8 +318,23 @@ feature-flink-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.flinkMonitor.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+# generated/ holds the copies that feature targets make for Helm, which reads files only inside the
+# chart. It starts empty on every deploy: a file deleted from its source must not linger, and a copy
+# left by a disabled feature would still ride in the Helm release as a chart file.
+.PHONY: clean-generated
+clean-generated:
+	@rm -rf ./generated/
+
+feature-grafana feature-asz: clean-generated
+
+# Remove everything a deploy generates: the copies for Helm, and the charts `helm dep up` downloads.
+.PHONY: clean
+clean: clean-generated
+	@rm -rf ./charts/ ./tmpcharts/ ./tmpcharts-*/ ./Chart.lock
+
 .PHONY: deploy
-deploy: $(features)
+deploy: clean-generated $(features)
+	@rm -rf ./charts/ ./tmpcharts/ ./tmpcharts-*/ ./Chart.lock
 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace --timeout=20m $(HELM_OPTIONS)
 ifneq ($(DEBUG),true)

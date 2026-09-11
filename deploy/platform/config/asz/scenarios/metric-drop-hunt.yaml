@@ -1,0 +1,708 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+session: 7e1c0000-0000-4a00-8a00-000000000011
+project: -Users-dev-oap-drop
+title: metrics missing after a receiver restart
+interval: 10s
+steps:
+  - input: "The service_resp_time metric stops appearing about ten minutes after the OAP restarts, but only for one service, shop::cart-service. Nothing in the logs. Can you work out where it is being dropped?"
+  - call:
+      thinking: unavailable
+      text: "First, is it missing from storage or only from the query? Checking what the query layer returns."
+      tool: {name: Bash, input: {command: "swctl --display json metrics linear --name service_resp_time --service-name 'shop::cart-service' --start '2026-09-10 0800' --end '2026-09-10 0859'"}, result: "60 buckets; IsEmptyValue is true in every one from 0812 on"}
+      usage: {in: 6100, out: 190, cache_read: 19000, cache_write: 3300}
+  - call: {text: "The same window for a healthy service, as a control.", tool: {name: Bash, input: {command: "swctl --display json metrics linear --name service_resp_time --service-name order-service --start '2026-09-10 0800' --end '2026-09-10 0859'"}, result: "60 buckets, all with values, 180 to 340"}, usage: {in: 6300, out: 120, cache_read: 20000}}
+  - call: {text: "The query path works; one service has no data after 08:12. Always the same one?", usage: {in: 6600, out: 210, cache_read: 20500}}
+  - input: "Always the same one. The other eleven keep reporting."
+  - call: {text: "That rules out anything global. Checking the OAL that defines the metric.", tool: {name: Bash, input: {command: "grep -rn 'service_resp_time' oap-server/server-starter/src/main/resources/oal"}, result: "oap-server/server-starter/src/main/resources/oal/core.oal:20:service_resp_time = from(Service.latency).longAvg().decorator(\"ServiceDecorator\");"}, usage: {in: 6900, out: 170, cache_read: 21200}}
+  - call: {text: "One definition, no filter, only a decorator. Nothing there singles out a service.", usage: {in: 7100, out: 150, cache_read: 21800}}
+  - input: "Right. And restarting brings it back, but only for about ten minutes."
+  - call: {text: "Ten minutes is suspiciously round. Looking for anything in core that expires.", tool: {name: Bash, input: {command: "grep -rn 'expireAfter' oap-server/server-core/src/main/java --include='*.java'"}, result: "5 hits: expireAfterWrite of one minute in the three profiling task caches, and of ten minutes in EndpointNameGrouping and WriteSessionCache"}, usage: {in: 7400, out: 200, cache_read: 22600}}
+  - call: {text: "Two ten-minute caches. A miss normally means a reload, not a drop. Seeing what each holds.", tool: {name: Bash, input: {command: "git grep -n -A2 'expireAfterWrite(Duration.ofMinutes(10))\\|expireAfterWrite(10' -- '*/EndpointNameGrouping.java' '*/WriteSessionCache.java'"}, result: "EndpointNameGrouping: unformatted HTTP URIs per service, behind a CacheLoader; WriteSessionCache: a plain map, no loader"}, usage: {in: 7700, out: 230, cache_read: 23400}}
+  - call: {text: "Two candidates. I will walk the pipeline backwards from storage and let the evidence choose.", usage: {in: 8000, out: 160, cache_read: 24000}}
+  - input: "Fine, but be systematic. I have been guessing at this for two days."
+  - call:
+      text: "Understood. Writing the pipeline down so we can cross stages off."
+      tool: {name: TodoWrite, input: {todos: [{content: "confirm rows are absent in storage, not just in query", status: in_progress}, {content: "check the OAL dispatcher", status: pending}, {content: "check L1 aggregation", status: pending}, {content: "check L2 persistence and the session cache", status: pending}, {content: "check the storage DAO write path", status: pending}]}, result: "5 todos recorded"}
+      usage: {in: 8300, out: 320, cache_read: 24800}
+  - call: {text: "Stage one: absent, or stored under an id the query does not match? Counting minute rows per entity for the hour.", tool: {name: Bash, input: {command: "bydbctl measure query --start 2026-09-10T08:00:00Z --end 2026-09-10T09:00:00Z -f - <<< '{name: service_resp_time_minute, groups: [sw_metricsMinute], tagProjection: {tagFamilies: [{name: storage-only, tags: [entity_id]}]}, limit: 1000}' | yq '.dataPoints[].tagFamilies[0].tags[0].value.str.value' | sort | uniq -c | sed 's/^ *//'"}, result: "12 lines: 60 rows for each of eleven entity ids, 12 rows for c2hvcDo6Y2FydC1zZXJ2aWNl.1"}, usage: {in: 8600, out: 240, cache_read: 25500}}
+  - call: {text: "Genuinely absent: twelve minute rows for that entity, then nothing. The drop is upstream of the write.", usage: {in: 8800, out: 140, cache_read: 26000}}
+  - input: "Could the agent just have stopped sending?"
+  - call: {text: "Worth eliminating first. Looking for traces from it after the metric stopped.", tool: {name: Bash, input: {command: "swctl --display json trace ls --service-name 'shop::cart-service' --start '2026-09-10 0820' --end '2026-09-10 0830' | jq '.traces | length'"}, result: "15"}, usage: {in: 9100, out: 160, cache_read: 26700}}
+  - call: {text: "A full page of fifteen, as many as trace ls returns at once. The agent still reports after 08:12; only the aggregated metric disappears.", usage: {in: 9300, out: 230, cache_read: 27200}}
+  - input: "That is what I thought. So it is inside the OAP."
+  - call: {text: "Yes. Next stage: the dispatcher OAL generates for that metric.", tool: {name: Bash, input: {command: "find oap-server -name 'ServiceDispatcher*.java'"}, result: "(no output)"}, usage: {in: 9600, out: 150, cache_read: 27900}}
+  - call: {text: "No source for it. Checking how OAL produces its classes.", tool: {name: Bash, input: {command: "grep -rln 'javassist.ClassPool' oap-server/oal-rt/src/main/java"}, result: "oap-server/oal-rt/src/main/java/org/apache/skywalking/oal/v2/generator/OALClassGeneratorV2.java"}, usage: {in: 9800, out: 170, cache_read: 28400}}
+  - call: {text: "The dispatchers are generated in memory with Javassist at boot, from FreeMarker templates. The template is the next best thing to a source.", usage: {in: 10000, out: 140, cache_read: 28900}}
+  - input: "There is a distribution built in ../oap-build if that helps."
+  - call: {text: "It will for the loaded script. For the dispatcher, the template is what counts.", tool: {name: Bash, input: {command: "ls oap-server/oal-rt/src/main/resources/code-templates-v2/dispatcher"}, result: "dispatch.ftl\ndoMetrics.ftl\ndoMetricsWithDebug.ftl"}, usage: {in: 10300, out: 130, cache_read: 29600}}
+  - call: {text: "Reading the per-metric method.", tool: {name: Read, input: {file_path: "oap-server/oal-rt/src/main/resources/code-templates-v2/dispatcher/doMetrics.ftl"}, result: "33 lines"}, usage: {in: 10600, out: 150, cache_read: 30300}}
+  - call: {text: "doMetrics applies the OAL filters, builds the metrics object, copies the source fields including the entity id, and hands it to MetricsStreamProcessor. With no filter on service_resp_time, nothing here picks out one service.", usage: {in: 10900, out: 250, cache_read: 31000}}
+  - input: "What about the OAL engine itself? It reads the script at startup."
+  - call: {text: "Once, to generate classes. A per-service drop ten minutes in cannot come from a one-off parse.", usage: {in: 11100, out: 190, cache_read: 31600}}
+  - input: "Humour me and check that the script it actually loaded matches the file."
+  - call: {text: "Fair. Comparing the script the distribution ships in config/oal with the source one.", tool: {name: Bash, input: {command: "tar -xOzf ../oap-build/dist/apache-skywalking-apm-bin.tar.gz apache-skywalking-apm-bin/config/oal/core.oal | diff - oap-server/server-starter/src/main/resources/oal/core.oal"}, result: "(no output)"}, usage: {in: 11400, out: 180, cache_read: 32300}}
+  - call: {text: "Identical. The loaded script is the one on disk.", usage: {in: 11600, out: 110, cache_read: 32800}}
+  - input: "Alright. Next."
+  - call: {text: "MAL next: meter rules can produce service metrics too and could shadow the OAL one.", tool: {name: Bash, input: {command: "grep -rln 'service_resp_time' oap-server/server-starter/src/main/resources/"}, result: "2 files: alarm-settings.yml and oal/core.oal"}, usage: {in: 11900, out: 170, cache_read: 33500}}
+  - call: {text: "The alarm rules only read it, and no MAL rule produces it. No second writer.", usage: {in: 12100, out: 130, cache_read: 34000}}
+  - input: "Could a meter rule be deleting it?"
+  - call: {text: "MAL only emits. Checking anyway for anything that removes stored data.", tool: {name: Bash, input: {command: "grep -rn 'deleteHistory\\|delete(' oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/storage --include='*.java'"}, result: "4 hits: the TTL keeper and its history-delete DAO, and the runtime-rule management delete"}, usage: {in: 12400, out: 220, cache_read: 34800}}
+  - call: {text: "Only the TTL keeper deletes metric rows, by time bucket, never by service. The other hit removes runtime rules. Parking that.", usage: {in: 12600, out: 180, cache_read: 35300}}
+  - input: "Hold on. Is cart-service special in any way? Different agent version?"
+  - call: {text: "Checking what its instances report.", tool: {name: Bash, input: {command: "swctl --display json instance ls --service-name 'shop::cart-service' | jq '.[].attributes'"}, result: "3 instances, the same agent build as the other eleven"}, usage: {in: 12900, out: 160, cache_read: 36100}}
+  - call: {text: "Same agent as the healthy eleven. Not the agent.", usage: {in: 13100, out: 120, cache_read: 36600}}
+  - input: "What is different about it then? It is the only one we deploy with a service group, if that matters."
+  - call:
+      thinking: unavailable
+      text: "It may. EndpointNameGrouping, one of the two ten-minute caches, keys by service name, and a group prefix is exactly what it would see differently. Reading the cache."
+      tool: {name: Bash, input: {command: "git grep -n -A6 'unformattedHttpUrisCache =' -- '*/EndpointNameGrouping.java'"}, result: "a LoadingCache from service name to its unformatted URIs, expireAfterWrite(Duration.ofMinutes(10)), loader returning an empty set"}
+      usage: {in: 13500, out: 340, cache_read: 37400}
+  - call: {text: "Hypothesis one: the grouped name falls through that cache in a way that costs the service its rows, and the expiry matches ten minutes.", usage: {in: 13800, out: 280, cache_read: 38000}}
+  - input: "That would fit. Prove it."
+  - call: {text: "Where is the cache used?", tool: {name: Bash, input: {command: "git grep -n 'unformattedHttpUrisCache' -- '*/EndpointNameGrouping.java'"}, result: "2 hits: the declaration, and getUnchecked(serviceName) inside format()"}, usage: {in: 14100, out: 130, cache_read: 38700}}
+  - call: {text: "Only inside format(). Who calls that?", tool: {name: Bash, input: {command: "grep -rn 'endpointNameGrouping.format(' oap-server --include='*.java' | grep -v /test/"}, result: "1 hit: NamingControl.java:116, in formatEndpointName()"}, usage: {in: 14400, out: 200, cache_read: 39400}}
+  - call: {text: "One caller, formatting endpoint names. Reading what a miss or a full cache does to the name.", tool: {name: Bash, input: {command: "git grep -n -A11 'unformattedUrisOfService =' -- '*/EndpointNameGrouping.java'"}, result: "records the URI as unformatted; past maxHttpUrisNumberPerService, 3000 by default, it returns ABANDONED_ENDPOINT_NAME instead"}, usage: {in: 14700, out: 160, cache_read: 40000}}
+  - input: "So it can rename an endpoint. Can it lose a service metric?"
+  - call: {text: "No. At worst an endpoint is renamed to the abandoned name; nothing there returns null or touches a Service source, and service_resp_time is service scope.", usage: {in: 15000, out: 210, cache_read: 40800}}
+  - input: "Keep going, do not drop it yet."
+  - call: {text: "Last thing that could matter: what an expiry costs.", tool: {name: Bash, input: {command: "git grep -n -A4 'new CacheLoader' -- '*/EndpointNameGrouping.java'"}, result: "load(service) returns ConcurrentHashMap.newKeySet()"}, usage: {in: 15600, out: 150, cache_read: 42100}}
+  - call: {text: "Hypothesis one is dead. An expired entry comes back as an empty set, so expiry costs remembered URIs, never a metric, and it would hit every service with HTTP endpoints.", usage: {in: 15900, out: 300, cache_read: 42800}}
+  - input: "Agreed. That is the same wall I hit yesterday."
+  - call: {text: "Then one layer in, to where the metric object lives between the dispatcher and the write.", usage: {in: 16400, out: 140, cache_read: 44000}}
+  - input: "Which layer is that?"
+  - call: {text: "L1 aggregation, then whatever sits in front of persistence. Sizing the worker package.", tool: {name: Bash, input: {command: "cd oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker && ls *.java | wc -l | sed 's/^ *//' && cat *.java | wc -l | sed 's/^ *//'"}, result: "23\n2712"}, usage: {in: 16700, out: 170, cache_read: 44600}}
+  - input: "Read the aggregate worker."
+  - call: {text: "Reading it.", tool: {name: Read, input: {file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/MetricsAggregateWorker.java"}, result: "218 lines"}, usage: {in: 17000, out: 120, cache_read: 45300}}
+  - call: {text: "It merges into a MergableBufferedData keyed on storage id and hands the batch on at most every l1FlushPeriod, 500 ms by default. Nothing service specific.", usage: {in: 17300, out: 200, cache_read: 45900}}
+  - input: "What is the metric id made of?"
+  - call: {text: "Checking.", tool: {name: Bash, input: {command: "git grep -n 'id0' -- '*/analysis/metrics/Metrics.java'"}, result: "2 hits: id() caches id0(), which every metrics class implements"}, usage: {in: 17600, out: 160, cache_read: 46600}}
+  - call: {text: "The OAL template appends the time bucket, then the entity id; a service's entity id comes from IDManager.", usage: {in: 17900, out: 190, cache_read: 47200}}
+  - input: "Is that stable? Base64 of the name, or of the name plus layer?"
+  - call: {text: "Checking.", tool: {name: Bash, input: {command: "git grep -h -A5 'public static String buildId(String name, boolean isNormal)' -- '*/analysis/IDManager.java'"}, result: "return encode(name) + Const.SERVICE_ID_CONNECTOR + BooleanUtils.booleanToValue(isNormal);"}, usage: {in: 18200, out: 180, cache_read: 47900}}
+  - call: {text: "Base64 of the full name, group included, then .1 for a normal service. No layer, stable across restarts. Not the id.", usage: {in: 18400, out: 130, cache_read: 48400}}
+  - input: "Try the receiver side. Maybe the segments for that service never reach the analysis at all."
+  - call: {text: "The traces argue against it, but confirming the analysis listener fires.", tool: {name: Bash, input: {command: "grep -rln 'class RPCAnalysisListener' oap-server/server-receiver-plugin/skywalking-trace-receiver-plugin/src/main/java"}, result: "(no output)"}, usage: {in: 18700, out: 200, cache_read: 49100}}
+  - call: {text: "Wrong module. Locating it.", tool: {name: Bash, input: {command: "find oap-server -name 'RPCAnalysisListener.java'"}, result: "oap-server/analyzer/agent-analyzer/src/main/java/org/apache/skywalking/oap/server/analyzer/provider/trace/parser/listener/RPCAnalysisListener.java"}, usage: {in: 18900, out: 130, cache_read: 49700}}
+  - call: {text: "It lives in the agent analyzer. Reading the part that emits service latency.", tool: {name: Bash, input: {command: "git grep -n 'public void parseEntry\\|public void build\\|sourceReceiver.receive' -- '*/RPCAnalysisListener.java'"}, result: "parseEntry queues one traffic builder per entry span; build() sends toService() and the instance and relation sources for each"}, usage: {in: 19200, out: 230, cache_read: 50400}}
+  - input: "So it does emit. Fine."
+  - call: {text: "Unconditionally, once per entry span. The source is produced.", usage: {in: 19400, out: 140, cache_read: 51000}}
+  - input: "This is going nowhere. Take a different angle: what changed? It did not do this in the last release."
+  - call: {text: "A better question than mine. Which two versions?", usage: {in: 19700, out: 120, cache_read: 51600}}
+  - input: "It was fine on 10.98.0, it does this on 10.99.0."
+  - call: {text: "Listing what touched the metrics path between the tags.", tool: {name: Bash, input: {command: "git log --oneline v10.98.0..v10.99.0 -- oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis | wc -l | sed 's/^ *//'"}, result: "31"}, usage: {in: 20000, out: 190, cache_read: 52300}}
+  - call: {text: "31 in the analysis package. Narrowing to the worker package, where persistence decisions are made.", tool: {name: Bash, input: {command: "git log --oneline v10.98.0..v10.99.0 -- oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker | wc -l | sed 's/^ *//'"}, result: "6"}, usage: {in: 20300, out: 170, cache_read: 53000}}
+  - input: "Six is a list I can read. Show me them with the stats."
+  - call: {text: "With line counts.", tool: {name: Bash, input: {command: "git log --stat --oneline v10.98.0..v10.99.0 -- oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker | head -50"}, result: "6 commits; the largest adds WriteSessionCache, SessionFlushWorker and SessionWarmupTimer"}, usage: {in: 20600, out: 210, cache_read: 53700}}
+  - call: {text: "One of the six puts a WriteSessionCache in front of persistence, one of the two ten-minute caches. The first thing that has lined up twice.", usage: {in: 20900, out: 260, cache_read: 54400}}
+  - input: "Now we are somewhere. What does it cache?"
+  - call: {text: "Reading the commit.", tool: {name: Bash, input: {command: "git show --stat $(git log --format=%H -1 --grep 'session cache' v10.98.0..v10.99.0) | tail -1 | sed 's/^ *//'"}, result: "4 files changed, 212 insertions(+), 38 deletions(-)"}, usage: {in: 21200, out: 150, cache_read: 55100}}
+  - call: {text: "It opens a write session per service and lets the flush worker write a service's metrics only while it is open, to hold back rows for services not yet registered. A held-back row is exactly our bug's shape: no error, no log, no row.", usage: {in: 21500, out: 280, cache_read: 55800}}
+  - input: "Show me that class."
+  - call: {text: "Reading it.", tool: {name: Read, input: {file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/WriteSessionCache.java"}, result: "47 lines"}, usage: {in: 21800, out: 110, cache_read: 56500}}
+  - call: {text: "Small: an expiring map of open sessions keyed by service id, an open() that puts, and an isActive() the flush worker calls before it writes.", usage: {in: 22000, out: 210, cache_read: 57100}}
+  - input: "Before it writes? So if isActive says no, nothing is written at all?"
+  - call: {text: "That is what the caller does. Confirming.", tool: {name: Bash, input: {command: "git grep -n -B2 -A3 'isActive' -- '*/SessionFlushWorker.java'"}, result: "1 call site, inside prepareBatch, a continue when false"}, usage: {in: 22300, out: 180, cache_read: 57800}}
+  - call: {text: "A continue with no log and no counter. A service-scope metric that fails isActive vanishes without trace, which matches every symptom.", usage: {in: 22600, out: 240, cache_read: 58400}}
+  - input: "Then why would it fail for one service?"
+  - call: {text: "That I cannot answer yet. The check looks harmless.", usage: {in: 22800, out: 130, cache_read: 59000}}
+  - input: "Do not skip past it. What exactly does the check look at?"
+  - call: {text: "Reading it.", tool: {name: Bash, input: {command: "git grep -h -A2 'boolean isActive' -- '*/WriteSessionCache.java'"}, result: "public boolean isActive(String serviceId) { return sessions.containsKey(serviceId); }"}, usage: {in: 23100, out: 200, cache_read: 59700}}
+  - call: {text: "A plain lookup by service id. So the real question is why the key would be missing for one service.", usage: {in: 23400, out: 180, cache_read: 60300}}
+  - input: "Missing? It is a ten minute cache. It would go missing for every service, not one."
+  - call: {text: "Unless something keeps re-opening eleven of them. A session exists only while something opens it.", usage: {in: 23700, out: 240, cache_read: 61000}}
+  - input: "So who opens them?"
+  - call: {text: "That is what I need to establish before I believe any of this.", usage: {in: 23900, out: 150, cache_read: 61600}}
+  - reset: {summary: "Why service_resp_time stops for shop::cart-service ten minutes after an OAP restart. Ruled out: query path, OAL script and dispatcher template, MAL, trace analysis, the agent, TTL deletes, EndpointNameGrouping's ten-minute cache. Lead: SessionFlushWorker.prepareBatch drops a service-scope metric with a bare continue when WriteSessionCache.isActive(serviceId) is false; sessions expire after ten minutes. Next: who opens sessions, and why one would be missing."}
+  - input: "Right, who opens the sessions?"
+  - call: {text: "Every caller of open().", tool: {name: Bash, input: {command: "grep -rn 'sessionCache.open(' oap-server/server-core/src/main/java --include='*.java'"}, result: "2 hits, both in SessionWarmupTimer.java"}, usage: {in: 7200, out: 130, cache_read: 15000, cache_write: 3000}}
+  - call: {text: "Only the warm-up timer. When does it run?", tool: {name: Bash, input: {command: "git grep -n 'void start\\|void warm\\|schedule' -- '*/SessionWarmupTimer.java'"}, result: "line 34, start(); line 39, scheduleWithFixedDelay(this::warm, 10, 10, TimeUnit.SECONDS); line 42, warm()"}, usage: {in: 7500, out: 170, cache_read: 15800}}
+  - input: "So every persisted service gets a session at boot?"
+  - call: {text: "start() opens one per persisted ServiceTraffic row. Checking cart-service is persisted, so start() would see it.", tool: {name: Bash, input: {command: "swctl --display json service ls | jq '.[] | select(.name == \"shop::cart-service\") | .group'"}, result: "\"shop\""}, usage: {in: 7800, out: 160, cache_read: 16400}}
+  - call: {text: "Persisted, in group shop, so start() opens its session at every boot. That would explain the good ten minutes after each restart.", usage: {in: 8100, out: 210, cache_read: 17100}}
+  - input: "And after that?"
+  - call: {text: "warm() should keep it open. A session re-opened every ten seconds can never reach a ten-minute expiry, on paper.", usage: {in: 8400, out: 190, cache_read: 17800}}
+  - call: {text: "So either the paper is wrong about one service, or the skip is not where the rows go.", usage: {in: 8700, out: 220, cache_read: 18400}}
+  - input: "So the theory is wrong."
+  - call: {text: "Not proven either way. Something must end one session and not eleven, or the rows die elsewhere. Instrumenting will settle it.", usage: {in: 8900, out: 190, cache_read: 19000}}
+  - input: "Park that for a moment. I want to rule out storage properly. BanyanDB has a lifecycle stage that moves data out of the hot segment. Could that be eating it?"
+  - call: {text: "Worth measuring. The lifecycle configuration first.", tool: {name: Bash, input: {command: "grep -n -A6 'metricsMinute:' oap-server/server-starter/src/main/resources/bydb.yml"}, result: "metricsMinute: segmentInterval 1 day, ttl 7 days, warm and cold stages off unless enabled"}, usage: {in: 9200, out: 210, cache_read: 19800}}
+  - call: {text: "Hypothesis two: a lifecycle loss would be time-based, not per service, and hit data older than a day. Ours is minutes old.", usage: {in: 9500, out: 220, cache_read: 20400}}
+  - input: "Measure it anyway. I have been wrong about that file before."
+  - call: {text: "Asking the store which entities it holds on each side of 08:12, in one segment.", tool: {name: Bash, input: {command: "bydbctl measure query --start 2026-09-10T08:00:00Z --end 2026-09-10T08:30:00Z -f - <<< '{name: service_resp_time_minute, groups: [sw_metricsMinute], tagProjection: {tagFamilies: [{name: storage-only, tags: [entity_id]}]}, limit: 1000}' | yq '.dataPoints[] | .timestamp + \" \" + .tagFamilies[0].tags[0].value.str.value' | awk '{print ($1 < \"2026-09-10T08:12\" ? \"before-0812\" : \"from-0812\"), $2}' | sort -u | cut -d' ' -f1 | uniq -c | sed 's/^ *//'"}, result: "12 before-0812\n11 from-0812"}, usage: {in: 9800, out: 260, cache_read: 21200}}
+  - call: {text: "Twelve entities before 08:12, eleven after, in a segment no lifecycle stage has touched. The store never got the twelfth. Hypothesis two is disproved; the drop is on the write side.", usage: {in: 10100, out: 300, cache_read: 21900}}
+  - input: "Good. That is one thing I can stop worrying about."
+  - call: {text: "It narrows the window too: between L1 aggregation and the batch handed to the DAO.", usage: {in: 10300, out: 160, cache_read: 22400}}
+  - input: "Can you instrument it instead of reading more code?"
+  - call: {text: "Yes. A log line in the skip branch will show at once whether prepareBatch drops it.", tool: {name: Edit, input: {file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorker.java", old_string: "continue;", new_string: "org.slf4j.LoggerFactory.getLogger(SessionFlushWorker.class).warn(\"skip {}\", serviceId);\n                continue;"}, result: "1 replacement (temporary instrumentation, to be reverted)"}, usage: {in: 10600, out: 280, cache_read: 23100}}
+  - call: {text: "Building the distribution and the OAP image from it.", tool: {name: Bash, input: {command: "make SKIP_TEST=true build.backend docker.oap"}, result: {text: "dist/apache-skywalking-apm-bin.tar.gz built; skywalking/oap:latest loaded", after: 420s}}, usage: {in: 10900, out: 140, cache_read: 23700}}
+  - input: "Run it against the soak stack in ../oap-soak. Same twelve service names as production, a load generator, and it keeps its BanyanDB volume between runs."
+  - call: {text: "Starting it on the new image. The kept volume means all twelve are registered before this OAP boots, as in production.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose up -d --wait && docker compose port oap 12800 && swctl --display json service ls | jq length"}, result: {text: "15 containers healthy\n0.0.0.0:12800\n12", after: 150s}}, usage: {in: 11200, out: 190, cache_read: 24400}}
+  - call: {text: "Twelve services, the OAP on the port swctl expects. Now we wait past ten minutes.", usage: {in: 11500, out: 150, cache_read: 25000}}
+  - input: "I am going to get a coffee. Ping me when it is interesting."
+    after: 1500s
+  - call: {text: "It is interesting. The skip branch fires, for one id only.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose logs --no-log-prefix oap | grep 'skip ' | awk '{print $NF}' | sort | uniq -c | sed 's/^ *//'"}, result: "1844 c2hvcDo6Y2FydC1zZXJ2aWNl.1"}, usage: {in: 11800, out: 200, cache_read: 3900, cache_write: 25700}}
+  - call: {text: "1,844 skips, one id. Dropping the .1 IDManager appends and decoding the rest.", tool: {name: Bash, input: {command: "echo c2hvcDo6Y2FydC1zZXJ2aWNl.1 | cut -d. -f1 | base64 -d"}, result: "shop::cart-service"}, usage: {in: 12100, out: 160, cache_read: 26300}}
+  - call: {text: "Can anything else in the worker package drop a metric silently?", tool: {name: Bash, input: {command: "git grep -n 'continue;' -- '*/analysis/worker/*.java'"}, result: "3 hits: MetricsPersistentWorker.java:261 and :268, SessionFlushWorker.java:57"}, usage: {in: 12330, out: 200, cache_read: 27020}}
+  - call: {text: "Two others. Reading them.", tool: {name: Bash, input: {command: "git grep -n -B10 -A7 'if (!supportUpdate)' -- '*/MetricsPersistentWorker.java'"}, result: "both inside if (cachedMetrics != null): skip the update when the metric does not support update, or when combine() abandons"}, usage: {in: 12480, out: 220, cache_read: 27370}}
+  - call: {text: "Both act on a row the persistent worker already caches: they can skip an update, never a minute's first write. Only the SessionFlushWorker one stops a row from ever existing.", usage: {in: 12630, out: 190, cache_read: 27720}}
+  - call: {text: "How often does prepareBatch run?", tool: {name: Bash, input: {command: "grep -rn 'prepareBatch' oap-server/server-core/src/main/java --include='*.java'"}, result: "2 hits: the method, and flush(), which runs once per persistence period"}, usage: {in: 12780, out: 200, cache_read: 28070}}
+  - call: {text: "And the default period.", tool: {name: Bash, input: {command: "grep -n 'persistentPeriod' oap-server/server-starter/src/main/resources/application.yml"}, result: "persistentPeriod: ${SW_CORE_PERSISTENT_PERIOD:25}"}, usage: {in: 12930, out: 170, cache_read: 28420}}
+  - call: {text: "Every 25 seconds, one skip per service-scope row the service owns that period, its service metrics at minute, hour and day level, about fifty a flush. Fifteen minutes of skips is about 37 flushes, right around 1,844. The arithmetic holds.", usage: {in: 13080, out: 180, cache_read: 28770}}
+  - call: {text: "Confirmed: prepareBatch discards every shop::cart-service service-scope row, silently, in the isActive branch.", usage: {in: 13320, out: 250, cache_read: 29530}}
+  - input: "Finally. And the first skip is at what time?"
+  - call: {text: "Comparing the first skip with the container start.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose logs -t --no-log-prefix oap | grep -m1 'skip ' | cut -c1-19; docker inspect -f '{{.State.StartedAt}}' $(docker compose ps -q oap) | cut -c1-19"}, result: "2026-09-10T09:26:52\n2026-09-10T09:16:38"}, usage: {in: 13620, out: 130, cache_read: 30130}}
+  - call: {text: "10m14s after the OAP started: a ten-minute expiry plus part of one 25 second period. No longer a coincidence.", usage: {in: 13920, out: 210, cache_read: 30730}}
+  - input: "So which ten minute cache is it? You found two."
+  - call: {text: "The session map itself, if the skip is what I think.", tool: {name: Bash, input: {command: "git grep -h 'expireAfter' -- '*/WriteSessionCache.java'"}, result: "this(CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES)"}, usage: {in: 14220, out: 230, cache_read: 31430}}
+  - call: {text: "The WriteSessionCache. Ten minutes after start() opened cart-service's session it expired, and the service has been skipped since.", usage: {in: 14520, out: 130, cache_read: 32030}}
+  - input: "Which would expire every service, not one. We keep going round this."
+  - call: {text: "Because I keep assuming warm() works. With expireAfterWrite only a put resets the clock, and after boot warm() is the only thing that puts. If eleven survive, warm() re-opens eleven sessions and not the twelfth.", usage: {in: 14820, out: 320, cache_read: 32730}}
+  - input: "Then why not the twelfth?"
+  - call: {text: "Reading exactly what warm() re-opens.", tool: {name: Bash, input: {command: "git grep -h -A4 'void warm' -- '*/SessionWarmupTimer.java'"}, result: "for each persisted ServiceTraffic: sessionCache.open(IDManager.ServiceID.buildId(traffic.getShortName(), true))"}, usage: {in: 15120, out: 280, cache_read: 33530}}
+  - call: {text: "It rebuilds the id from the short name.", usage: {in: 15520, out: 210, cache_read: 34330}}
+  - call: {text: "There it is. For the eleven ungrouped services the short name is the name, so warm() re-opens their real sessions. For shop::cart-service it is cart-service, so warm() keeps re-opening a session no metric uses while the real one dies ten minutes after boot.", usage: {in: 15720, out: 340, cache_read: 34730}}
+  - call: {text: "Confirming start() differs.", tool: {name: Bash, input: {command: "git grep -n 'buildId' -- '*/SessionWarmupTimer.java'"}, result: "line 36, in start(): buildId(traffic.getName(), true); line 44, in warm(): buildId(traffic.getShortName(), true)"}, usage: {in: 15870, out: 180, cache_read: 35080}}
+  - call: {text: "start() uses the full name, warm() the short one. That is why every restart buys exactly ten minutes.", usage: {in: 16020, out: 190, cache_read: 35430}}
+  - call: {text: "One more check: does the flush worker's lookup count as a write?", tool: {name: Bash, input: {command: "git grep -n 'sessions\\.' -- '*/WriteSessionCache.java'"}, result: "line 41, sessions.put(serviceId, Boolean.TRUE); line 45, return sessions.containsKey(serviceId);"}, usage: {in: 16170, out: 220, cache_read: 35780}}
+  - call: {text: "No. containsKey is a read, and a read never resets expireAfterWrite, so checking a session every period keeps nothing alive.", usage: {in: 16320, out: 250, cache_read: 36130}}
+  - input: "Prove the key part, not just the expiry part."
+  - call: {text: "Logging every key open() receives. With the skip line carrying the key the metrics use, the log shows both sides.", tool: {name: Edit, input: {file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/WriteSessionCache.java", old_string: "sessions.put(serviceId, Boolean.TRUE);", new_string: "org.slf4j.LoggerFactory.getLogger(WriteSessionCache.class).warn(\"open {}\", serviceId);\n        sessions.put(serviceId, Boolean.TRUE);"}, result: "1 replacement (temporary, reverted with the other one)"}, usage: {in: 16595, out: 260, cache_read: 37030}}
+  - call: {text: "Rebuilding the image and recreating only the OAP.", tool: {name: Bash, input: {command: "make SKIP_TEST=true build.backend docker.oap && cd ../oap-soak && docker compose up -d --wait oap"}, result: {text: "skywalking/oap:latest rebuilt; oap recreated on it and healthy", after: 480s}}, usage: {in: 16895, out: 150, cache_read: 37630}}
+  - input: "And?"
+    after: 900s
+  - call: {text: "Thirteen keys for twelve services, as predicted.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose logs --no-log-prefix oap | grep 'open ' | awk '{print $NF}' | sort | uniq -c | sed 's/^ *//' | while read n id; do echo \"$n $(echo $id | cut -d. -f1 | base64 -d)\"; done | sort -n"}, result: "13 lines: 1 shop::cart-service, 91 cart-service, then 92 for each of the other eleven"}, usage: {in: 17195, out: 180, cache_read: 3900, cache_write: 38330}}
+  - call: {text: "shop::cart-service is opened once, by start(), never again, while warm() refreshes cart-service, a key no metric carries. The skip lines carry c2hvcDo6Y2FydC1zZXJ2aWNl.1, the key never refreshed. That is the whole bug.", usage: {in: 17495, out: 190, cache_read: 38930}}
+  - input: "And for a healthy service?"
+  - call: {text: "order-service in both logs.", tool: {name: Bash, input: {command: "cd ../oap-soak && L=$(docker compose logs --no-log-prefix oap); K=$(printf order-service | base64).1; echo \"open $(echo \"$L\" | grep -c \"open $K\") skip $(echo \"$L\" | grep -c \"skip $K\")\""}, result: "open 92 skip 0"}, usage: {in: 17795, out: 140, cache_read: 39530}}
+  - call: {text: "Opened 92 times under the key its metrics carry, never skipped. As clean a contrast as it gets.", usage: {in: 18095, out: 160, cache_read: 40130}}
+  - reset: {summary: "Root cause: SessionFlushWorker.prepareBatch drops a service-scope metric with a bare continue when WriteSessionCache has no open session for its service id; sessions expire ten minutes after the last open(). SessionWarmupTimer.start() opens them by getName(), but warm() re-opens them every ten seconds by getShortName(), so shop::cart-service's real session expires ten minutes after boot. Evidence: 1,844 skips, one id; open() log: shop::cart-service once, cart-service 91 times; first skip 10m14s after start. Left: fix warm(), make the skip observable, add a test."}
+  - input: "Before you write anything, when did this land and was it deliberate?"
+  - call: {text: "Blaming the warm() loop.", tool: {name: Bash, input: {command: "git log -1 --format='%h %ad' -L '/void warm/,+4:oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimer.java' | head -1"}, result: "landed in the session cache commit, 10.99.0 cycle"}, usage: {in: 6800, out: 200, cache_read: 14000, cache_write: 3200}}
+  - call: {text: "With the session cache itself, in the 10.99.0 cycle, matching your report.", usage: {in: 7100, out: 150, cache_read: 14800}}
+  - input: "Was the short name intentional? Some display path, maybe?"
+  - call: {text: "Reading the commit message.", tool: {name: Bash, input: {command: "git log -1 --format=%B $(git log --format=%H -1 --grep 'session cache')"}, result: "message describes keeping sessions warm between persistence periods, says nothing about which name"}, usage: {in: 7400, out: 190, cache_read: 15500}}
+  - call: {text: "Nothing about it. A slip: start() and warm() were plainly meant to open the same key.", usage: {in: 7700, out: 170, cache_read: 16100}}
+  - input: "Anywhere else that builds a service id from the short name?"
+  - call: {text: "Sweeping core.", tool: {name: Bash, input: {command: "grep -rn 'buildId([a-zA-Z.]*getShortName()' oap-server/server-core/src/main/java --include='*.java'"}, result: "1 hit: SessionWarmupTimer.java:44"}, usage: {in: 8000, out: 230, cache_read: 16800}}
+  - call: {text: "Only that one. But the flush worker is the other half: whatever the timer gets wrong, it drops without a word. Both need changing, or the next slip is just as silent.", usage: {in: 8300, out: 240, cache_read: 17400}}
+  - call: {text: "Does the flush worker ever re-open a session itself?", tool: {name: Bash, input: {command: "git grep -n 'open(' -- '*/SessionFlushWorker.java'"}, result: "(no output)"}, usage: {in: 8570, out: 230, cache_read: 18280}}
+  - call: {text: "Never. An expired session stays expired until the next start(), which is why nothing recovers without a restart.", usage: {in: 8720, out: 210, cache_read: 18630}}
+  - call: {text: "And a grouped service registered after boot would get no session at all: start() never saw it, and warm() opens only its short-name twin.", usage: {in: 8870, out: 200, cache_read: 18980}}
+  - call: {text: "The worker's only other use of the cache.", tool: {name: Bash, input: {command: "git grep -n 'sessionCache\\.' -- '*/SessionFlushWorker.java'"}, result: "1 hit, line 56: if (serviceId != null && !sessionCache.isActive(serviceId)) {"}, usage: {in: 9020, out: 200, cache_read: 19330}}
+  - call: {text: "One read, no writes. So the fix belongs in two places: the key warm() refreshes, and what prepareBatch does when a session is missing.", usage: {in: 9170, out: 220, cache_read: 19680}}
+  - input: "Check the whole tree while you are at it."
+  - call: {text: "Widening the sweep.", tool: {name: Bash, input: {command: "grep -rn 'getShortName()' oap-server --include='*.java' | grep -v /test/ | grep -c buildId"}, result: "1"}, usage: {in: 9430, out: 150, cache_read: 20520}}
+  - call: {text: "Only that line builds an id next to a short name anywhere under oap-server.", usage: {in: 9630, out: 120, cache_read: 21120}}
+  - input: "Good. Now, what is the smallest correct fix?"
+  - call: {text: "The full name in warm(), and no silent drop: when a session is missing, re-open it, write the row, log at debug and count it. No restructuring in a bug fix.", usage: {in: 9930, out: 190, cache_read: 21720}}
+  - input: "Agreed, small. Do not touch the eviction policy, that is a separate discussion."
+  - call:
+      text: "Then this is the plan."
+      tool: {name: TodoWrite, input: {todos: [{content: "full name in warm()", status: in_progress}, {content: "no silent skip in prepareBatch", status: pending}, {content: "test for a grouped service", status: pending}, {content: "revert the instrumentation", status: pending}, {content: "rerun the soak", status: pending}]}, result: "5 todos recorded"}
+      usage: {in: 10230, out: 340, cache_read: 22420}
+  - input: "Do the revert first. I do not want those warn lines surviving into a commit."
+  - call: {text: "Reverting both instrumented files first.", tool: {name: Bash, input: {command: "git checkout -- oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker && git status --short"}, result: "(no output)"}, usage: {in: 10530, out: 160, cache_read: 23120}}
+  - input: "Now the timer."
+  - call:
+      text: "One word: the full name, as start() already uses."
+      tool:
+        name: Edit
+        input: {file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimer.java", old_string: "buildId(traffic.getShortName(), true)", new_string: "buildId(traffic.getName(), true)"}
+        result: "The file SessionWarmupTimer.java has been updated."
+        changes:
+        - path: oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimer.java
+          before: |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import java.util.List;
+            import java.util.concurrent.Executors;
+            import java.util.concurrent.TimeUnit;
+            import java.util.function.Supplier;
+            import lombok.RequiredArgsConstructor;
+            import org.apache.skywalking.oap.server.core.analysis.IDManager;
+            import org.apache.skywalking.oap.server.core.analysis.manual.service.ServiceTraffic;
+
+            @RequiredArgsConstructor
+            public class SessionWarmupTimer {
+                private final WriteSessionCache sessionCache;
+                private final Supplier<List<ServiceTraffic>> services;
+
+                public void start() {
+                    for (ServiceTraffic traffic : services.get()) {
+                        sessionCache.open(IDManager.ServiceID.buildId(traffic.getName(), true));
+                    }
+                    Executors.newSingleThreadScheduledExecutor()
+                             .scheduleWithFixedDelay(this::warm, 10, 10, TimeUnit.SECONDS);
+                }
+
+                void warm() {
+                    for (ServiceTraffic traffic : services.get()) {
+                        sessionCache.open(IDManager.ServiceID.buildId(traffic.getShortName(), true));
+                    }
+                }
+            }
+          after: |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import java.util.List;
+            import java.util.concurrent.Executors;
+            import java.util.concurrent.TimeUnit;
+            import java.util.function.Supplier;
+            import lombok.RequiredArgsConstructor;
+            import org.apache.skywalking.oap.server.core.analysis.IDManager;
+            import org.apache.skywalking.oap.server.core.analysis.manual.service.ServiceTraffic;
+
+            @RequiredArgsConstructor
+            public class SessionWarmupTimer {
+                private final WriteSessionCache sessionCache;
+                private final Supplier<List<ServiceTraffic>> services;
+
+                public void start() {
+                    for (ServiceTraffic traffic : services.get()) {
+                        sessionCache.open(IDManager.ServiceID.buildId(traffic.getName(), true));
+                    }
+                    Executors.newSingleThreadScheduledExecutor()
+                             .scheduleWithFixedDelay(this::warm, 10, 10, TimeUnit.SECONDS);
+                }
+
+                void warm() {
+                    for (ServiceTraffic traffic : services.get()) {
+                        sessionCache.open(IDManager.ServiceID.buildId(traffic.getName(), true));
+                    }
+                }
+            }
+      usage: {in: 10830, out: 380, cache_read: 23820}
+  - input: "Why rebuild the id at all? ServiceTraffic has getServiceId()."
+  - call: {text: "It has, and builds the id from the full name and the layer's normal flag when none is stored. start() builds it from getName() with true, so matching start() keeps this one word. Moving both to getServiceId() is a follow-up.", usage: {in: 11530, out: 250, cache_read: 25120}}
+  - input: "Fine. Now the flush worker."
+  - call:
+      text: "Rewriting it so a missing session is no longer a silent drop: re-open, write, log at debug, count. The counter is created in the constructor, as MetricsPersistentWorker creates its own."
+      tool:
+        name: Write
+        input:
+          file_path: "oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorker.java"
+          content: &worker_after |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.List;
+            import lombok.extern.slf4j.Slf4j;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.MetricsMetaInfo;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata;
+            import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine;
+            import org.apache.skywalking.oap.server.core.worker.AbstractWorker;
+            import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder;
+            import org.apache.skywalking.oap.server.telemetry.TelemetryModule;
+            import org.apache.skywalking.oap.server.telemetry.api.CounterMetrics;
+            import org.apache.skywalking.oap.server.telemetry.api.MetricsCreator;
+            import org.apache.skywalking.oap.server.telemetry.api.MetricsTag;
+
+            @Slf4j
+            public class SessionFlushWorker extends AbstractWorker<Metrics> {
+                private final WriteSessionCache sessionCache;
+                private final AbstractWorker<Metrics> nextWorker;
+                private final CounterMetrics reopened;
+                private final List<Metrics> buffer = new ArrayList<>();
+
+                SessionFlushWorker(ModuleDefineHolder moduleDefineHolder, WriteSessionCache sessionCache,
+                                   AbstractWorker<Metrics> nextWorker) {
+                    super(moduleDefineHolder);
+                    this.sessionCache = sessionCache;
+                    this.nextWorker = nextWorker;
+                    MetricsCreator metricsCreator = moduleDefineHolder.find(TelemetryModule.NAME)
+                                                                      .provider()
+                                                                      .getService(MetricsCreator.class);
+                    this.reopened = metricsCreator.createCounter(
+                        "write_session_reopened", "The number of write sessions re-opened by the flush worker.",
+                        MetricsTag.EMPTY_KEY, MetricsTag.EMPTY_VALUE);
+                }
+
+                @Override
+                public synchronized void in(Metrics metrics) {
+                    buffer.add(metrics);
+                }
+
+                synchronized void flush() {
+                    prepareBatch(buffer);
+                    buffer.clear();
+                }
+
+                void prepareBatch(Collection<Metrics> batch) {
+                    for (Metrics metrics : batch) {
+                        String serviceId = serviceIdOf(metrics);
+                        if (serviceId != null && !sessionCache.isActive(serviceId)) {
+                            log.debug("no write session for {}, re-opening it", serviceId);
+                            sessionCache.open(serviceId);
+                            reopened.inc();
+                        }
+                        nextWorker.in(metrics);
+                    }
+                }
+
+                private static String serviceIdOf(Metrics metrics) {
+                    if (!(metrics instanceof WithMetadata)) {
+                        return null;
+                    }
+                    MetricsMetaInfo meta = ((WithMetadata) metrics).getMeta();
+                    return meta.getScope() == DefaultScopeDefine.SERVICE ? meta.getId() : null;
+                }
+            }
+        result: "The file SessionFlushWorker.java has been updated."
+        changes:
+        - path: oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorker.java
+          before: |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import java.util.ArrayList;
+            import java.util.Collection;
+            import java.util.List;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.MetricsMetaInfo;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.WithMetadata;
+            import org.apache.skywalking.oap.server.core.source.DefaultScopeDefine;
+            import org.apache.skywalking.oap.server.core.worker.AbstractWorker;
+            import org.apache.skywalking.oap.server.library.module.ModuleDefineHolder;
+
+            public class SessionFlushWorker extends AbstractWorker<Metrics> {
+                private final WriteSessionCache sessionCache;
+                private final AbstractWorker<Metrics> nextWorker;
+                private final List<Metrics> buffer = new ArrayList<>();
+
+                SessionFlushWorker(ModuleDefineHolder moduleDefineHolder, WriteSessionCache sessionCache,
+                                   AbstractWorker<Metrics> nextWorker) {
+                    super(moduleDefineHolder);
+                    this.sessionCache = sessionCache;
+                    this.nextWorker = nextWorker;
+                }
+
+                @Override
+                public synchronized void in(Metrics metrics) {
+                    buffer.add(metrics);
+                }
+
+                synchronized void flush() {
+                    prepareBatch(buffer);
+                    buffer.clear();
+                }
+
+                void prepareBatch(Collection<Metrics> batch) {
+                    for (Metrics metrics : batch) {
+                        String serviceId = serviceIdOf(metrics);
+                        if (serviceId != null && !sessionCache.isActive(serviceId)) {
+                            continue;
+                        }
+                        nextWorker.in(metrics);
+                    }
+                }
+
+                private static String serviceIdOf(Metrics metrics) {
+                    if (!(metrics instanceof WithMetadata)) {
+                        return null;
+                    }
+                    MetricsMetaInfo meta = ((WithMetadata) metrics).getMeta();
+                    return meta.getScope() == DefaultScopeDefine.SERVICE ? meta.getId() : null;
+                }
+            }
+          after: *worker_after
+      usage: {in: 11930, out: 520, cache_read: 25920}
+  - input: "You open a session from the flush path now. Does that not hide the next timer bug?"
+  - call: {text: "It would, silently, which is why the re-open is logged and counted. With the timer right, write_session_reopened stays at zero; if it moves, a session expired that should not have.", usage: {in: 12330, out: 280, cache_read: 26620}}
+  - input: "And does anything rely on the old drop? Check it, do not assert it."
+  - call: {text: "Everything that uses the worker or its check.", tool: {name: Bash, input: {command: "grep -rln 'sessionCache.isActive\\|SessionFlushWorker' oap-server --include='*.java' | xargs -n1 basename"}, result: "SessionFlushWorker.java\nSessionFlushWorkerTest.java\nTestWorkers.java"}, usage: {in: 12630, out: 200, cache_read: 27320}}
+  - call: {text: "Only the worker and its tests. If the test pins the drop it will fail, and I would rather see that than guess.", usage: {in: 12930, out: 210, cache_read: 27920}}
+  - input: "Good. The counter needs a name that shows up in so11y."
+  - call: {text: "Checking the name against the other worker counters.", tool: {name: Bash, input: {command: "git grep -h -A1 'createCounter(' -- '*/analysis/worker/*.java' | grep '\"'"}, result: "6 counters: metrics_aggregator_abandon, metrics_aggregation twice, metrics_persistent_cache twice, and the new write_session_reopened"}, usage: {in: 13230, out: 190, cache_read: 28620}}
+  - call: {text: "write_session_reopened sits with the other five: snake_case, created through MetricsCreator like metrics_persistent_cache, with no labels since it counts one thing.", usage: {in: 13530, out: 150, cache_read: 29220}}
+  - input: "Now a test that would have caught this."
+  - call: {text: "What ServiceTraffic lets a test set, before I invent a builder.", tool: {name: Bash, input: {command: "git grep -h -A3 '@Setter' -- '*/manual/service/ServiceTraffic.java' | grep private"}, result: "name, shortName, serviceId, group and layer"}, usage: {in: 13630, out: 170, cache_read: 29420}}
+  - call:
+      text: "Plain setters, no mocks. After one warm(), a grouped service must have an open session under its full-name id. That is the exact condition, and it fails on the old timer."
+      tool:
+        name: Write
+        input:
+          file_path: "oap-server/server-core/src/test/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimerTest.java"
+          content: &timer_test |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import static org.junit.jupiter.api.Assertions.assertTrue;
+
+            import java.util.List;
+            import org.apache.skywalking.oap.server.core.analysis.IDManager;
+            import org.apache.skywalking.oap.server.core.analysis.manual.service.ServiceTraffic;
+            import org.junit.jupiter.api.Test;
+
+            public class SessionWarmupTimerTest {
+                @Test
+                public void warmKeepsAGroupedServiceOpen() {
+                    WriteSessionCache cache = new WriteSessionCache();
+                    new SessionWarmupTimer(cache, () -> List.of(traffic("shop::cart-service", "cart-service"))).warm();
+                    assertTrue(cache.isActive(IDManager.ServiceID.buildId("shop::cart-service", true)));
+                }
+
+                @Test
+                public void warmKeepsAPlainServiceOpen() {
+                    WriteSessionCache cache = new WriteSessionCache();
+                    new SessionWarmupTimer(cache, () -> List.of(traffic("order-service", "order-service"))).warm();
+                    assertTrue(cache.isActive(IDManager.ServiceID.buildId("order-service", true)));
+                }
+
+                private static ServiceTraffic traffic(String name, String shortName) {
+                    ServiceTraffic traffic = new ServiceTraffic();
+                    traffic.setName(name);
+                    traffic.setShortName(shortName);
+                    return traffic;
+                }
+            }
+        result: "File created successfully."
+        changes:
+        - path: oap-server/server-core/src/test/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimerTest.java
+          after: *timer_test
+      usage: {in: 13830, out: 480, cache_read: 29920}
+  - input: "Run the test against the unfixed timer first. I want to see it fail."
+  - call: {text: "Stashing the fix and running only that test.", tool: {name: Bash, input: {command: "git stash push oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionWarmupTimer.java && ./mvnw -q -pl oap-server/server-core test -Dtest=SessionWarmupTimerTest"}, result: {text: "warmKeepsAGroupedServiceOpen: expected: <true> but was: <false>", after: 95s}}, usage: {in: 14730, out: 220, cache_read: 31920}}
+  - call: {text: "Fails on the old timer for the right reason; the plain service passes. Restoring the fix.", tool: {name: Bash, input: {command: "git stash pop"}, result: "1 file restored"}, usage: {in: 15030, out: 150, cache_read: 32520}}
+  - input: "Now green."
+  - call: {text: "Same test, fixed timer.", tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-core test -Dtest=SessionWarmupTimerTest"}, result: {text: "Tests run: 2, Failures: 0", after: 88s}}, usage: {in: 15330, out: 140, cache_read: 33120}}
+  - input: "And the rest of the worker tests, they are the ones I would expect to break."
+  - call: {text: "The whole worker package.", tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-core test -Dtest='org.apache.skywalking.oap.server.core.analysis.worker.*'"}, result: {text: "Tests run: 43, Failures: 1", after: 210s}}, usage: {in: 15630, out: 180, cache_read: 33820}}
+  - call: {text: "One failure. Reading it before assuming it is mine.", tool: {name: Bash, input: {command: "sed -n '/FAILURE/,/^$/p' oap-server/server-core/target/surefire-reports/*SessionFlushWorkerTest.txt | head -20"}, result: "metricWithoutSession: expected: <0> but was: <1>"}, usage: {in: 15930, out: 190, cache_read: 34420}}
+  - input: "Is that test asserting the old behaviour?"
+  - call: {text: "Deliberately: it hands the worker a service metric with no open session and expects nothing written. That is the silent drop written down as a test.", usage: {in: 16230, out: 260, cache_read: 35120}}
+  - input: "Then it has to change. But do not fold that into this fix without saying so in the commit."
+  - call: {text: "Agreed. When was that assertion written?", tool: {name: Bash, input: {command: "git log -1 --format='%h %s' -- oap-server/server-core/src/test/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorkerTest.java"}, result: "same session cache commit"}, usage: {in: 16530, out: 170, cache_read: 35720}}
+  - call: {text: "In the same commit as the bug, so it recorded observed behaviour, not intended. Updating the assertion and calling it out.", usage: {in: 16830, out: 210, cache_read: 36320}}
+  - input: "Update it."
+  - call:
+      text: "The one assertion, nothing else in that file."
+      tool:
+        name: Edit
+        input: {file_path: "oap-server/server-core/src/test/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorkerTest.java", old_string: "assertEquals(0, written.size());", new_string: "assertEquals(1, written.size());"}
+        result: "The file SessionFlushWorkerTest.java has been updated."
+        changes:
+        - path: oap-server/server-core/src/test/java/org/apache/skywalking/oap/server/core/analysis/worker/SessionFlushWorkerTest.java
+          before: |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import static org.junit.jupiter.api.Assertions.assertEquals;
+
+            import java.util.ArrayList;
+            import java.util.List;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
+            import org.junit.jupiter.api.Test;
+
+            public class SessionFlushWorkerTest {
+                @Test
+                public void metricWithoutSession() {
+                    List<Metrics> written = new ArrayList<>();
+                    SessionFlushWorker worker = TestWorkers.recording(written);
+                    worker.prepareBatch(TestWorkers.serviceMetrics("shop::cart-service"));
+                    assertEquals(0, written.size());
+                }
+            }
+          after: |
+            /*
+             * Licensed to the Apache Software Foundation (ASF) under one or more
+             * contributor license agreements.  See the NOTICE file distributed with
+             * this work for additional information regarding copyright ownership.
+             * The ASF licenses this file to You under the Apache License, Version 2.0
+             * (the "License"); you may not use this file except in compliance with
+             * the License.  You may obtain a copy of the License at
+             *
+             *     http://www.apache.org/licenses/LICENSE-2.0
+             *
+             * Unless required by applicable law or agreed to in writing, software
+             * distributed under the License is distributed on an "AS IS" BASIS,
+             * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+             * See the License for the specific language governing permissions and
+             * limitations under the License.
+             *
+             */
+
+            package org.apache.skywalking.oap.server.core.analysis.worker;
+
+            import static org.junit.jupiter.api.Assertions.assertEquals;
+
+            import java.util.ArrayList;
+            import java.util.List;
+            import org.apache.skywalking.oap.server.core.analysis.metrics.Metrics;
+            import org.junit.jupiter.api.Test;
+
+            public class SessionFlushWorkerTest {
+                @Test
+                public void metricWithoutSession() {
+                    List<Metrics> written = new ArrayList<>();
+                    SessionFlushWorker worker = TestWorkers.recording(written);
+                    worker.prepareBatch(TestWorkers.serviceMetrics("shop::cart-service"));
+                    assertEquals(1, written.size());
+                }
+            }
+      usage: {in: 17130, out: 200, cache_read: 36920}
+  - call: {text: "Rerunning the package.", tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-core test -Dtest='org.apache.skywalking.oap.server.core.analysis.worker.*'"}, result: {text: "Tests run: 43, Failures: 0", after: 205s}}, usage: {in: 17430, out: 150, cache_read: 37520}}
+  - input: "Good. Style and licence checks before you go near CI."
+  - call: {text: "Both.", tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-core checkstyle:check && license-eye header check 2>&1 | tail -1"}, result: {text: "INFO Totally checked 6184 files, valid: 4012, invalid: 0, ignored: 2172, fixed: 0", after: 70s}}, usage: {in: 17730, out: 160, cache_read: 38120}}
+  - call: {text: "And git's whitespace check on the diff, so CI does not bounce it for trailing spaces.", tool: {name: Bash, input: {command: "git diff --check"}, result: "(no output)"}, usage: {in: 17830, out: 170, cache_read: 38320}}
+  - input: "Now the real proof: does the metric come back after twelve minutes?"
+  - call: {text: "Rebuilding the image from the fixed tree, and running the real so11y e2e case on it first as a sanity check.", tool: {name: Bash, input: {command: "make SKIP_TEST=true build.backend docker.oap && e2e run -c test/e2e-v2/cases/so11y/e2e.yaml"}, result: {text: "skywalking/oap:latest rebuilt; so11y case: setup, trigger and verify passed, cleaned up", after: 900s}}, usage: {in: 18030, out: 190, cache_read: 38820}}
+  - call: {text: "Green. Recreating the soak OAP on the fixed image and leaving it running.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose up -d --wait oap"}, result: {text: "oap recreated and healthy", after: 60s}}, usage: {in: 18180, out: 150, cache_read: 39220}}
+  - input: "I will be back in half an hour."
+    after: 1500s
+  - call: {text: "About twenty-five minutes of uptime, well past the expiry, and cart-service still reports.", tool: {name: Bash, input: {command: "swctl --display json metrics linear --name service_resp_time --service-name 'shop::cart-service' --start '2026-09-10 1057' --end '2026-09-10 1116' | jq '[.[] | select(.IsEmptyValue == false)] | length'"}, result: "20"}, usage: {in: 18330, out: 200, cache_read: 3900, cache_write: 39520}}
+  - call: {text: "Twenty of twenty buckets, all after the recreation. Before the fix, none after minute ten.", usage: {in: 18630, out: 160, cache_read: 40120}}
+  - call: {text: "Confirming the soak OAP runs the image just built.", tool: {name: Bash, input: {command: "docker inspect -f '{{.Image}}' $(cd ../oap-soak && docker compose ps -q oap) | cut -c8-19; docker image inspect -f '{{.Id}}' skywalking/oap:latest | cut -c8-19"}, result: "3f2c9e41a7d0\n3f2c9e41a7d0"}, usage: {in: 18780, out: 200, cache_read: 40320}}
+  - input: "Check the other eleven did not regress."
+  - call: {text: "All twelve, same window.", tool: {name: Bash, input: {command: "for s in $(swctl --display json service ls | jq -r '.[].name'); do echo -n \"$s \"; swctl --display json metrics linear --name service_resp_time --service-name \"$s\" --start '2026-09-10 1057' --end '2026-09-10 1116' | jq '[.[] | select(.IsEmptyValue == false)] | length'; done"}, result: "12 services, 20 buckets each"}, usage: {in: 18930, out: 300, cache_read: 40820}}
+  - call: {text: "Twelve of twelve, twenty each. Nothing regressed.", usage: {in: 19230, out: 140, cache_read: 41420}}
+  - input: "And the new counter, is it moving?"
+  - call: {text: "From the self observability endpoint the soak OAP publishes on 1234.", tool: {name: Bash, input: {command: "curl -s localhost:1234/metrics | grep '^write_session_reopened'"}, result: "write_session_reopened 0.0"}, usage: {in: 19530, out: 150, cache_read: 42020}}
+  - call: {text: "Zero, as it should be: warm() keeps every session open, so the worker never re-opens one. If it moves, a session expired that should not have, and someone will see it.", usage: {in: 19830, out: 240, cache_read: 42620}}
+  - input: "Show me everything the change touches."
+  - call: {text: "The whole diff, staged so the new test counts.", tool: {name: Bash, input: {command: "git add oap-server/server-core && git diff --cached --shortstat | sed 's/^ *//'"}, result: "4 files changed, 67 insertions(+), 3 deletions(-)"}, usage: {in: 20130, out: 150, cache_read: 43220}}
+  - call: {text: "Four files, 67 added and 3 removed, mostly the new test and the counter. Two days of reading for a one-word fix, a worker that no longer drops silently, a test and one corrected assertion.", usage: {in: 20430, out: 210, cache_read: 43820}}
+  - input: "That is usually how it goes. Any risk I should know about?"
+  - call: {text: "One: prepareBatch now writes a service-scope row whose session is missing, and re-opens it, instead of holding it back, so a service not yet registered gets written too. The right trade, but a behaviour change, and it belongs in the commit message.", usage: {in: 20730, out: 260, cache_read: 44420}}
+  - input: "Put that in the message. Draft it."
+  - call: {text: "Drafted with the behaviour change, saved for the commit.", tool: {name: Bash, input: {command: "cat > .git/COMMIT_MSG <<'EOF'\nRe-open write sessions by the full service name\n\nSessionWarmupTimer.warm() rebuilt ids from the short name, so a grouped service's session expired ten minutes after boot and SessionFlushWorker.prepareBatch silently skipped its rows.\n\nwarm() now uses the full name, as start() does. A missing session is re-opened, logged at debug and counted (write_session_reopened). Behaviour change: such rows are written, not held back; the worker test pinning the drop is updated.\nEOF"}, result: "(no output)"}, usage: {in: 21030, out: 380, cache_read: 45120}}
+  - input: "Good. Does this need a backport?"
+  - call: {text: "Which release branches carry the session cache?", tool: {name: Bash, input: {command: "git branch -r --contains $(git log --format=%H -1 --grep 'session cache') | head"}, result: "origin/master, origin/release-10.99.0"}, usage: {in: 21330, out: 170, cache_read: 45720}}
+  - call: {text: "10.98.0 never had it, so one backport, to release-10.99.0.", usage: {in: 21630, out: 140, cache_read: 46320}}
+  - input: "Is there an issue open for this already?"
+  - call: {text: "Checking the local docs first.", tool: {name: Bash, input: {command: "grep -rn 'service_resp_time' docs/en/FAQ/*.md | head"}, result: "(no output)"}, usage: {in: 21930, out: 130, cache_read: 46920}}
+  - call: {text: "Nothing in the FAQ. Worth an entry, since the symptom is so easy to blame on the agent.", usage: {in: 22230, out: 160, cache_read: 47520}}
+  - input: "Not in this change. Keep it to the fix."
+  - call: {text: "Understood, the FAQ stays out.", usage: {in: 22430, out: 100, cache_read: 48020}}
+  - input: "Last thing. How would we have found this faster?"
+  - call: {text: "A counter on the skip branch would have found it in ten minutes, not two days. The drop had no visible side effect and every layer we walked was innocent. The fix leaves a counter and a debug line where the silence was.", usage: {in: 22730, out: 320, cache_read: 48620}}
+  - input: "That is the honest answer. Thanks."
+  - call: {text: "Summary: warm() re-opened write sessions by the short name, so shop::cart-service's session expired ten minutes after boot and prepareBatch skipped its rows without a word. warm() now uses the full name, and a missing session is re-opened, logged and counted instead of the row dropped. Four files, 67 added, 3 removed, one backport to release-10.99.0.", usage: {in: 23030, out: 340, cache_read: 49320}}
+  - call: {text: "Tearing the soak stack down.", tool: {name: Bash, input: {command: "cd ../oap-soak && docker compose down"}, result: {text: "15 containers removed; the banyandb volume kept", after: 25s}}, usage: {in: 23130, out: 130, cache_read: 49620}}
+  - input: "One more thing before you go. Open the pull request against master, with the backport label."
+  - call: {text: "Committing on a branch and pushing.", tool: {name: Bash, input: {command: "git checkout -b fix/write-session-full-name && git commit -F .git/COMMIT_MSG && git push -u origin fix/write-session-full-name"}, result: "4 files changed, 67 insertions(+), 3 deletions(-); branch pushed"}, usage: {in: 23230, out: 190, cache_read: 49770}}
+  - call: {text: "Opening it from the pushed branch.", tool: {name: Bash, input: {command: "gh pr create --base master --title 'Re-open write sessions by the full service name' --label backport-release-10.99.0 --body-file .git/COMMIT_MSG"}, result: "pull request #99142 opened"}, usage: {in: 23330, out: 220, cache_read: 49920}}
+  - call: {text: "Opened #99142 against master with the backport-release-10.99.0 label. That is everything on the list.", usage: {in: 23530, out: 140, cache_read: 50420}}

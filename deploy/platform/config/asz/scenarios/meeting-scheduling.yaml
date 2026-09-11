@@ -1,0 +1,83 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+session: 7e1c0000-0000-4a00-8a00-000000000002
+project: -Users-dev-calendar
+title: schedule the design review
+interval: 5s
+steps:
+  - input: "I need the storage design review on the calendar this week. Find a slot that works for the four of us."
+  - inject: {type: mcp_tool_listing, text: "calendar_list_calendars, calendar_list_events, calendar_freebusy, calendar_create_event, calendar_add_conference, contacts_lookup, gmail_create_draft, gmail_send_draft"}
+  - call:
+      thinking: unavailable
+      text: "Listing the calendars I can see."
+      tool: {id: c1, name: calendar_list_calendars, input: {min_access_role: freeBusyReader}, result: {text: "primary, team-storage, rooms-shanghai", after: 500ms}}
+      usage: {in: 3800, out: 150, cache_read: 14000, cache_write: 2900}
+  - call:
+      text: "Looking at your own week first."
+      tool: {id: c2, name: calendar_list_events, input: {calendar_id: primary, time_min: "2026-09-14T00:00:00+08:00", time_max: "2026-09-19T00:00:00+08:00", single_events: true}, result: {text: "11 events. Wednesday afternoon and Thursday morning are the only clear blocks.", after: 900ms}}
+      usage: {in: 4000, out: 190, cache_read: 16000}
+  - call: {text: "Your side is clear Wednesday 13:00-17:00 and Thursday 09:00-11:00. Checking the others.", usage: {in: 4600, out: 320, cache_read: 18000}}
+  - input: "Who is free Wednesday afternoon?"
+  - call:
+      text: "Delegating the four availability lookups."
+      agent:
+        name: availability-checker
+        prompt: "Check free/busy for hanwei@, sara.qin@, jiajing@ and lu@ on Wednesday 2026-09-16 13:00-17:00 Asia/Shanghai, and name every overlapping free hour."
+        after: 3s
+        notify: true
+        steps:
+          - call: {text: "Resolving the four addresses.", tool: {id: a1, name: contacts_lookup, input: {names: [hanwei, sara.qin, jiajing, lu]}, result: {text: "4 of 4 resolved."}}, usage: {in: 1100, out: 120, cache_read: 5000}}
+          - call:
+              text: "Querying free/busy."
+              tool: {id: a2, name: calendar_freebusy, input: {time_min: "2026-09-16T13:00:00+08:00", time_max: "2026-09-16T17:00:00+08:00", items: [{id: hanwei@example.org}, {id: sara.qin@example.org}, {id: jiajing@example.org}, {id: lu@example.org}], time_zone: Asia/Shanghai}, result: {text: "hanwei busy 15:00-16:00; sara busy 13:00-14:00; jiajing free; lu busy 16:30-17:00.", after: 1500ms}}
+              usage: {in: 1300, out: 260, cache_read: 5400}
+          - call: {text: "14:00-15:00 is the only hour all four are free.", usage: {in: 2400, out: 180, cache_read: 5800}}
+      usage: {in: 5000, out: 160, cache_read: 20000}
+  - call: {text: "14:00-15:00 Wednesday is the only hour that works for all four.", usage: {in: 6200, out: 240, cache_read: 24000}}
+  - queued: {text: "also invite Sara's new report, Mei", mode: prompt}
+  - call:
+      text: "Adding Mei. Checking she is free in that hour."
+      tool: {id: c3, name: calendar_freebusy, input: {time_min: "2026-09-16T14:00:00+08:00", time_max: "2026-09-16T15:00:00+08:00", items: [{id: mei@example.org}]}, result: {text: "mei@example.org is free.", after: 600ms}}
+      usage: {in: 6600, out: 170, cache_read: 26000}
+  - input: "Book it."
+  - call:
+      text: "Booking Wednesday 14:00 with the large room."
+      tool: {id: c4, name: calendar_create_event, input: {calendar_id: team-storage, summary: "Storage design review", start: {date_time: "2026-09-16T14:00:00+08:00", time_zone: Asia/Shanghai}, end: {date_time: "2026-09-16T15:00:00+08:00", time_zone: Asia/Shanghai}, attendees: [{email: hanwei@example.org}, {email: sara.qin@example.org}, {email: jiajing@example.org}, {email: lu@example.org}, {email: mei@example.org}, {email: "rooms-shanghai/large@example.org", resource: true}]}, result: {text: "409 conflict: resource rooms-shanghai/large is already booked 14:00-15:00.", failed: true, after: 1100ms}}
+      usage: {in: 7100, out: 520, cache_read: 28000}
+  - call:
+      text: "The large room is taken. Trying the small room."
+      tool: {id: c5, name: calendar_create_event, input: {calendar_id: team-storage, summary: "Storage design review", start: {date_time: "2026-09-16T14:00:00+08:00", time_zone: Asia/Shanghai}, end: {date_time: "2026-09-16T15:00:00+08:00", time_zone: Asia/Shanghai}, attendees: [{email: hanwei@example.org}, {email: sara.qin@example.org}, {email: jiajing@example.org}, {email: lu@example.org}, {email: mei@example.org}, {email: "rooms-shanghai/small@example.org", resource: true}]}, result: {text: "event ev_9f21c created; 5 invitations sent.", after: 1800ms}}
+      usage: {in: 7600, out: 540, cache_read: 30000}
+  - input: "Add a video call link, and mail the agenda round."
+  - call:
+      text: "Requesting a video room for the event. The conferencing service takes a moment to allocate it."
+      tool: {id: c6, name: calendar_add_conference, input: {event_id: ev_9f21c, conference_type: video, request_id: req_ev_9f21c_1}}
+      usage: {in: 8000, out: 170, cache_read: 32000}
+  - call:
+      text: "Drafting the agenda mail while that allocates."
+      tool: {id: c7, name: gmail_create_draft, input: {to: [hanwei@example.org, sara.qin@example.org, jiajing@example.org, lu@example.org, mei@example.org], subject: "Storage design review - Wed 14:00", body: "Agenda: 1) BanyanDB TTL defaults 2) lifecycle node sizing 3) the FODC proxy port."}, result: {text: "draft r_44127 created.", after: 1200ms}}
+      usage: {in: 8300, out: 460, cache_read: 33000}
+  - result: {of: c6, text: "conference allocated: https://video.example.org/j/sdr-0916-1400, event ev_9f21c updated."}
+    after: 45s
+  - call:
+      text: "The video link is on the event. Sending the agenda."
+      tool: {id: c8, name: gmail_send_draft, input: {draft_id: r_44127}, result: {text: "sent, message m_77104.", after: 900ms}}
+      usage: {in: 8700, out: 210, cache_read: 35000}
+  - input: "Perfect, thanks."
+  - call: {text: "Booked: Wednesday 16 September, 14:00-15:00 Asia/Shanghai, small room, video link https://video.example.org/j/sdr-0916-1400, agenda sent to five people.", usage: {in: 9000, out: 280, cache_read: 36000}}
