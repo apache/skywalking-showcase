@@ -29,7 +29,23 @@ metadata:
   {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}
     istio-injection: enabled
   {{- end }}
-{{- if or .Values.features.agent.enabled .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}
+{{- /*
+The music application, from here to the end before rating, deploys only with a feature that uses it:
+  agent, java-agent-injector, mesh-with-agent: run it with SkyWalking agents, baked in, injected or in the mesh;
+  als, istiod-monitor: observe the mesh its sidecars form;
+  trace-profiling: profiles agent::songs;
+  rover: profiles its mesh services, and its access log watches their traffic;
+  apisix-monitor, activemq-monitor: scrape its frontend, an APISIX, and the exporter beside its ActiveMQ;
+  grafana, baseline: chart and predict the GENERAL and MESH services it produces;
+  event, only with SCALLER_ENABLE=true: its CronJobs scale songs, gateway and app.
+r3 is not listed: its load calls only rating, which deploys whatever the features.
+*/}}
+{{- if or .Values.features.agent.enabled .Values.features.javaAgentInjector.enabled .Values.features.meshWithAgent.enabled
+          .Values.features.als.enabled .Values.features.istiodMonitor.enabled
+          .Values.features.traceProfiling.enabled .Values.features.rover.enabled
+          .Values.features.apisixMonitor.enabled .Values.features.activemqMonitor.enabled
+          .Values.features.grafana.enabled .Values.features.baseline.enabled
+          (and .Values.features.event.enabled .Values.sampleServices.scaller.enabled) }}
 
 ---
 apiVersion: v1

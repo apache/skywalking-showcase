@@ -518,7 +518,7 @@ steps:
       input:
         command: |-
           rg -n 'parseConfig|\*Config\b' banyand/measure
-      result: {text: "5 matches: config.go:18 is the definition; the rest are config_test.go:6, init.go:4, svc.go:4 and write.go:5.", after: 500ms}
+      result: {text: "5 matches: config.go:18 is the definition; the rest are config_test.go:6, init.go:21, svc.go:21 and write.go:22.", after: 500ms}
     usage: {in: 19700, out: 130, cache_read: 53000}
 - input: "Go ahead. One file at a time for this first module, show me each."
 - call:
@@ -543,6 +543,23 @@ steps:
       changes:
       - path: banyand/measure/init.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           func (s *writeService) init(path string) error {
@@ -551,9 +568,27 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.w = newWriter(cfg)
           	return nil
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -564,6 +599,7 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.w = newWriter(cfg)
           	return nil
           }
     usage: {in: 20100, out: 420, cache_read: 54000}
@@ -593,6 +629,23 @@ steps:
       changes:
       - path: banyand/measure/write.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           import "time"
@@ -608,6 +661,23 @@ steps:
           	retries  int
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           import (
@@ -650,6 +720,23 @@ steps:
       changes:
       - path: banyand/measure/svc.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           type writeService struct {
@@ -657,6 +744,23 @@ steps:
           	w   *endpointWriter
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package measure
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -779,6 +883,23 @@ steps:
       changes:
       - path: banyand/stream/init.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           func (s *service) init(path string) error {
@@ -787,9 +908,27 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.w = newWriter(cfg)
           	return nil
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -800,10 +939,28 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.w = newWriter(cfg)
           	return nil
           }
       - path: banyand/stream/write.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import "time"
@@ -818,6 +975,23 @@ steps:
           	timeout  time.Duration
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import (
@@ -837,6 +1011,23 @@ steps:
           }
       - path: banyand/stream/svc.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           type service struct {
@@ -848,6 +1039,23 @@ steps:
           	return validateConfig(s.cfg)
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -917,7 +1125,7 @@ steps:
 - input: "Build and test stream."
 - call:
     text: "Running it."
-    tool: {name: Bash, input: {command: "go vet ./banyand/stream && go test ./banyand/stream -count=1 2>&1 | tail -4"}, result: {text: "write_test.go:14: timeout = 20s, want 30s; FAIL github.com/apache/skywalking-banyandb/banyand/stream 0.508s", failed: true, after: 11s}}
+    tool: {name: Bash, input: {command: "go vet ./banyand/stream && go test ./banyand/stream -count=1 2>&1 | tail -4"}, result: {text: "write_test.go:31: timeout = 20s, want 30s; FAIL github.com/apache/skywalking-banyandb/banyand/stream 0.508s", failed: true, after: 11s}}
     usage: {in: 25100, out: 110, cache_read: 65000}
 - call: {text: "The divergence we found at the start: stream alone defaulted to 30s, and TestWriterTimeout encodes it.", usage: {in: 25300, out: 200, cache_read: 65500}}
 - input: "Do we keep 30s for stream?"
@@ -957,6 +1165,23 @@ steps:
       changes:
       - path: banyand/stream/write_test.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import (
@@ -974,6 +1199,23 @@ steps:
           	}
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package stream
 
           import (
@@ -1010,6 +1252,23 @@ steps:
       changes:
       - path: banyand/queue/pub.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           import "time"
@@ -1024,6 +1283,23 @@ steps:
           	timeout  time.Duration
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           import (
@@ -1043,6 +1319,23 @@ steps:
           }
       - path: banyand/queue/sub.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           func (s *service) init(path string) error {
@@ -1051,9 +1344,27 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.pub = newPublisher(cfg)
           	return nil
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -1064,22 +1375,59 @@ steps:
           		return err
           	}
           	s.cfg = cfg
+          	s.pub = newPublisher(cfg)
           	return nil
           }
       - path: banyand/queue/svc.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           type service struct {
           	cfg *Config
+          	pub *publisher
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package queue
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
 
           type service struct {
           	cfg *cfgblock.Block
+          	pub *publisher
           }
     usage: {in: 8600, out: 420, cache_read: 3200, cache_write: 22400}
 - input: "Delete queue's loader."
@@ -1207,6 +1555,23 @@ steps:
       changes:
       - path: banyand/dquery/svc.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package dquery
 
           type service struct {
@@ -1222,6 +1587,23 @@ steps:
           	return nil
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package dquery
 
           import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
@@ -1292,24 +1674,58 @@ steps:
       changes:
       - path: pkg/node/selector.go
         before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package node
 
           import "time"
 
-          func newStaticSelector(path string) (*staticSelector, error) {
+          func NewStaticSelector(path string) (*StaticSelector, error) {
           	c, err := parseNodeConfig(path)
           	if err != nil {
           		return nil, err
           	}
-          	return &staticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
+          	return &StaticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
           }
 
-          // staticSelector always picks the one endpoint its block names.
-          type staticSelector struct {
+          // StaticSelector always picks the one endpoint its block names.
+          type StaticSelector struct {
           	endpoint string
           	timeout  time.Duration
           }
         after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
           package node
 
           import (
@@ -1318,16 +1734,16 @@ steps:
           	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
           )
 
-          func newStaticSelector(path string) (*staticSelector, error) {
+          func NewStaticSelector(path string) (*StaticSelector, error) {
           	c, err := cfgblock.LoadFile(path, "node", "selector")
           	if err != nil {
           		return nil, err
           	}
-          	return &staticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
+          	return &StaticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
           }
 
-          // staticSelector always picks the one endpoint its block names.
-          type staticSelector struct {
+          // StaticSelector always picks the one endpoint its block names.
+          type StaticSelector struct {
           	endpoint string
           	timeout  time.Duration
           }
@@ -1697,19 +2113,19 @@ steps:
           	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
           )
 
-          // target is what backup needs from the shared block.
-          type target struct {
+          // Target is what backup needs from the shared block.
+          type Target struct {
           	Endpoint string
           	Timeout  time.Duration
           }
 
-          // newTarget reads backup's block through the shared loader.
-          func newTarget(path string) (*target, error) {
+          // NewTarget reads backup's block through the shared loader.
+          func NewTarget(path string) (*Target, error) {
           	b, err := cfgblock.LoadFile(path, "backup", "target")
           	if err != nil {
           		return nil, err
           	}
-          	return &target{Endpoint: b.Endpoint, Timeout: b.Timeout}, nil
+          	return &Target{Endpoint: b.Endpoint, Timeout: b.Timeout}, nil
           }
       result: "written, 22 lines"
       changes:
@@ -1724,19 +2140,19 @@ steps:
           	"gopkg.in/yaml.v3"
           )
 
-          // target is backup's own copy of the shared block.
-          type target struct {
+          // Target is backup's own copy of the shared block.
+          type Target struct {
           	Endpoint string
           	Timeout  time.Duration
           }
 
-          func newTarget(path string) (*target, error) {
+          func NewTarget(path string) (*Target, error) {
           	raw, err := os.ReadFile(path)
           	if err != nil {
           		return nil, err
           	}
           	var doc struct {
-          		T target `yaml:"backup.target"`
+          		T Target `yaml:"backup.target"`
           	}
           	if err = yaml.Unmarshal(raw, &doc); err != nil {
           		return nil, err
@@ -1764,18 +2180,18 @@ steps:
           	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
           )
 
-          // options is what lifecycle needs from the shared block.
-          type options struct {
+          // Options is what lifecycle needs from the shared block.
+          type Options struct {
           	Endpoint string
           	Timeout  time.Duration
           }
 
-          func loadOptions(path string, o *options) error {
+          func LoadOptions(path string, o *Options) error {
           	b, err := cfgblock.LoadFile(path, "lifecycle", "migration")
           	if err != nil {
           		return err
           	}
-          	*o = options{Endpoint: b.Endpoint, Timeout: b.Timeout}
+          	*o = Options{Endpoint: b.Endpoint, Timeout: b.Timeout}
           	return nil
           }
       result: "written, 22 lines"
@@ -1791,19 +2207,19 @@ steps:
           	"gopkg.in/yaml.v3"
           )
 
-          // options is lifecycle's own copy of the shared block.
-          type options struct {
+          // Options is lifecycle's own copy of the shared block.
+          type Options struct {
           	Endpoint string
           	Timeout  time.Duration
           }
 
-          func loadOptions(path string, o *options) error {
+          func LoadOptions(path string, o *Options) error {
           	raw, err := os.ReadFile(path)
           	if err != nil {
           		return err
           	}
           	var doc struct {
-          		O options `yaml:"lifecycle.migration"`
+          		O Options `yaml:"lifecycle.migration"`
           	}
           	if err = yaml.Unmarshal(raw, &doc); err != nil {
           		return err
