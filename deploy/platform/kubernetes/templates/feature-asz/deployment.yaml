@@ -1,0 +1,88 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.asz.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asz
+  labels:
+    app: asz
+spec:
+  replicas: 1
+  # Each pod has its own emptyDir, so a rollout cannot mix data. Recreate stops the old pod before the new one
+  # starts, so two feeds never generate conversations at the same time.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: asz
+  template:
+    metadata:
+      labels:
+        app: asz
+      annotations:
+        sidecar.istio.io/inject: "false"
+        # The feed reads its scenario set once, at start, so a changed scenario or configuration rolls the pod.
+        checksum/config: {{ include (print $.Template.BasePath "/feature-asz/configmaps.yaml") . | sha256sum }}
+    spec:
+      containers:
+        # The feed: one whole conversation every features.asz.every, picked at random, written as Claude Code's
+        # own files under /asz/data/_source.
+        - name: feed
+          image: {{ .Values.features.asz.image }}
+          args: ["scenario", "build", "/asz/scenarios", "--format", "claude-code", "--out", "/asz/data",
+                 "--every", {{ .Values.features.asz.every | quote }}, "--pick", "random"]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: data
+              mountPath: /asz/data
+            - name: scenarios
+              mountPath: /asz/scenarios
+              readOnly: true
+        # The pipeline: on every interval it lands what is new, parses what moved, and pushes to the OAP.
+        - name: collector
+          image: {{ .Values.features.asz.image }}
+          args: ["collect", "-config", "/asz/conf/asz.yaml"]
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /asz/data
+            - name: config
+              mountPath: /asz/conf
+              readOnly: true
+      volumes:
+        - name: data
+          emptyDir:
+            sizeLimit: 2Gi
+        - name: scenarios
+          configMap:
+            name: asz-scenarios
+        - name: config
+          configMap:
+            name: asz-config
+{{- end }}
