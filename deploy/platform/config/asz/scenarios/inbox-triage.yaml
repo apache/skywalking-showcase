@@ -1,0 +1,109 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+session: 7e1c0000-0000-4a00-8a00-000000000001
+project: -Users-dev-inbox
+title: morning inbox triage
+interval: 5s
+steps:
+  - input: "Good morning. Summarise everything unread since yesterday evening."
+  - system: {subtype: mcp_server_connected, fields: {content: "gmail: 11 tools, calendar: 6 tools"}}
+  - inject: {type: mcp_tool_listing, text: "gmail_search, gmail_read_thread, gmail_list_labels, gmail_modify_labels, gmail_create_draft, gmail_send_draft, gmail_export_mbox, contacts_lookup"}
+  - call:
+      thinking: unavailable
+      text: "Searching for anything unread since 18:00 yesterday, Asia/Shanghai. Gmail reads a bare date as midnight Pacific, so the cutoff goes in as epoch seconds."
+      tool:
+        id: g1
+        name: gmail_search
+        input: {query: "is:unread after:1788948000", max_results: 100, label_ids: [INBOX], options: {include_spam_trash: false}}
+        result: {text: "37 threads, 112 messages. Top senders: ci-bot@example.org, dev@lists.example.org, sara.qin@example.org, board@example.org.", after: 1200ms}
+      usage: {in: 4200, out: 210, cache_read: 18000, cache_write: 3400}
+  - call:
+      text: "37 unread threads. Four clusters: CI noise (19), the dev@lists.example.org list (3 threads), Sara on the Q3 budget, and a board sync change."
+      usage: {in: 4400, out: 620, cache_read: 22000}
+  - input: "Which of those actually need me today?"
+  - call:
+      text: "Checking who is waiting on you."
+      tool: {id: g2, name: gmail_search, input: {query: "is:unread to:me -from:ci-bot after:1788948000", max_results: 40}, result: {text: "6 threads address you directly.", after: 700ms}}
+      usage: {in: 5100, out: 180, cache_read: 26000}
+  - call: {text: "Three: Sara's budget question, the CI quota triage thread, and the board sync reschedule.", usage: {in: 5300, out: 420, cache_read: 28000}}
+  - input: "Do a proper digest of the release vote, CI quota and board sync threads."
+  - call:
+      text: "Fanning out, one reader per thread."
+      workflow:
+        name: thread digest
+        children:
+          - name: thread-release
+            prompt: "Summarise the \"release 10.99.0 vote\" thread in three bullets."
+            steps:
+              - call: {text: "Reading the thread.", tool: {id: wr1, name: gmail_read_thread, input: {thread_id: t_release_10990, format: full}, result: {text: "18 messages, 6 participants."}}, usage: {in: 900, out: 90, cache_read: 4000}}
+              - call: {text: "Vote is open until Friday; two binding +1s so far; one concern about the BanyanDB TTL default.", usage: {in: 3100, out: 240, cache_read: 4200}}
+          - name: thread-quota
+            prompt: "Summarise the \"CI runner quota triage\" thread in three bullets."
+            steps:
+              - call: {text: "Reading the thread.", tool: {id: wq1, name: gmail_read_thread, input: {thread_id: t_ci_quota, format: full}, result: {text: "429 rate limit exceeded for user; retry after 5s.", failed: true, after: 300ms}}, usage: {in: 900, out: 90, cache_read: 4000}}
+              - call: {text: "Rate limited. Waiting and reading again.", tool: {id: wq2, name: gmail_read_thread, input: {thread_id: t_ci_quota, format: full}, result: {text: "6 messages, 3 participants.", after: 6s}}, usage: {in: 1000, out: 110, cache_read: 4300}}
+              - call: {text: "Shared CI runner minutes hit the monthly quota; the two slowest e2e jobs move to nightly; no action for us.", usage: {in: 2600, out: 220, cache_read: 4600}}
+          - name: thread-board
+            prompt: "Summarise the \"board sync moved\" thread in three bullets."
+            steps:
+              - call: {text: "Reading the thread.", tool: {id: wb1, name: gmail_read_thread, input: {thread_id: t_board_sync, format: full}, result: {text: "4 messages, 5 participants."}}, usage: {in: 800, out: 80, cache_read: 3800}}
+              - call: {text: "Moved from Tuesday to Friday 15:00; the agenda is unchanged.", usage: {in: 1900, out: 160, cache_read: 4000}}
+      usage: {in: 5600, out: 240, cache_read: 31000, cache_write: 2200}
+  - call: {text: "Digest of the three threads is ready; the CI quota one needed a retry after a rate limit.", usage: {in: 9800, out: 540, cache_read: 44000}}
+  - input: "Archive everything from the CI bot, and start me a full mbox export of the archive label."
+  - call:
+      text: "Archiving the CI noise first."
+      tool: {id: g3, name: gmail_modify_labels, input: {query: "from:ci-bot is:unread", add: [ARCHIVE], remove: [INBOX, UNREAD]}, result: {text: "19 threads relabelled.", after: 2s}}
+      usage: {in: 10200, out: 190, cache_read: 47000}
+  - call:
+      text: "Starting the export. It runs in the background; I will report when it lands."
+      tool: {id: g4, name: gmail_export_mbox, input: {query: "label:archive", format: mbox, compress: true}}
+      usage: {in: 10400, out: 160, cache_read: 48000}
+  - input: "Draft a reply to Sara on the budget thread and send it."
+  - call:
+      text: "Looking her up."
+      tool: {id: g5, name: contacts_lookup, input: {name: Sara}, result: {text: "sara.qin@example.org (Finance)", after: 400ms}}
+      usage: {in: 11000, out: 120, cache_read: 51000}
+  - call:
+      text: "Drafting."
+      tool: {id: g6, name: gmail_create_draft, input: {to: [sara.qin@example.org], thread_id: t_q3_budget, subject: "Re: Q3 budget", body: "Numbers look right to me; the storage line is the only one I would revisit."}, result: {text: "draft r_88231 created.", after: 900ms}}
+      usage: {in: 11200, out: 380, cache_read: 52000}
+  - call:
+      text: "Sending it."
+      tool: {id: g7, name: gmail_send_draft, input: {draft_id: r_88231}, result: {text: "503 backendError: the service is currently unavailable.", failed: true, after: 600ms}}
+      usage: {in: 11600, out: 100, cache_read: 53000}
+  - error: "API Error: Connection reset by peer."
+  - call:
+      text: "The send hit a transient 503. Retrying it once."
+      tool: {id: g8, name: gmail_send_draft, input: {draft_id: r_88231}, result: {text: "403 forbidden: the workspace admin policy for this connector allows reading and drafting, and blocks sending.", failed: true, after: 700ms}}
+      usage: {in: 11800, out: 110, cache_read: 53500}
+  - queued: {text: "just leave it as a draft then", mode: prompt}
+  - call: {text: "I cannot send it: this connector's workspace admin policy blocks sending, so another retry will not help. The draft r_88231 is saved and waiting for you to send.", usage: {in: 12100, out: 300, cache_read: 54000}}
+  - result: {of: g4, text: "mbox written: 402 MB, 41,338 messages, archive-2026-09-10.mbox.gz"}
+    after: 240s
+  - call: {text: "The archive export finished: 402 MB, 41,338 messages.", usage: {in: 12400, out: 180, cache_read: 55000}}
+  - reset: {summary: "Summary: 37 unread threads triaged into CI noise, a three-thread digest by three readers (the release 10.99.0 vote, CI quota triage, and the board sync move to Friday 15:00), and Sara's budget question (draft r_88231 saved; sending blocked by the connector's workspace policy). The 19 CI bot threads were archived. A 402 MB mbox export of the archive label completed."}
+  - input: "Remind me what is still open."
+  - call: {text: "Two things: the draft to Sara is unsent because the connector's workspace policy blocks sending, and the release 10.99.0 vote closes Friday.", usage: {in: 3200, out: 260, cache_read: 12000, cache_write: 3100}}
+  - input: "Thanks, that is everything."
+  - call:
+      text: "Taking a fresh unread count before you go."
+      tool: {id: g9, name: gmail_search, input: {query: "in:inbox is:unread after:1788948000", max_results: 100}, result: {text: "18 threads, 61 messages.", after: 800ms}}
+      usage: {in: 3400, out: 120, cache_read: 13000}
+  - call: {text: "Anytime. 18 of the 37 threads from last night are still unread in the inbox; the 19 CI bot threads are archived.", usage: {in: 3600, out: 110, cache_read: 13500}}

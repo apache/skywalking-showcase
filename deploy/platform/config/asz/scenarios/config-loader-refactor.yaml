@@ -1,0 +1,2330 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+session: 7e1c0000-0000-4a00-8a00-000000000016
+project: -Users-dev-oap-config
+title: unify the duplicated config loaders
+interval: 15s
+steps:
+- input: "Four modules each parse the same configuration block their own way. Pull that into one loader, move every caller over, and make sure the existing tests still cover each path."
+- call:
+    thinking: "Find all of them before proposing anything."
+    text: "Locating every place that parses the block."
+    tool: {name: Bash, input: {command: "rg -l 'parse(Node)?Config|srvconf' --type go | sort"}, result: {text: "14 files under banyand/ and pkg/.", after: 900ms}}
+    usage: {in: 6200, out: 140, cache_read: 21000, cache_write: 3400}
+- call:
+    text: "Narrowing to the files that own a parser, not the ones that call it."
+    tool: {name: Bash, input: {command: "rg -l 'yaml:\"endpoint\"' banyand pkg --type go"}, result: {text: "6 files: banyand/{dquery,measure,queue,stream}/config.go, banyand/liaison/pkg/srvconf/srvconf.go, pkg/node/nodeconfig.go", after: 700ms}}
+    usage: {in: 6600, out: 120, cache_read: 22000}
+- call: {text: "Six, not four. measure, stream, queue and liaison are the ones you meant; dquery and pkg/node also carry a private copy.", usage: {in: 7100, out: 260, cache_read: 23000}}
+- input: "Which four are they exactly?"
+- call:
+    text: "Listing all six with sizes."
+    tool: {name: Bash, input: {command: "wc -l $(rg -l 'yaml:\"endpoint\"' banyand pkg --type go)"}, result: {text: "34 dquery, 53 liaison/pkg/srvconf, 34 measure, 29 queue, 42 stream, 32 pkg/node - 224 total", after: 400ms}}
+    usage: {in: 7400, out: 130, cache_read: 24000}
+- call: {text: "The four you meant are measure, stream, queue and liaison's srvconf package; dquery and pkg/node are the extra two. liaison's is the largest because it also carries a file watcher.", usage: {in: 7700, out: 300, cache_read: 25000}}
+- input: "Show me how different they really are."
+- call:
+    text: "Diffing two of them directly."
+    tool: {name: Bash, input: {command: "diff -u banyand/measure/config.go banyand/stream/config.go | head -40"}, result: {text: "Same parser. stream differs in the package name, its key (stream.write), a 30s default instead of 20s, and an extra validateConfig.", after: 600ms}}
+    usage: {in: 8100, out: 150, cache_read: 26000}
+- call:
+    text: "And the odd one out."
+    tool: {name: Bash, input: {command: "diff -u banyand/measure/config.go banyand/queue/config.go | head -40"}, result: {text: "queue has no timeout default and validates nothing; its own comment says a zero timeout is passed on as \"no timeout\".", after: 500ms}}
+    usage: {in: 8400, out: 140, cache_read: 27000}
+- call: {text: "Copy-paste with the names and keys changed. stream defaults to 30s instead of 20s; queue sets no default and validates nothing.", usage: {in: 8800, out: 280, cache_read: 28000}}
+- input: "Do they all default the timeout the same way?"
+- call:
+    text: "Checking the defaults."
+    tool: {name: Bash, input: {command: "rg -n 'Timeout = ' $(rg -l 'yaml:\"endpoint\"' banyand pkg --type go)"}, result: {text: "20s in dquery, liaison, measure and pkg/node; 30s in stream; no line at all in queue.", after: 500ms}}
+    usage: {in: 9100, out: 120, cache_read: 29000}
+- call: {text: "No. 20s in four, 30s in stream, and queue leaves it zero, which downstream reads as no timeout.", usage: {in: 9400, out: 240, cache_read: 30000}}
+- input: "That is a bug then. Note it and keep going."
+- call: {text: "Noted. Unifying on 20s makes queue's zero-timeout path go away, so the changelog will say that out loud.", usage: {in: 9700, out: 210, cache_read: 31000}}
+- input: "How many call sites are we talking about?"
+- call:
+    text: "Counting the calls into the private parsers."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -n '(parse(Node)?Config|srvconf\.Parse)\(path' --type go
+      result: {text: "12 matches: 5 are the parser definitions, 7 are call sites, one per module and one for each liaison server.", after: 800ms}
+    usage: {in: 10100, out: 130, cache_read: 32000}
+- call:
+    text: "And the files that pass the private types around."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -l '\*(srvconf\.)?Config\b' --type go | wc -l
+      result: {text: "15", after: 600ms}
+    usage: {in: 10400, out: 120, cache_read: 33000}
+- call: {text: "Fifteen, but one is banyand/liaison/pkg/auth/reloader.go, whose *Config is the auth package's own type. So seven call sites and fourteen files naming the private type. Small per module, but every module is touched.", usage: {in: 10700, out: 230, cache_read: 34000}}
+- input: "Any of them do live reload?"
+- call:
+    text: "Looking for watchers."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -n 'fsnotify|Watch\(' banyand/liaison banyand/measure banyand/stream banyand/queue banyand/dquery pkg/node
+      result: {text: "only liaison: srvconf.Watch, the gRPC server's call to it, and a skipped fsnotify test. The rest read once at start.", after: 500ms}
+    usage: {in: 11000, out: 130, cache_read: 35000}
+- call: {text: "Only liaison's gRPC server. The shared loader needs a watcher hook or liaison loses behaviour.", usage: {in: 11300, out: 220, cache_read: 36000}}
+- input: "Good. Propose the shape of the shared loader before you write anything."
+- call: {text: "One Block struct, a Source interface for where bytes come from, a Loader that memoises per key, defaults and Validate in their own file, typed errors, and an OnChange hook so liaison keeps live reload. Six new files, six deleted, each caller reduced to one constructor line.", usage: {in: 11700, out: 520, cache_read: 37000}}
+- input: "Put it in a new pkg/cfgblock; pkg/config is already the flag and viper plumbing. Go ahead."
+- call:
+    thinking: "Loader first, source behind an interface so the tests need no files."
+    text: "Writing the loader."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/loader.go
+        content: &w_loader |
+          package cfgblock
+
+          import (
+          	"fmt"
+          	"os"
+          	"sync"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Block is the shape every module used to parse on its own.
+          type Block struct {
+          	Extra    map[string]string `yaml:"extra"`
+          	Name     string            `yaml:"name"`
+          	Endpoint string            `yaml:"endpoint"`
+          	Timeout  time.Duration     `yaml:"timeout"`
+          	Retries  int               `yaml:"retries"`
+          }
+
+          // Loader resolves one Block from a Source and memoises it.
+          type Loader struct {
+          	src     Source
+          	cache   map[string]*Block
+          	prefix  string
+          	watches []func(*Block)
+          	mu      sync.RWMutex
+          }
+
+          // New returns a Loader reading src under the given key prefix.
+          func New(src Source, prefix string) *Loader {
+          	return &Loader{src: src, prefix: prefix, cache: map[string]*Block{}}
+          }
+
+          // Load resolves the named block, applying defaults and validation.
+          func (l *Loader) Load(name string) (*Block, error) {
+          	l.mu.RLock()
+          	b, ok := l.cache[name]
+          	l.mu.RUnlock()
+          	if ok {
+          		return b, nil
+          	}
+          	raw, err := l.src.Read(l.key(name))
+          	if err != nil {
+          		return nil, err
+          	}
+          	b = &Block{}
+          	if err = yaml.Unmarshal(raw, b); err != nil {
+          		return nil, &ParseError{Name: name, Err: err}
+          	}
+          	applyDefaults(b)
+          	if err = Validate(b); err != nil {
+          		return nil, err
+          	}
+          	l.mu.Lock()
+          	l.cache[name] = b
+          	l.mu.Unlock()
+          	return b, nil
+          }
+
+          func (l *Loader) key(name string) string {
+          	if l.prefix == "" {
+          		return name
+          	}
+          	return l.prefix + "." + name
+          }
+
+          // FromFile returns a Loader over the YAML file at path.
+          func FromFile(path, prefix string) (*Loader, error) {
+          	if _, err := os.Stat(path); err != nil {
+          		return nil, fmt.Errorf("config file %s: %w", path, err)
+          	}
+          	return New(&fileSource{path: path}, prefix), nil
+          }
+
+          // LoadFile is FromFile then Load, for a caller that never reloads.
+          func LoadFile(path, prefix, name string) (*Block, error) {
+          	l, err := FromFile(path, prefix)
+          	if err != nil {
+          		return nil, err
+          	}
+          	return l.Load(name)
+          }
+      result: "written, 83 lines"
+      changes:
+      - path: pkg/cfgblock/loader.go
+        after: *w_loader
+    usage: {in: 12100, out: 1150, cache_read: 38000}
+- input: "Split the source out, I do not want file IO in the same file as the parsing."
+- call:
+    text: "Source interface plus a file and a map implementation."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/source.go
+        content: &w_source |
+          package cfgblock
+
+          import (
+          	"os"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Source is where a Loader gets raw bytes for a key.
+          type Source interface {
+          	Read(key string) ([]byte, error)
+          }
+
+          type fileSource struct {
+          	path string
+          }
+
+          // Read re-reads the file on every call, so a Reload sees what is on disk.
+          func (f *fileSource) Read(key string) ([]byte, error) {
+          	raw, err := os.ReadFile(f.path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	doc := map[string]yaml.Node{}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, &ParseError{Name: key, Err: err}
+          	}
+          	n, ok := doc[key]
+          	if !ok {
+          		return nil, &MissingError{Key: key, Path: f.path}
+          	}
+          	return yaml.Marshal(&n)
+          }
+
+          // MapSource serves blocks from memory; the tests use it.
+          type MapSource map[string][]byte
+
+          // Read returns the bytes stored under key.
+          func (m MapSource) Read(key string) ([]byte, error) {
+          	if v, ok := m[key]; ok {
+          		return v, nil
+          	}
+          	return nil, &MissingError{Key: key, Path: "memory"}
+          }
+      result: "written, 44 lines"
+      changes:
+      - path: pkg/cfgblock/source.go
+        after: *w_source
+    usage: {in: 13400, out: 680, cache_read: 40000}
+- input: "Defaults and validation in their own file too."
+- call:
+    text: "Writing defaults and validation. Only what the old loaders already did: a 20s timeout, and the endpoint check stream had; name stays optional because pkg/node's block has none."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/defaults.go
+        content: &w_defaults |
+          package cfgblock
+
+          import "time"
+
+          // DefaultTimeout is the value four of the six old loaders hardcoded.
+          const DefaultTimeout = 20 * time.Second
+
+          // applyDefaults fills only what a module used to fill: an unset timeout.
+          // Name stays optional and retries keep no default, as before.
+          func applyDefaults(b *Block) {
+          	if b.Timeout == 0 {
+          		b.Timeout = DefaultTimeout
+          	}
+          	if b.Extra == nil {
+          		b.Extra = map[string]string{}
+          	}
+          }
+
+          // Validate applies stream's one rule, an endpoint, to every module.
+          func Validate(b *Block) error {
+          	if b.Endpoint == "" {
+          		return &InvalidError{Field: "endpoint", Reason: "must not be empty"}
+          	}
+          	return nil
+          }
+      result: "written, 24 lines"
+      changes:
+      - path: pkg/cfgblock/defaults.go
+        after: *w_defaults
+    usage: {in: 14500, out: 620, cache_read: 42000}
+- input: "Typed errors, not fmt.Errorf strings."
+- call:
+    text: "Three error types, all unwrappable. FromFile keeps one %w wrap around the os error, which errors.Is still sees through."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/errors.go
+        content: &w_errors |
+          package cfgblock
+
+          import "fmt"
+
+          // ParseError wraps a YAML failure with the block that caused it.
+          type ParseError struct {
+          	Err  error
+          	Name string
+          }
+
+          func (e *ParseError) Error() string { return fmt.Sprintf("config %q: %v", e.Name, e.Err) }
+          func (e *ParseError) Unwrap() error { return e.Err }
+
+          // MissingError says a key is absent from a source.
+          type MissingError struct {
+          	Key  string
+          	Path string
+          }
+
+          func (e *MissingError) Error() string {
+          	return fmt.Sprintf("config key %q not found in %s", e.Key, e.Path)
+          }
+
+          // InvalidError is a failed validation rule.
+          type InvalidError struct {
+          	Field  string
+          	Reason string
+          }
+
+          func (e *InvalidError) Error() string {
+          	return fmt.Sprintf("config field %s %s", e.Field, e.Reason)
+          }
+      result: "written, 32 lines"
+      changes:
+      - path: pkg/cfgblock/errors.go
+        after: *w_errors
+    usage: {in: 15400, out: 540, cache_read: 44000}
+- input: "Does it build?"
+- call:
+    text: "Building."
+    tool: {name: Bash, input: {command: "go build ./pkg/cfgblock/..."}, result: "no output"}
+    usage: {in: 15800, out: 70, cache_read: 45000}
+- call: {text: "It builds. Nothing imports it yet.", usage: {in: 15900, out: 90, cache_read: 45500}}
+- input: "Now the tests. Cover every path the six old loaders covered."
+- call:
+    thinking: "One test per behaviour, driven off MapSource so no fixtures are needed."
+    text: "Writing the test file."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/loader_test.go
+        content: &w_ltest |
+          package cfgblock
+
+          import (
+          	"errors"
+          	"testing"
+          )
+
+          func src() MapSource {
+          	return MapSource{
+          		"liaison.grpc":  []byte("name: grpc\nendpoint: :17912\ntimeout: 5s\n"),
+          		"measure.write": []byte("name: write\nendpoint: :17913\nretries: 5\n"),
+          		"stream.write":  []byte("name: stream\nendpoint: :17914\n"),
+          		"queue.sub":     []byte("name: sub\nendpoint: :17915\n"),
+          		"node.selector": []byte("endpoint: :17916\n"),
+          		"broken":        []byte("name: [1,2\n"),
+          		"noEndpoint":    []byte("name: x\n"),
+          	}
+          }
+
+          func TestLoadEachModuleBlock(t *testing.T) {
+          	l := New(src(), "")
+          	// node.selector carries no name, as pkg/node's block never did.
+          	for _, name := range []string{"liaison.grpc", "measure.write", "stream.write", "queue.sub", "node.selector"} {
+          		if b, err := l.Load(name); err != nil || b.Endpoint == "" {
+          			t.Fatalf("Load(%s) = %+v, %v", name, b, err)
+          		}
+          	}
+          }
+
+          func TestDefaultsApplied(t *testing.T) {
+          	b, err := New(src(), "").Load("queue.sub")
+          	if err != nil {
+          		t.Fatal(err)
+          	}
+          	if b.Timeout != DefaultTimeout || b.Retries != 0 || b.Extra == nil {
+          		t.Fatalf("got %v/%d/%v, want 20s, no retries and an empty map", b.Timeout, b.Retries, b.Extra)
+          	}
+          }
+
+          func TestParseErrorIsTyped(t *testing.T) {
+          	_, err := New(src(), "").Load("broken")
+          	pe := &ParseError{}
+          	if !errors.As(err, &pe) {
+          		t.Fatalf("err = %T, want *ParseError", err)
+          	}
+          }
+
+          func TestEmptyEndpointRejected(t *testing.T) {
+          	_, err := New(src(), "").Load("noEndpoint")
+          	ie := &InvalidError{}
+          	if !errors.As(err, &ie) || ie.Field != "endpoint" {
+          		t.Fatalf("err = %v, want an InvalidError on endpoint", err)
+          	}
+          }
+
+          func TestReloadNotifiesWatchers(t *testing.T) {
+          	l := New(src(), "")
+          	fired := 0
+          	l.OnChange(func(*Block) { fired++ })
+          	if _, err := l.Load("queue.sub"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if _, err := l.Reload("queue.sub"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if fired != 1 {
+          		t.Fatalf("watchers fired %d times, want 1", fired)
+          	}
+          }
+      result: "written, 69 lines"
+      changes:
+      - path: pkg/cfgblock/loader_test.go
+        after: *w_ltest
+    usage: {in: 16200, out: 1240, cache_read: 46000}
+- input: "Run them."
+- call:
+    text: "Running the package tests."
+    tool: {name: Bash, input: {command: "go test ./pkg/cfgblock/... 2>&1 | tail -20"}, result: {text: "pkg/cfgblock/loader_test.go:59:4: l.OnChange undefined (type *Loader has no field or method OnChange); loader_test.go:63:17: l.Reload undefined; FAIL github.com/apache/skywalking-banyandb/pkg/cfgblock [build failed]", failed: true, after: 4s}}
+    usage: {in: 17000, out: 110, cache_read: 47000}
+- call: {text: "The test names the hook liaison needs, and I have not written it. Better to find that out here than in liaison.", usage: {in: 17200, out: 180, cache_read: 47500}}
+- input: "Right, liaison needs that hook. Add it."
+- call:
+    text: "Reload, OnChange, and a WatchFile that drives Reload from fsnotify, in their own file."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/watch.go
+        content: &w_watch |
+          package cfgblock
+
+          import "github.com/fsnotify/fsnotify"
+
+          // Reload drops the memoised block, re-reads it and notifies watchers.
+          func (l *Loader) Reload(name string) (*Block, error) {
+          	l.mu.Lock()
+          	delete(l.cache, name)
+          	l.mu.Unlock()
+          	b, err := l.Load(name)
+          	if err != nil {
+          		return nil, err
+          	}
+          	l.mu.RLock()
+          	watches := append([]func(*Block){}, l.watches...)
+          	l.mu.RUnlock()
+          	for _, w := range watches {
+          		w(b)
+          	}
+          	return b, nil
+          }
+
+          // OnChange registers a watcher fired on every successful Reload.
+          func (l *Loader) OnChange(f func(*Block)) {
+          	l.mu.Lock()
+          	l.watches = append(l.watches, f)
+          	l.mu.Unlock()
+          }
+
+          // WatchFile calls Reload(name) on every event for path, as srvconf.Watch did.
+          func (l *Loader) WatchFile(path, name string) error {
+          	w, err := fsnotify.NewWatcher()
+          	if err != nil {
+          		return err
+          	}
+          	go func() {
+          		for range w.Events {
+          			_, _ = l.Reload(name)
+          		}
+          	}()
+          	return w.Add(path)
+          }
+      result: "written, 42 lines"
+      changes:
+      - path: pkg/cfgblock/watch.go
+        after: *w_watch
+    usage: {in: 17600, out: 620, cache_read: 48000}
+- input: "Run them again."
+- call:
+    text: "Re-running."
+    tool: {name: Bash, input: {command: "go test ./pkg/cfgblock/... -count=1"}, result: {text: "ok   github.com/apache/skywalking-banyandb/pkg/cfgblock   0.552s", after: 5s}}
+    usage: {in: 18000, out: 100, cache_read: 49000}
+- input: "Write a short README next to it so nobody adds a seventh loader."
+- call:
+    text: "Short and blunt."
+    tool:
+      name: Write
+      input:
+        file_path: pkg/cfgblock/README.md
+        content: &w_readme |
+          # pkg/cfgblock
+
+          One loader for the shared configuration block. Do not add another.
+
+          ## Use
+
+              loader, err := cfgblock.FromFile(path, "measure")
+              block, err := loader.Load("write")
+
+          `LoadFile` does both for a caller that never reloads. `Load` applies the
+          defaults and validates, so no caller repeats either. Live reload: `OnChange`
+          plus `Reload`, or `WatchFile`. Tests use `MapSource` instead of a file.
+      result: "written, 12 lines"
+      changes:
+      - path: pkg/cfgblock/README.md
+        after: *w_readme
+    usage: {in: 18600, out: 380, cache_read: 50000}
+- input: "Good. Start with measure and move it over."
+- call:
+    text: "Reading measure's own loader first."
+    tool: {name: Read, input: {file_path: banyand/measure/config.go}, result: {text: "34 lines: a Config struct, parseConfig reading the measure.write key, and a hardcoded 20s default.", after: 300ms}}
+    usage: {in: 19400, out: 120, cache_read: 52000}
+- call:
+    text: "And its call sites."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -n 'parseConfig|\*Config\b' banyand/measure
+      result: {text: "5 matches: config.go:18 is the definition; the rest are config_test.go:6, init.go:21, svc.go:21 and write.go:22.", after: 500ms}
+    usage: {in: 19700, out: 130, cache_read: 53000}
+- input: "Go ahead. One file at a time for this first module, show me each."
+- call:
+    text: "init.go first: the import and the one call."
+    tool:
+      name: Edit
+      input:
+        file_path: banyand/measure/init.go
+        old_string: |-
+          package measure
+
+          func (s *writeService) init(path string) error {
+          	cfg, err := parseConfig(path)
+        new_string: |-
+          package measure
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          func (s *writeService) init(path string) error {
+          	cfg, err := cfgblock.LoadFile(path, "measure", "write")
+      result: "1 hunk applied"
+      changes:
+      - path: banyand/measure/init.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          func (s *writeService) init(path string) error {
+          	cfg, err := parseConfig(path)
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.w = newWriter(cfg)
+          	return nil
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          func (s *writeService) init(path string) error {
+          	cfg, err := cfgblock.LoadFile(path, "measure", "write")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.w = newWriter(cfg)
+          	return nil
+          }
+    usage: {in: 20100, out: 420, cache_read: 54000}
+- call:
+    text: "write.go next: the parameter type."
+    tool:
+      name: Edit
+      input:
+        file_path: banyand/measure/write.go
+        old_string: |-
+          package measure
+
+          import "time"
+
+          func newWriter(cfg *Config) *endpointWriter {
+        new_string: |-
+          package measure
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func newWriter(cfg *cfgblock.Block) *endpointWriter {
+      result: "1 hunk applied"
+      changes:
+      - path: banyand/measure/write.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          import "time"
+
+          func newWriter(cfg *Config) *endpointWriter {
+          	return &endpointWriter{endpoint: cfg.Endpoint, timeout: cfg.Timeout, retries: cfg.Retries}
+          }
+
+          // endpointWriter is the client measure builds from its block.
+          type endpointWriter struct {
+          	endpoint string
+          	timeout  time.Duration
+          	retries  int
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func newWriter(cfg *cfgblock.Block) *endpointWriter {
+          	return &endpointWriter{endpoint: cfg.Endpoint, timeout: cfg.Timeout, retries: cfg.Retries}
+          }
+
+          // endpointWriter is the client measure builds from its block.
+          type endpointWriter struct {
+          	endpoint string
+          	timeout  time.Duration
+          	retries  int
+          }
+    usage: {in: 20500, out: 320, cache_read: 55000}
+- input: "svc.go too."
+- call:
+    text: "svc.go: the field type."
+    tool:
+      name: Edit
+      input:
+        file_path: banyand/measure/svc.go
+        old_string: |-
+          package measure
+
+          type writeService struct {
+          	cfg *Config
+        new_string: |-
+          package measure
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type writeService struct {
+          	cfg *cfgblock.Block
+      result: "1 hunk applied"
+      changes:
+      - path: banyand/measure/svc.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          type writeService struct {
+          	cfg *Config
+          	w   *endpointWriter
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package measure
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type writeService struct {
+          	cfg *cfgblock.Block
+          	w   *endpointWriter
+          }
+    usage: {in: 21100, out: 300, cache_read: 56000}
+- input: "Now delete the old one."
+- call:
+    text: "Removing measure's loader."
+    tool:
+      name: Bash
+      input: {command: "git rm banyand/measure/config.go"}
+      result: "rm 'banyand/measure/config.go'"
+      changes:
+      - path: banyand/measure/config.go
+        before: |
+          package measure
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Config is measure's copy of the shared block.
+          type Config struct {
+          	Name     string        `yaml:"name"`
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          	Retries  int           `yaml:"retries"`
+          }
+
+          func parseConfig(path string) (*Config, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		C Config `yaml:"measure.write"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	c := &doc.C
+          	if c.Timeout == 0 {
+          		c.Timeout = 20 * time.Second
+          	}
+          	return c, nil
+          }
+    usage: {in: 21700, out: 130, cache_read: 57000}
+- input: "Build measure."
+- call:
+    text: "Building, and vetting too: go build skips _test.go files, go vet does not."
+    tool: {name: Bash, input: {command: "go build ./banyand/measure && go vet ./banyand/measure"}, result: {text: "build clean; vet: banyand/measure/config_test.go:6:12: undefined: parseConfig", failed: true, after: 3s}}
+    usage: {in: 22000, out: 100, cache_read: 58000}
+- input: "Move that test onto the shared cases."
+- call:
+    text: "Rewriting it against the loader."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/measure/config_test.go
+        content: &w_mtest |
+          package measure
+
+          import (
+          	"testing"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func TestServiceUsesSharedLoader(t *testing.T) {
+          	s := &writeService{}
+          	if err := s.init("testdata/measure.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if s.cfg.Endpoint != ":17913" || s.cfg.Timeout != cfgblock.DefaultTimeout {
+          		t.Fatalf("got %q/%v, want :17913 and the package default", s.cfg.Endpoint, s.cfg.Timeout)
+          	}
+          }
+      result: "written, 17 lines"
+      changes:
+      - path: banyand/measure/config_test.go
+        before: |
+          package measure
+
+          import "testing"
+
+          func TestParseConfig(t *testing.T) {
+          	c, err := parseConfig("testdata/measure.yaml")
+          	if err != nil {
+          		t.Fatal(err)
+          	}
+          	if c.Endpoint != ":17913" {
+          		t.Fatalf("endpoint = %q", c.Endpoint)
+          	}
+          }
+        after: *w_mtest
+    usage: {in: 22600, out: 640, cache_read: 59000}
+- input: "Build and test measure."
+- call:
+    text: "Both."
+    tool: {name: Bash, input: {command: "go vet ./banyand/measure && go test ./banyand/measure -count=1"}, result: {text: "ok   github.com/apache/skywalking-banyandb/banyand/measure   0.452s", after: 9s}}
+    usage: {in: 23100, out: 110, cache_read: 60000}
+- call: {text: "measure is fully on the shared loader: three files edited, its parser deleted, its test moved onto the loader, vet and tests clean.", usage: {in: 23400, out: 240, cache_read: 61000}}
+- input: "stream next. Same shape, batch it, I do not need to see every hunk."
+- call:
+    thinking: "Same shape as measure; svc.go's Validate goes because the loader validates now. sed for text, goimports for imports."
+    text: "One batch over stream's three callers."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -e 's/\*Config/*cfgblock.Block/' -e 's/parseConfig(path)/cfgblock.LoadFile(path, "stream", "write")/' -e '/^func (s \*service) Validate/,/^}/d' banyand/stream/init.go banyand/stream/write.go banyand/stream/svc.go && goimports -w banyand/stream/init.go banyand/stream/write.go banyand/stream/svc.go
+      result: "no output"
+      changes:
+      - path: banyand/stream/init.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          func (s *service) init(path string) error {
+          	cfg, err := parseConfig(path)
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.w = newWriter(cfg)
+          	return nil
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          func (s *service) init(path string) error {
+          	cfg, err := cfgblock.LoadFile(path, "stream", "write")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.w = newWriter(cfg)
+          	return nil
+          }
+      - path: banyand/stream/write.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import "time"
+
+          func newWriter(cfg *Config) *endpointWriter {
+          	return &endpointWriter{endpoint: cfg.Endpoint, timeout: cfg.Timeout}
+          }
+
+          // endpointWriter is the client stream builds from its block.
+          type endpointWriter struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func newWriter(cfg *cfgblock.Block) *endpointWriter {
+          	return &endpointWriter{endpoint: cfg.Endpoint, timeout: cfg.Timeout}
+          }
+
+          // endpointWriter is the client stream builds from its block.
+          type endpointWriter struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+      - path: banyand/stream/svc.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          type service struct {
+          	cfg *Config
+          	w   *endpointWriter
+          }
+
+          func (s *service) Validate() error {
+          	return validateConfig(s.cfg)
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type service struct {
+          	cfg *cfgblock.Block
+          	w   *endpointWriter
+          }
+    usage: {in: 24000, out: 480, cache_read: 62000}
+- call:
+    text: "Checking the sed did not eat a brace."
+    tool: {name: Bash, input: {command: "gofmt -l banyand/stream"}, result: {text: "no output", after: 700ms}}
+    usage: {in: 24400, out: 90, cache_read: 63000}
+- input: "Delete stream's loader."
+- call:
+    text: "Removing it."
+    tool:
+      name: Bash
+      input: {command: "git rm banyand/stream/config.go"}
+      result: "rm 'banyand/stream/config.go'"
+      changes:
+      - path: banyand/stream/config.go
+        before: |
+          package stream
+
+          import (
+          	"errors"
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Config is stream's copy of the shared block.
+          type Config struct {
+          	Name     string        `yaml:"name"`
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          	Retries  int           `yaml:"retries"`
+          }
+
+          func parseConfig(path string) (*Config, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		C Config `yaml:"stream.write"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	c := &doc.C
+          	if c.Timeout == 0 {
+          		c.Timeout = 30 * time.Second
+          	}
+          	return c, nil
+          }
+
+          func validateConfig(c *Config) error {
+          	if c.Endpoint == "" {
+          		return errors.New("stream: endpoint is required")
+          	}
+          	return nil
+          }
+    usage: {in: 24800, out: 130, cache_read: 64000}
+- input: "Build and test stream."
+- call:
+    text: "Running it."
+    tool: {name: Bash, input: {command: "go vet ./banyand/stream && go test ./banyand/stream -count=1 2>&1 | tail -4"}, result: {text: "write_test.go:31: timeout = 20s, want 30s; FAIL github.com/apache/skywalking-banyandb/banyand/stream 0.508s", failed: true, after: 11s}}
+    usage: {in: 25100, out: 110, cache_read: 65000}
+- call: {text: "The divergence we found at the start: stream alone defaulted to 30s, and TestWriterTimeout encodes it.", usage: {in: 25300, out: 200, cache_read: 65500}}
+- input: "Do we keep 30s for stream?"
+- call: {text: "I would not. One default is the whole point, and 20s is what four of the six used. It is still a behaviour change for stream, so it goes in the changelog, not in a quiet diff.", usage: {in: 25600, out: 320, cache_read: 66000}}
+- input: "Agreed. Unify on 20s and record it."
+- call:
+    text: "Changelog entry."
+    tool:
+      name: Edit
+      input:
+        file_path: CHANGES.md
+        old_string: |-
+          ### Bug Fixes
+
+          - Honor the configured logging level
+        new_string: |-
+          ### Behavior Changes
+
+          - `stream` defaulted its timeout to 30s; every module now defaults to 20s.
+            Set `timeout: 30s` under `stream.write` to keep the old value.
+          - `queue` set no timeout default, so an unset timeout meant none; it is now 20s.
+          - Only `stream` rejected a block with an empty endpoint; every module now does.
+
+          ### Bug Fixes
+
+          - Honor the configured logging level
+      result: "1 hunk applied"
+    usage: {in: 26000, out: 560, cache_read: 67000}
+- call:
+    text: "And the stream test now wants the shared default."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -e 's/30\*time.Second/cfgblock.DefaultTimeout/' -e 's/want 30s/want the package default/' banyand/stream/write_test.go && goimports -w banyand/stream/write_test.go && go test ./banyand/stream -count=1
+      result: {text: "ok   github.com/apache/skywalking-banyandb/banyand/stream   0.499s", after: 13s}
+      changes:
+      - path: banyand/stream/write_test.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import (
+          	"testing"
+          	"time"
+          )
+
+          func TestWriterTimeout(t *testing.T) {
+          	s := &service{}
+          	if err := s.init("testdata/stream.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if s.cfg.Timeout != 30*time.Second {
+          		t.Fatalf("timeout = %v, want 30s", s.cfg.Timeout)
+          	}
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package stream
+
+          import (
+          	"testing"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func TestWriterTimeout(t *testing.T) {
+          	s := &service{}
+          	if err := s.init("testdata/stream.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if s.cfg.Timeout != cfgblock.DefaultTimeout {
+          		t.Fatalf("timeout = %v, want the package default", s.cfg.Timeout)
+          	}
+          }
+    usage: {in: 26400, out: 160, cache_read: 68000}
+- input: "Good. How much context are you carrying?"
+- call: {text: "Enough that I am re-reading things I already know. Let me compact before queue, not halfway through it.", usage: {in: 26800, out: 170, cache_read: 69000}}
+- reset: {summary: "Unifying BanyanDB's duplicated configuration loaders. Six private parsers: measure, stream, queue, dquery, pkg/node and liaison's srvconf. queue sets no timeout and validates nothing; stream defaults to 30s. pkg/cfgblock written, 5 tests green. measure moved by three Edits, config.go deleted, test rewritten. stream moved by one sed batch plus goimports, config.go deleted. CHANGES.md records three behaviour changes: stream 30s to 20s, queue's unset timeout now 20s, an empty endpoint rejected in every module. Name stays optional, retries get no default. Remaining: queue, dquery, pkg/node, liaison, a sweep for stray copies, the full suite, lint."}
+- input: "Where are we?"
+- call: {text: "Two of six modules moved, the shared package is green, and CHANGES.md records the three behaviour changes. queue is next, and it is the interesting one because it never validated anything.", usage: {in: 8200, out: 260, cache_read: 21000, cache_write: 4100}}
+- input: "queue then."
+  after: 1400s
+- call:
+    text: "Same batch shape over queue's three callers."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -e 's/\*Config/*cfgblock.Block/' -e 's/parseConfig(path)/cfgblock.LoadFile(path, "queue", "sub")/' banyand/queue/pub.go banyand/queue/sub.go banyand/queue/svc.go && goimports -w banyand/queue/pub.go banyand/queue/sub.go banyand/queue/svc.go
+      result: "no output"
+      changes:
+      - path: banyand/queue/pub.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          import "time"
+
+          func newPublisher(cfg *Config) *publisher {
+          	return &publisher{endpoint: cfg.Endpoint, timeout: cfg.Timeout}
+          }
+
+          // publisher is the client queue builds from its block.
+          type publisher struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func newPublisher(cfg *cfgblock.Block) *publisher {
+          	return &publisher{endpoint: cfg.Endpoint, timeout: cfg.Timeout}
+          }
+
+          // publisher is the client queue builds from its block.
+          type publisher struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+      - path: banyand/queue/sub.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          func (s *service) init(path string) error {
+          	cfg, err := parseConfig(path)
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.pub = newPublisher(cfg)
+          	return nil
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          func (s *service) init(path string) error {
+          	cfg, err := cfgblock.LoadFile(path, "queue", "sub")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	s.pub = newPublisher(cfg)
+          	return nil
+          }
+      - path: banyand/queue/svc.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          type service struct {
+          	cfg *Config
+          	pub *publisher
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package queue
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type service struct {
+          	cfg *cfgblock.Block
+          	pub *publisher
+          }
+    usage: {in: 8600, out: 420, cache_read: 3200, cache_write: 22400}
+- input: "Delete queue's loader."
+- call:
+    text: "Gone."
+    tool:
+      name: Bash
+      input: {command: "git rm banyand/queue/config.go"}
+      result: "rm 'banyand/queue/config.go'"
+      changes:
+      - path: banyand/queue/config.go
+        before: |
+          package queue
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Config is queue's copy of the shared block. It is never validated,
+          // and a zero timeout is passed on as "no timeout".
+          type Config struct {
+          	Name     string        `yaml:"name"`
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          	Retries  int           `yaml:"retries"`
+          }
+
+          func parseConfig(path string) (*Config, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		C Config `yaml:"queue.sub"`
+          	}
+          	err = yaml.Unmarshal(raw, &doc)
+          	return &doc.C, err
+          }
+    usage: {in: 9400, out: 120, cache_read: 25600}
+- input: "Test queue."
+- call:
+    text: "Running it."
+    tool: {name: Bash, input: {command: "go test ./banyand/queue -count=1 2>&1 | tail -6"}, result: {text: "--- FAIL: TestInit (0.00s); sub_test.go:8: config field endpoint must not be empty; FAIL github.com/apache/skywalking-banyandb/banyand/queue 0.448s", failed: true, after: 8s}}
+    usage: {in: 9700, out: 110, cache_read: 26000}
+- input: "Are those fixtures wrong, or is the validation too strict?"
+- call:
+    text: "Reading the fixtures."
+    tool: {name: Bash, input: {command: "cat banyand/queue/testdata/*.yaml"}, result: {text: "queue.sub:\n  name: sub", after: 400ms}}
+    usage: {in: 10000, out: 100, cache_read: 27000}
+- call: {text: "The fixture is wrong. Its block has a name and no endpoint; it only passed because queue skipped validation, and it describes a subscriber that could never have dialled anything.", usage: {in: 10300, out: 260, cache_read: 28000}}
+- input: "Fix it, and keep one case that asserts the rejection."
+- call:
+    text: "The test first: TestInit now pins the 20s timeout queue never set, and a new case asserts the rejection."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/queue/sub_test.go
+        content: &w_qtest |
+          package queue
+
+          import (
+          	"errors"
+          	"testing"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func TestInit(t *testing.T) {
+          	s := &service{}
+          	if err := s.init("testdata/queue.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if s.cfg.Timeout != cfgblock.DefaultTimeout {
+          		t.Fatalf("timeout = %v, want the 20s default queue never had", s.cfg.Timeout)
+          	}
+          }
+
+          func TestEmptyEndpointIsRejected(t *testing.T) {
+          	s := &service{}
+          	err := s.init("testdata/queue-no-endpoint.yaml")
+          	var ie *cfgblock.InvalidError
+          	if !errors.As(err, &ie) || ie.Field != "endpoint" {
+          		t.Fatalf("err = %v, want an InvalidError on endpoint", err)
+          	}
+          }
+      result: "written, 27 lines"
+      changes:
+      - path: banyand/queue/sub_test.go
+        before: |
+          package queue
+
+          import "testing"
+
+          func TestInit(t *testing.T) {
+          	s := &service{}
+          	if err := s.init("testdata/queue.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          }
+        after: *w_qtest
+    usage: {in: 10700, out: 720, cache_read: 29000}
+- call:
+    text: "Then the fixtures: the endpoint-less copy becomes the rejection case, and the original gets an endpoint."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          cp banyand/queue/testdata/queue.yaml banyand/queue/testdata/queue-no-endpoint.yaml && sed -i '' '/^  name: sub$/a\
+            endpoint: ":17915"
+          ' banyand/queue/testdata/queue.yaml && go test ./banyand/queue -count=1
+      result: {text: "ok   github.com/apache/skywalking-banyandb/banyand/queue   0.435s", after: 7s}
+    usage: {in: 11200, out: 200, cache_read: 30000}
+- input: "dquery next, it should be the same again."
+- call:
+    text: "One caller, one deletion."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -e 's/\*Config/*cfgblock.Block/' -e 's/parseConfig(path)/cfgblock.LoadFile(path, "dquery", "query")/' banyand/dquery/svc.go && goimports -w banyand/dquery/svc.go && git rm -q banyand/dquery/config.go
+      result: "no output"
+      changes:
+      - path: banyand/dquery/svc.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package dquery
+
+          type service struct {
+          	cfg *Config
+          }
+
+          func (s *service) init(path string) error {
+          	cfg, err := parseConfig(path)
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	return nil
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package dquery
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type service struct {
+          	cfg *cfgblock.Block
+          }
+
+          func (s *service) init(path string) error {
+          	cfg, err := cfgblock.LoadFile(path, "dquery", "query")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	return nil
+          }
+      - path: banyand/dquery/config.go
+        before: |
+          package dquery
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Config is dquery's copy of the shared block.
+          type Config struct {
+          	Name     string        `yaml:"name"`
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          	Retries  int           `yaml:"retries"`
+          }
+
+          func parseConfig(path string) (*Config, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		C Config `yaml:"dquery.query"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	c := &doc.C
+          	if c.Timeout == 0 {
+          		c.Timeout = 20 * time.Second
+          	}
+          	return c, nil
+          }
+    usage: {in: 11900, out: 460, cache_read: 31000}
+- input: "Test it."
+- call:
+    text: "Testing dquery."
+    tool: {name: Bash, input: {command: "go test ./banyand/dquery -count=1"}, result: {text: "ok   github.com/apache/skywalking-banyandb/banyand/dquery   0.415s", after: 6s}}
+    usage: {in: 12200, out: 90, cache_read: 32000}
+- input: "pkg/node."
+- call:
+    text: "selector.go is the only caller."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -e 's/parseNodeConfig(path)/cfgblock.LoadFile(path, "node", "selector")/' pkg/node/selector.go && goimports -w pkg/node/selector.go && git rm -q pkg/node/nodeconfig.go
+      result: "no output"
+      changes:
+      - path: pkg/node/selector.go
+        before: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package node
+
+          import "time"
+
+          func NewStaticSelector(path string) (*StaticSelector, error) {
+          	c, err := parseNodeConfig(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	return &StaticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
+          }
+
+          // StaticSelector always picks the one endpoint its block names.
+          type StaticSelector struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+        after: |
+          // Licensed to Apache Software Foundation (ASF) under one or more contributor
+          // license agreements. See the NOTICE file distributed with
+          // this work for additional information regarding copyright
+          // ownership. Apache Software Foundation (ASF) licenses this file to you under
+          // the Apache License, Version 2.0 (the "License"); you may
+          // not use this file except in compliance with the License.
+          // You may obtain a copy of the License at
+          //
+          //     http://www.apache.org/licenses/LICENSE-2.0
+          //
+          // Unless required by applicable law or agreed to in writing,
+          // software distributed under the License is distributed on an
+          // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+          // KIND, either express or implied.  See the License for the
+          // specific language governing permissions and limitations
+          // under the License.
+
+          package node
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          func NewStaticSelector(path string) (*StaticSelector, error) {
+          	c, err := cfgblock.LoadFile(path, "node", "selector")
+          	if err != nil {
+          		return nil, err
+          	}
+          	return &StaticSelector{endpoint: c.Endpoint, timeout: c.Timeout}, nil
+          }
+
+          // StaticSelector always picks the one endpoint its block names.
+          type StaticSelector struct {
+          	endpoint string
+          	timeout  time.Duration
+          }
+      - path: pkg/node/nodeconfig.go
+        before: |
+          package node
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // nodeConfig is pkg/node's copy of the shared block.
+          type nodeConfig struct {
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          }
+
+          func parseNodeConfig(path string) (*nodeConfig, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		C nodeConfig `yaml:"node.selector"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	c := &doc.C
+          	if c.Timeout == 0 {
+          		c.Timeout = 20 * time.Second
+          	}
+          	return c, nil
+          }
+    usage: {in: 12600, out: 480, cache_read: 33000}
+- input: "Test that too."
+- call:
+    text: "Testing pkg/node."
+    tool: {name: Bash, input: {command: "go test ./pkg/node -count=1"}, result: {text: "ok   github.com/apache/skywalking-banyandb/pkg/node   0.443s", after: 5s}}
+    usage: {in: 12900, out: 90, cache_read: 34000}
+- input: "liaison last."
+  after: 1700s
+- call:
+    thinking: "Reuse the same batch and see whether the reload hook survives it."
+    text: "Trying the same batch first, with one loader for both servers. If the build fails, the checkout puts both files back."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          sed -i '' -E 's/srvconf\.Parse\(path, ("[a-z]+")\)/pkgLoader.Load(\1)/' banyand/liaison/grpc/config_binding.go banyand/liaison/http/config_binding.go && go build ./banyand/liaison/... || git checkout -- banyand/liaison/grpc banyand/liaison/http
+      result: {text: "banyand/liaison/http/config_binding.go:10:14: undefined: pkgLoader; banyand/liaison/grpc/config_binding.go:10:14: undefined: pkgLoader. Both files restored by the checkout.", failed: true, after: 4s}
+    usage: {in: 13500, out: 180, cache_read: 3300, cache_write: 31000}
+- call: {text: "I reached for a package-level loader out of habit and meant to declare it next. It would be shared by both servers.", usage: {in: 13700, out: 170, cache_read: 34300}}
+- input: "Stop. Do not add a package-level loader. Each liaison server owns its own Loader instance, because the gRPC and HTTP servers reload independently and one must not drop the other's watchers. Redo it that way."
+- call:
+    thinking: "That is right: a shared loader means a shared watcher slice, and a Reload on one server would fire the other's callbacks."
+    text: "Understood. A Loader per server, each with its own watchers; gRPC keeps following the file through its own WatchFile."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/liaison/grpc/config_binding.go
+        content: &w_grpc |
+          package grpc
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type ConfigBinding struct {
+          	loader *cfgblock.Loader
+          	cfg    *cfgblock.Block
+          }
+
+          func (s *ConfigBinding) Init(path string) error {
+          	loader, err := cfgblock.FromFile(path, "liaison")
+          	if err != nil {
+          		return err
+          	}
+          	s.loader = loader
+          	loader.OnChange(func(b *cfgblock.Block) { s.cfg = b })
+          	if s.cfg, err = loader.Load("grpc"); err != nil {
+          		return err
+          	}
+          	return loader.WatchFile(path, "grpc")
+          }
+
+          // Reload re-reads this server's block only.
+          func (s *ConfigBinding) Reload() error {
+          	_, err := s.loader.Reload("grpc")
+          	return err
+          }
+
+          // OnChange registers f with this server's Loader only.
+          func (s *ConfigBinding) OnChange(f func()) {
+          	s.loader.OnChange(func(*cfgblock.Block) { f() })
+          }
+      result: "written, 32 lines"
+      changes:
+      - path: banyand/liaison/grpc/config_binding.go
+        before: |
+          package grpc
+
+          import "github.com/apache/skywalking-banyandb/banyand/liaison/pkg/srvconf"
+
+          type ConfigBinding struct {
+          	cfg *srvconf.Config
+          }
+
+          func (s *ConfigBinding) Init(path string) error {
+          	cfg, err := srvconf.Parse(path, "grpc")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	srvconf.Watch(path, "grpc", func(c *srvconf.Config) { s.cfg = c })
+          	return nil
+          }
+        after: *w_grpc
+    usage: {in: 14100, out: 620, cache_read: 35000}
+- call:
+    text: "And the HTTP server, same shape, its own instance. It never followed the file, so it still does not."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/liaison/http/config_binding.go
+        content: &w_http |
+          package http
+
+          import "github.com/apache/skywalking-banyandb/pkg/cfgblock"
+
+          type ConfigBinding struct {
+          	loader *cfgblock.Loader
+          	cfg    *cfgblock.Block
+          }
+
+          func (s *ConfigBinding) Init(path string) error {
+          	loader, err := cfgblock.FromFile(path, "liaison")
+          	if err != nil {
+          		return err
+          	}
+          	s.loader = loader
+          	loader.OnChange(func(b *cfgblock.Block) { s.cfg = b })
+          	s.cfg, err = loader.Load("http")
+          	return err
+          }
+
+          // Reload re-reads this server's block only.
+          func (s *ConfigBinding) Reload() error {
+          	_, err := s.loader.Reload("http")
+          	return err
+          }
+
+          // OnChange registers f with this server's Loader only.
+          func (s *ConfigBinding) OnChange(f func()) {
+          	s.loader.OnChange(func(*cfgblock.Block) { f() })
+          }
+      result: "written, 30 lines"
+      changes:
+      - path: banyand/liaison/http/config_binding.go
+        before: |
+          package http
+
+          import "github.com/apache/skywalking-banyandb/banyand/liaison/pkg/srvconf"
+
+          type ConfigBinding struct {
+          	cfg *srvconf.Config
+          }
+
+          func (s *ConfigBinding) Init(path string) error {
+          	cfg, err := srvconf.Parse(path, "http")
+          	if err != nil {
+          		return err
+          	}
+          	s.cfg = cfg
+          	return nil
+          }
+        after: *w_http
+    usage: {in: 14600, out: 480, cache_read: 36000}
+- input: "Delete liaison's loader."
+- call:
+    text: "Removing the srvconf package, watcher included."
+    tool:
+      name: Bash
+      input: {command: "git rm -r banyand/liaison/pkg/srvconf"}
+      result: "rm 'banyand/liaison/pkg/srvconf/srvconf.go'"
+      changes:
+      - path: banyand/liaison/pkg/srvconf/srvconf.go
+        before: |
+          package srvconf
+
+          import (
+          	"os"
+          	"time"
+
+          	"github.com/fsnotify/fsnotify"
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Config is liaison's copy of the shared block.
+          type Config struct {
+          	Name     string        `yaml:"name"`
+          	Endpoint string        `yaml:"endpoint"`
+          	Timeout  time.Duration `yaml:"timeout"`
+          	Retries  int           `yaml:"retries"`
+          }
+
+          // Parse reads the liaison.<name> block from path.
+          func Parse(path, name string) (*Config, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	doc := map[string]*Config{}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	c, ok := doc["liaison."+name]
+          	if !ok {
+          		return nil, os.ErrNotExist
+          	}
+          	if c.Timeout == 0 {
+          		c.Timeout = 20 * time.Second
+          	}
+          	return c, nil
+          }
+
+          // Watch calls f with a freshly parsed block each time path changes.
+          func Watch(path, name string, f func(*Config)) {
+          	w, err := fsnotify.NewWatcher()
+          	if err != nil {
+          		return
+          	}
+          	go func() {
+          		for range w.Events {
+          			if c, perr := Parse(path, name); perr == nil {
+          				f(c)
+          			}
+          		}
+          	}()
+          	_ = w.Add(path)
+          }
+    usage: {in: 15000, out: 140, cache_read: 37000}
+- input: "Does reload still fire?"
+- call:
+    text: "Checking what drives it now that srvconf.Watch is gone."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -n 'WatchFile|Reload\(' banyand/liaison
+      result: {text: "grpc/config_binding.go:20 returns loader.WatchFile(path, \"grpc\"); each server defines its own Reload over its own loader (grpc/config_binding.go:24, http/config_binding.go:22).", after: 500ms}
+    usage: {in: 15300, out: 160, cache_read: 38000}
+- call: {text: "Yes for gRPC: its own Loader follows the file and reloads only the grpc block. HTTP never followed the file and still does not. It needs a test that proves the two servers are independent.", usage: {in: 15600, out: 280, cache_read: 39000}}
+- input: "Write that test."
+- call:
+    text: "Replacing the skipped fsnotify test with one that asserts independence."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/liaison/reload_test.go
+        content: &w_rtest |
+          package liaison
+
+          import (
+          	"testing"
+
+          	"github.com/apache/skywalking-banyandb/banyand/liaison/grpc"
+          	"github.com/apache/skywalking-banyandb/banyand/liaison/http"
+          )
+
+          func TestServersReloadIndependently(t *testing.T) {
+          	g, h := &grpc.ConfigBinding{}, &http.ConfigBinding{}
+          	if err := g.Init("testdata/liaison.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	if err := h.Init("testdata/liaison.yaml"); err != nil {
+          		t.Fatal(err)
+          	}
+          	grpcFired, httpFired := 0, 0
+          	g.OnChange(func() { grpcFired++ })
+          	h.OnChange(func() { httpFired++ })
+          	if err := g.Reload(); err != nil {
+          		t.Fatal(err)
+          	}
+          	if grpcFired != 1 || httpFired != 0 {
+          		t.Fatalf("fired grpc=%d http=%d, want 1 and 0", grpcFired, httpFired)
+          	}
+          }
+      result: "written, 27 lines"
+      changes:
+      - path: banyand/liaison/reload_test.go
+        before: |
+          package liaison
+
+          import "testing"
+
+          func TestWatchConfig(t *testing.T) {
+          	t.Skip("flaky under fsnotify")
+          }
+        after: *w_rtest
+    usage: {in: 16000, out: 700, cache_read: 40000}
+- input: "Run liaison."
+- call:
+    text: "Running it."
+    tool: {name: Bash, input: {command: "go test ./banyand/liaison/... -count=1 2>&1 | grep -E '^(FAIL|ok[[:space:]]+github.com/apache/skywalking-banyandb/banyand/liaison[[:space:]])'"}, result: {text: "ok   github.com/apache/skywalking-banyandb/banyand/liaison   0.435s", after: 95s}}
+    usage: {in: 16400, out: 100, cache_read: 41000}
+- call: {text: "No FAIL anywhere under banyand/liaison. All six modules are on the shared loader, and the skipped fsnotify test is replaced by one that asserts the behaviour you asked for.", usage: {in: 16600, out: 220, cache_read: 41500}}
+- input: "Now sweep the whole tree for anything still hand-rolling this block. I do not want to find a seventh copy next month."
+  after: 900s
+- call:
+    text: "Sending a sweep over the tree while I keep the build warm."
+    agent:
+      name: call-site-sweep
+      prompt: "Find any remaining private parsing of the shared configuration block: yaml.Unmarshal into an endpoint/timeout struct, or a hardcoded 20s or 30s timeout default. Report file, line, and whether it is production code or a test."
+      after: 4s
+      notify: true
+      steps:
+        - call:
+            text: "Every yaml.Unmarshal outside pkg/cfgblock, tests excluded."
+            tool:
+              name: Bash
+              input:
+                command: |-
+                  rg -l 'yaml.Unmarshal' --type go -g '!*_test.go' | rg -v '^pkg/cfgblock/'
+              result: "7 files: 5 decode unrelated documents (migration plan, liaison auth rules and reloader, file discovery, remote-storage config), plus banyand/backup/target.go and banyand/backup/lifecycle/options.go."
+            usage: {in: 2100, out: 130, cache_read: 7000, cache_write: 1900}
+        - call:
+            text: "Hardcoded timeout assignments."
+            tool:
+              name: Bash
+              input:
+                command: |-
+                  rg -n '\.Timeout = (20|30) \* time.Second' --type go -g '!*_test.go'
+              result: "2 hits: banyand/backup/target.go:29 and banyand/backup/lifecycle/options.go:29, both 20s."
+            usage: {in: 2400, out: 140, cache_read: 7400}
+        - call:
+            text: "queue had the zero-timeout bug, so checking its publisher separately."
+            tool:
+              name: Bash
+              input:
+                command: |-
+                  rg -n '(20|30) \* time.Second' banyand/queue -g '!*_test.go'
+              result: "banyand/queue/pub/batch.go:43: defaultBackoffMax = 30 * time.Second"
+            usage: {in: 2700, out: 120, cache_read: 7800}
+        - call:
+            text: "Reading around it."
+            tool: {name: Bash, input: {command: "sed -n '39,43p' banyand/queue/pub/batch.go"}, result: "a const block: defaultMaxRetries = 3, defaultPerRequestTimeout = 2s, backoff 500ms up to 30s. The publisher's retry policy, not the config block."}
+            usage: {in: 3000, out: 110, cache_read: 8200}
+        - call: {text: "Two real ones, both production: banyand/backup/target.go and banyand/backup/lifecycle/options.go each yaml.Unmarshal their own key and default the timeout to 20s. Neither tags its fields; yaml.v3 falls back to lowercased names. The 30s in banyand/queue/pub/batch.go is the publisher's retry backoff, unrelated.", usage: {in: 3400, out: 380, cache_read: 8600}}
+    usage: {in: 16900, out: 260, cache_read: 3400, cache_write: 38200}
+- input: "What did it find?"
+- call: {text: "Two more: banyand/backup/target.go and banyand/backup/lifecycle/options.go. Neither showed up in the first grep because neither tags its fields. That makes eight copies, not four.", usage: {in: 17400, out: 300, cache_read: 42000}}
+- input: "Move those two as well."
+- call:
+    text: "One at a time; they wrap the block differently. Neither block has a name, which the loader leaves optional. backup first."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/backup/target.go
+        content: &w_target |
+          package backup
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          // Target is what backup needs from the shared block.
+          type Target struct {
+          	Endpoint string
+          	Timeout  time.Duration
+          }
+
+          // NewTarget reads backup's block through the shared loader.
+          func NewTarget(path string) (*Target, error) {
+          	b, err := cfgblock.LoadFile(path, "backup", "target")
+          	if err != nil {
+          		return nil, err
+          	}
+          	return &Target{Endpoint: b.Endpoint, Timeout: b.Timeout}, nil
+          }
+      result: "written, 22 lines"
+      changes:
+      - path: banyand/backup/target.go
+        before: |
+          package backup
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Target is backup's own copy of the shared block.
+          type Target struct {
+          	Endpoint string
+          	Timeout  time.Duration
+          }
+
+          func NewTarget(path string) (*Target, error) {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return nil, err
+          	}
+          	var doc struct {
+          		T Target `yaml:"backup.target"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return nil, err
+          	}
+          	t := &doc.T
+          	if t.Timeout == 0 {
+          		t.Timeout = 20 * time.Second
+          	}
+          	return t, nil
+          }
+        after: *w_target
+    usage: {in: 17800, out: 420, cache_read: 43000}
+- call:
+    text: "Then lifecycle."
+    tool:
+      name: Write
+      input:
+        file_path: banyand/backup/lifecycle/options.go
+        content: &w_options |
+          package lifecycle
+
+          import (
+          	"time"
+
+          	"github.com/apache/skywalking-banyandb/pkg/cfgblock"
+          )
+
+          // Options is what lifecycle needs from the shared block.
+          type Options struct {
+          	Endpoint string
+          	Timeout  time.Duration
+          }
+
+          func LoadOptions(path string, o *Options) error {
+          	b, err := cfgblock.LoadFile(path, "lifecycle", "migration")
+          	if err != nil {
+          		return err
+          	}
+          	*o = Options{Endpoint: b.Endpoint, Timeout: b.Timeout}
+          	return nil
+          }
+      result: "written, 22 lines"
+      changes:
+      - path: banyand/backup/lifecycle/options.go
+        before: |
+          package lifecycle
+
+          import (
+          	"os"
+          	"time"
+
+          	"gopkg.in/yaml.v3"
+          )
+
+          // Options is lifecycle's own copy of the shared block.
+          type Options struct {
+          	Endpoint string
+          	Timeout  time.Duration
+          }
+
+          func LoadOptions(path string, o *Options) error {
+          	raw, err := os.ReadFile(path)
+          	if err != nil {
+          		return err
+          	}
+          	var doc struct {
+          		O Options `yaml:"lifecycle.migration"`
+          	}
+          	if err = yaml.Unmarshal(raw, &doc); err != nil {
+          		return err
+          	}
+          	*o = doc.O
+          	if o.Timeout == 0 {
+          		o.Timeout = 20 * time.Second
+          	}
+          	return nil
+          }
+        after: *w_options
+    usage: {in: 18100, out: 380, cache_read: 44000}
+- input: "Build everything."
+- call:
+    text: "Whole tree, vet included."
+    tool: {name: Bash, input: {command: "go build ./... && go vet ./..."}, result: {text: "no output", after: 26s}}
+    usage: {in: 18300, out: 90, cache_read: 45000}
+- input: "Run the whole suite."
+- call:
+    text: "Starting it. It takes a while, so I will keep working."
+    tool: {id: fullsuite, name: Bash, input: {command: "go test -count=1 -timeout 20m ./... 2>&1 | grep -E '^(ok|FAIL)' | cut -c1-4 | sort | uniq -c | sed 's/^ *//'"}}
+    usage: {in: 18600, out: 130, cache_read: 46000}
+- input: "While that runs, check nothing outside pkg/cfgblock still imports the yaml package for this."
+- call:
+    text: "Checking the imports."
+    tool: {name: Bash, input: {command: "rg -l 'gopkg.in/yaml' --type go -g '!*_test.go' | rg -v '^pkg/cfgblock/'"}, result: {text: "3 files: file-based discovery, the remote-storage config loader and the test setup helper. None of them reads the block.", after: 900ms}}
+    usage: {in: 18900, out: 130, cache_read: 47000}
+- result: {of: fullsuite, text: "214 ok"}
+  after: 280s
+- call: {text: "The full suite is green: 214 packages ok and no FAIL line.", usage: {in: 19400, out: 190, cache_read: 48000}}
+- input: "You are carrying a lot again. Compact and then finish the housekeeping."
+- reset: {summary: "Config-loader unification in BanyanDB, second compaction. pkg/cfgblock holds the only parser. Eight private copies gone: six files deleted (measure, stream, queue and dquery config.go, pkg/node/nodeconfig.go, liaison's srvconf), and the inline parsers the sweep found in banyand/backup/target.go and banyand/backup/lifecycle/options.go now call cfgblock.LoadFile. liaison has a Loader per server after the person rejected a package-level one; reload_test.go asserts they reload independently. CHANGES.md records stream 30s to 20s, queue's unset timeout becoming 20s, and an empty endpoint rejected in every module. Build, vet and the full suite green. Remaining: docs, licence headers, lint, commit message."}
+- input: "Recap."
+- call: {text: "Eight private parsers gone, one package in their place, every module and both extra call sites moved, full suite green. Housekeeping left: docs, licence headers, lint.", usage: {in: 7600, out: 240, cache_read: 19000, cache_write: 3900}}
+- input: "Update docs/configuration.md."
+- call:
+    text: "Rewriting the page around the single block."
+    tool:
+      name: Write
+      input:
+        file_path: docs/configuration.md
+        content: &w_docs |
+          # Configuration
+
+          Every module reads the shared configuration block through one loader,
+          `pkg/cfgblock`. A module never parses, defaults or validates on its own.
+          Blocks are keyed `<module>.<name>`, for example `measure.write`.
+
+          ## Fields
+
+          | Field | Type | Default | Notes |
+          |---|---|---|---|
+          | `name` | string | none | optional |
+          | `endpoint` | string | none | required in every module |
+          | `timeout` | duration | `20s` | the same for every module |
+          | `retries` | int | `0` | no default, as before |
+          | `extra` | map | empty | never nil when a module receives it |
+
+          ## Live reload
+
+          The liaison gRPC server follows the file and reloads its own block. Each
+          server owns its own loader, so reloading one never fires another's watchers.
+      result: "written, 20 lines"
+      changes:
+      - path: docs/configuration.md
+        before: |
+          # Configuration
+
+          Each module reads its own configuration block. See the module
+          documentation for the fields it accepts and the defaults it uses.
+        after: *w_docs
+    usage: {in: 8100, out: 640, cache_read: 21000}
+- input: "Licence headers on the new files?"
+- call:
+    text: "Running the checker."
+    tool: {name: Bash, input: {command: "make license-check 2>&1 | tail -3"}, result: {text: "invalid: 13: the six new Go files under pkg/cfgblock and the seven existing files replaced by a whole-file Write. The README and testdata are exempt: **/*.md and **/testdata/** are in paths-ignore.", failed: true, after: 12s}}
+    usage: {in: 8600, out: 110, cache_read: 22000}
+- call:
+    text: "Seven are files I rewrote with Write rather than Edit; a whole-file Write carries no header unless I type one. Fixing all thirteen."
+    tool: {name: Bash, input: {command: "make license-fix && make license-check 2>&1 | tail -1"}, result: {text: "fixed: 13; the check passes.", after: 14s}}
+    usage: {in: 8800, out: 120, cache_read: 22500}
+- input: "Lint."
+  after: 1500s
+- call:
+    text: "Full linter."
+    tool: {name: Bash, input: {command: "golangci-lint run ./... 2>&1 | tail -3"}, result: {text: "0 issues.", after: 48s}}
+    usage: {in: 9100, out: 150, cache_read: 3100, cache_write: 21000}
+- call: {text: "Clean on the first run, godot, gci and fieldalignment included.", usage: {in: 9300, out: 120, cache_read: 24400}}
+- input: "Show me the diffstat."
+- call:
+    text: "Staged, by status, code and docs only."
+    tool: {name: Bash, input: {command: "git add -A && git diff --cached --name-status -- '*.go' '*.md' | cut -f1 | sort | uniq -c | sed 's/^ *//'"}, result: {text: "7 A\n6 D\n21 M", after: 700ms}}
+    usage: {in: 9900, out: 120, cache_read: 25500}
+- call: {text: "34 files: 7 added, all in pkg/cfgblock; 6 private copies deleted; 21 edited. The queue fixtures are staged too but sit outside that pathspec.", usage: {in: 10100, out: 180, cache_read: 26000}}
+- input: "Any module still carrying its own default?"
+- call:
+    text: "Last check."
+    tool:
+      name: Bash
+      input:
+        command: |-
+          rg -n '\.Timeout = [0-9]+ \* time.Second' banyand pkg --type go | wc -l
+      result: {text: "0", after: 600ms}
+    usage: {in: 10500, out: 90, cache_read: 27000}
+- input: "Write the commit message."
+- call: {text: "Subject: unify the per-module configuration loaders into pkg/cfgblock. Body: eight private parsers replaced by one loader with shared defaults, validation and typed errors; a Loader per liaison server keeps their reloads independent; three behaviour changes recorded in CHANGES.md (stream 30s to 20s, queue's unset timeout becomes 20s, every module rejects an empty endpoint).", usage: {in: 11000, out: 420, cache_read: 28000}}
+- input: "Good. That is the lot."
+- call: {text: "Branch is green on build, vet, the full suite, licence headers and lint. Ready for review.", usage: {in: 11300, out: 110, cache_read: 28500}}

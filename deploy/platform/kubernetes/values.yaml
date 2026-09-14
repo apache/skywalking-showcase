@@ -30,6 +30,8 @@ skywalking:
       promql: 9090
       logql: 3100
       traceql: 3200
+      # With these two ports set, the chart turns on SW_RECEIVER_ZIPKIN and SW_QUERY_ZIPKIN itself. Setting them
+      # again under env duplicates the entries, which Helm 4's server-side apply rejects.
       zipkin-receiver: 9411
       zipkin-query: 9412
       metrics: 1234
@@ -42,7 +44,7 @@ skywalking:
       # @feature: istiod-monitor; enable rules to analyze Istio control plane metrics
       # @feature: mysql; enable mysql rules to analyze MySQL metrics
       # @feature: apisix-monitor; enable APISIX rules to analyze APISIX metrics
-      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*,banyandb/*
+      SW_OTEL_RECEIVER_ENABLED_OTEL_METRICS_RULES: vm,oap,k8s/*,istio-controlplane,mysql/*,postgresql/*,apisix,elasticsearch/*,rabbitmq/*,mongodb/*,nginx/*,rocketmq/*,pulsar/*,activemq/*,flink/*,banyandb/*,ai-agent/*
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_ENVOY_METRIC_ALS_HTTP_ANALYSIS: "mx-mesh,persistence" # @feature: als; enable mesh analyzer (mx-mesh) to analyze ALS logs
       K8S_SERVICE_NAME_RULE: "mesh-svr::${service.metadata.name}.${service.metadata.namespace}"
@@ -54,8 +56,6 @@ skywalking:
       SW_STORAGE_ES_RESPONSE_TIMEOUT: "50000"
       SW_STORAGE_ES_INDEX_SHARDS_NUMBER: "6"
       SW_STORAGE_ES_SUPER_DATASET_INDEX_SHARDS_FACTOR: "2"
-      SW_RECEIVER_ZIPKIN: default
-      SW_QUERY_ZIPKIN: default
       # @feature: r3; some basic settings for R3
       SW_CORE_ENABLE_ENDPOINT_NAME_GROUPING_BY_OPENAPI: "false"
       SW_CORE_MAX_HTTP_URIS_NUMBER_PER_SVR: "3000"
@@ -72,6 +72,13 @@ skywalking:
       SW_STORAGE_BANYANDB_LOG_TTL_DAYS: "1"
       SW_STORAGE_BANYANDB_LOG_ENABLE_WARM_STAGE: "true"
       SW_STORAGE_BANYANDB_LOG_ENABLE_COLD_STAGE: "true"
+      SW_STORAGE_BANYANDB_AI_AGENT_TTL_DAYS: "1"
+      SW_STORAGE_BANYANDB_AI_AGENT_ENABLE_WARM_STAGE: "true"
+      SW_STORAGE_BANYANDB_AI_AGENT_ENABLE_COLD_STAGE: "true"
+      # The log group keeps the OAP default warm and cold TTLs, 7 and 30 days. The AI-agent
+      # group defaults to 60 and 180, so it is set to the log values here.
+      SW_STORAGE_BANYANDB_AI_AGENT_WARM_TTL_DAYS: "7"
+      SW_STORAGE_BANYANDB_AI_AGENT_COLD_TTL_DAYS: "30"
       SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_SHARD_NUM: "1"
       SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_WARM_SHARD_NUM: "1"
       SW_STORAGE_BANYANDB_BROWSER_ERROR_LOG_COLD_SHARD_NUM: "1"
@@ -918,6 +925,13 @@ features:
   grafana:
     enabled: false
     image: ~
+
+  # @feature: asz; the SkyWalking AI Sessionizer and its scenario feed
+  asz:
+    enabled: false
+    image: ~
+    # One generated conversation this often, each picked at random from the scenarios.
+    every: 30m
 
   function:
     enabled: false

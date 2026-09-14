@@ -1,6 +1,6 @@
-# SkyWalking 10.x showcase
+# SkyWalking 11.x showcase
 
-**This showcase would follow the latest changes of SkyWalking 10.x, even before the official release.**
+**This showcase follows the latest changes of SkyWalking 11.x and the Horizon UI, even before the official releases.**
 
 This showcase repository includes an example music application and other manifests to demonstrate the main features of
 SkyWalking. The music application is composed of several microservices that are written in different programming
@@ -124,6 +124,7 @@ Currently, the features supported are:
 | `baseline`              | Deploy [SkyPredictor](https://github.com/SkyAPM/SkyPredictor) as baseline calculator to predict metrics.                                                                               | Only support deployment in the Kubernetes environment, docker is not supported.                                                       |
 | `flink-monitor`         | Deploy OpenTelemetry and export Flink monitoring metrics to SkyWalking for analysis and display on UI.                                                                                 
 | `banyandb-monitor`      | Deploy OpenTelemetry and export BanyanDB monitoring metrics to SkyWalking for analysis and display on UI.                                                                              |                                                    |
+| `asz`                   | Deploy the [SkyWalking AI Sessionizer](https://github.com/apache/skywalking-ai-sessionizer) and feed the `AI_AGENT` layer from its scenario feed: one generated Claude Code conversation every 30 minutes, picked at random from ten scenarios. | No real agent runs in the showcase: the conversations are generated. Only support deployment in the Kubernetes environment. |
 ### Kubernetes
 
 To deploy the example application in Kubernetes, please make sure that you have `kubectl` command available, and it can

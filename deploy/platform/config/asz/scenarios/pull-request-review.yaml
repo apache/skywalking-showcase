@@ -1,0 +1,408 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# A multi-agent review of a large incoming pull request: a short parent,
+# four reviewers dispatched together in one workflow batch, and almost no
+# writes -- the only file the session leaves behind is its review notes.
+session: 7e1c0000-0000-4a00-8a00-000000000012
+project: -Users-dev-oap-review
+title: review the storage-plugin pull request
+interval: 10s
+steps:
+  - input: "A contributor has opened a pull request touching the BanyanDB storage plugin and the query layer. Review it for correctness and for anything that duplicates code we already have, and tell me what actually needs changing before merge."
+  - system: {subtype: model_change, fields: {content: "model set to the review profile: read-only tools, no writes without asking"}}
+  - call:
+      thinking: unavailable
+      text: "Pulling the pull request down first."
+      tool:
+        name: Bash
+        input: {command: "gh pr view 99452 --json title,author,additions,deletions,changedFiles,body", description: "Read the pull request metadata"}
+        result: {text: "Support point-query pushdown in the BanyanDB storage plugin -- +1,842 / -318 across 41 files.", after: 2s}
+      usage: {in: 6200, out: 190, cache_read: 21000, cache_write: 3300}
+  - call:
+      text: "Fetching the head and checking it out so I can read it locally."
+      tool: {name: Bash, input: {command: "git fetch origin pull/99452/head:pr-99452 && git switch -q pr-99452 && git diff --stat master...pr-99452 | tail -1", description: "Fetch and check out the branch, and size the diff"}, result: {text: "41 files changed, 1842 insertions(+), 318 deletions(-)", after: 6s}}
+      usage: {in: 6600, out: 160, cache_read: 23000}
+  - call: {text: "41 files, +1,842 / -318. Big enough that I want to split it by area before I read a line of it.", usage: {in: 7000, out: 260, cache_read: 24000}}
+  - input: "Break the diff down by area first."
+  - call:
+      text: "Grouping the changed paths."
+      tool: {name: Bash, input: {command: "git diff --name-only master...pr-99452 | cut -d/ -f1-3 | sort | uniq -c | sort -rn | sed 's/^ *//'", description: "Group changed files by module"}, result: {text: "19 oap-server/server-storage-plugin/storage-banyandb-plugin\n9 oap-server/server-query-plugin/query-graphql-plugin\n9 oap-server/server-core/src\n2 test/e2e-v2/cases\n2 docs/en/setup", after: 1200ms}}
+      usage: {in: 7400, out: 200, cache_read: 26000}
+  - call: {text: "Four areas: the BanyanDB plugin (19 files, two of them unit tests), the GraphQL query plugin (9), server-core (9: seven query services and two analysis classes for the new column), and a new end-to-end case (2 files). The docs are two one-line edits.", usage: {in: 7900, out: 340, cache_read: 27000}}
+  - input: "Show me the storage plugin part."
+  - call:
+      text: "Reading the two files that carry most of it."
+      tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/measure/BanyanDBMeasureReadDAO.java", limit: 400}, result: {text: "412 lines. A new buildPointQuery path sits beside the existing buildRangeQuery.", after: 900ms}}
+      usage: {in: 8300, out: 170, cache_read: 29000}
+  - call:
+      text: "And the condition builder it calls."
+      tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/ConditionBuilder.java"}, result: {text: "188 lines, 61 of them new.", after: 700ms}}
+      usage: {in: 8800, out: 150, cache_read: 31000}
+  - call: {text: "The shape is: a point query is detected in the DAO, translated by ConditionBuilder into a single-key lookup, and falls back to the range path when the key set is not complete.", usage: {in: 10200, out: 420, cache_read: 34000}}
+  - input: "Does it touch the schema?"
+  - call:
+      text: "Checking for schema and index declarations in the diff."
+      tool: {name: Bash, input: {command: "git diff master...pr-99452 -- oap-server/server-core | grep -E '^[+-].*(@Column|@BanyanDB)' | head -30", description: "Look for storage annotations in the diff"}, result: {text: "2 added lines: a new column point_key, indexed by default; no SeriesID or ShardingKey change, nothing removed.", after: 1500ms}}
+      usage: {in: 10700, out: 220, cache_read: 36000}
+  - call: {text: "It adds one indexed tag, point_key, so BanyanDB gets one new index rule of that name. That is the part that needs a compatibility answer for existing installations, and I do not have one yet.", usage: {in: 11100, out: 300, cache_read: 37000}}
+  - input: "And the query layer?"
+  - call:
+      text: "Listing what changed there."
+      tool: {name: Bash, input: {command: "git diff --stat master...pr-99452 -- oap-server/server-query-plugin", description: "Size the query plugin change"}, result: {text: "9 files changed, 261 insertions(+), 44 deletions(-)", after: 900ms}}
+      usage: {in: 11500, out: 160, cache_read: 38000}
+  - call:
+      text: "Reading the resolver it adds."
+      tool: {name: Read, input: {file_path: "oap-server/server-query-plugin/query-graphql-plugin/src/main/java/org/apache/skywalking/oap/query/graphql/resolver/PointValuesQuery.java"}, result: {text: "118 lines, all new; one resolver method, readPointValues.", after: 800ms}}
+      usage: {in: 12000, out: 180, cache_read: 40000}
+  - call: {text: "One new GraphQL resolver, readPointValues. Whether that is additive or a protocol break depends on the query-protocol submodule, which I have not looked at.", usage: {in: 12400, out: 330, cache_read: 41000}}
+  - input: "Is there test coverage at all?"
+  - call:
+      text: "Finding the tests it brings."
+      tool: {name: Bash, input: {command: "git diff --name-only master...pr-99452 | grep -iE 'test|e2e'", description: "List test files in the diff"}, result: {text: "4 files: two unit tests in the plugin, one e2e case with its expected file.", after: 700ms}}
+      usage: {in: 12800, out: 140, cache_read: 42000}
+  - call: {text: "Four test files. Thin for 1,800 added lines, but I want a child agent to say exactly which changed lines are uncovered rather than guessing from the file count.", usage: {in: 13100, out: 280, cache_read: 43000}}
+  - input: "Does any of it duplicate something we already have?"
+  - call:
+      text: "Grepping for an existing condition builder."
+      tool: {name: Bash, input: {command: "grep -rn 'class .*ConditionBuilder' oap-server --include='*.java' | head -20", description: "Search for existing condition builders"}, result: {text: "2 hits: the BanyanDB one it extends, and one in the elasticsearch plugin with a near-identical signature.", after: 3s}}
+      usage: {in: 13500, out: 210, cache_read: 45000}
+  - call: {text: "There is at least one near-duplicate already in the tree. Worth a proper answer, not a grep.", usage: {in: 13800, out: 200, cache_read: 46000}}
+  - input: "Right. Split the review four ways -- correctness, schema compatibility, query protocol, tests -- and send them out together as one batch. None of them should need another's answer."
+  # The four reviews are independent, so they go out as one batch.
+  - call:
+      thinking: "Four independent questions, none of which informs another. One batch, four children, and I reconcile afterwards."
+      text: "Launching four reviewers in one batch."
+      workflow:
+        name: pr-99452 review
+        children:
+          - name: pr-correctness
+            prompt: "Review pull request 99452 for correctness only: null handling, the fallback from the point path to the range path, and anything that duplicates a helper already in the tree. Report findings with file and line."
+            steps:
+              - call: {text: "Reading the new code path end to end.", tool: {name: Bash, input: {command: "git diff master...pr-99452 -- '*BanyanDBMeasureReadDAO.java' | head -200", description: "Read the DAO diff"}, result: {text: "142 added lines; buildPointQuery, isPointQuery and a modified readMeasureValues."}}, usage: {in: 1400, out: 120, cache_read: 5200}}
+              - call: {text: "Checking the fallback condition.", tool: {name: Bash, input: {command: "grep -n 'isPointQuery\\|fallback\\|buildRangeQuery' -A4 oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/measure/BanyanDBMeasureReadDAO.java", description: "Inspect the fallback branch"}, result: {text: "isPointQuery returns ids.size() <= 1; the range path is only reached in the else branch."}}, usage: {in: 2100, out: 160, cache_read: 5600}}
+              - call: {text: "That misses the empty case. Confirming what the caller can pass.", tool: {name: Bash, input: {command: "grep -rn 'readMeasureValues(' oap-server/server-core --include='*.java' | head -20", description: "Find the callers of readMeasureValues"}, result: {text: "7 callers; two of them can pass an empty id list on an unhealthy service.", after: 4s}}, usage: {in: 2600, out: 200, cache_read: 6100}}
+              - call: {text: "Looking for the duplicate helper.", tool: {name: Bash, input: {command: "grep -rn 'buildCondition' oap-server/server-storage-plugin --include='*.java'", description: "Search for existing condition helpers"}, result: {text: "oap-server/server-storage-plugin/storage-elasticsearch-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/elasticsearch/query/ConditionBuilder.java:44 has the same signature."}}, usage: {in: 3000, out: 150, cache_read: 6400}}
+              - call:
+                  text: "Comparing the two implementations."
+                  tool: {name: Bash, input: {command: "diff <(sed -n '30,90p' oap-server/server-storage-plugin/storage-elasticsearch-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/elasticsearch/query/ConditionBuilder.java) <(sed -n '40,100p' oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/ConditionBuilder.java)", description: "Diff the two condition builders"}, result: {text: "two hunks, 18 changed lines out of 61, all in the tag-name mapping; the rest is identical.", after: 400ms}}
+                  usage: {in: 3400, out: 180, cache_read: 6800}
+              - call: {text: "Checking whether the shared part was ever extracted before.", tool: {name: Bash, input: {command: "git log --oneline -S 'ConditionBuilder' -- oap-server | head -10", description: "History of the condition builders"}, result: {text: "4 commits; one from 2024 that split them deliberately for the tag mapping."}}, usage: {in: 3700, out: 170, cache_read: 7100}}
+              - call: {text: "Reading the null handling on the tag values.", tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/ConditionBuilder.java", offset: 100, limit: 60}, result: {text: "tagValue is dereferenced without a null check on line 131."}}, usage: {in: 4000, out: 140, cache_read: 7400}}
+              - call: {text: "Confirming that path is reachable.", tool: {name: Bash, input: {command: "grep -rn 'setTagValue(null\\|tagValue = null' oap-server --include='*.java' | head", description: "Look for null tag values"}, result: {text: "no direct hits; reachable only through the labelled-value decoder.", after: 2s}}, usage: {in: 4300, out: 160, cache_read: 7700}}
+              - call: {text: "Correctness findings: (1) isPointQuery treats an empty id list as a point query, so two core callers take the new path with no keys -- real, blocking. (2) ConditionBuilder duplicates the elasticsearch one, but the 2024 split was deliberate for tag mapping, so this is not new duplication. (3) tagValue is dereferenced without a null check at line 131, reachable only through the labelled-value decoder -- worth a guard, not blocking.", usage: {in: 4600, out: 460, cache_read: 8000}}
+          - name: pr-schema-compat
+            prompt: "Review pull request 99452 for BanyanDB schema compatibility: the new index rule, whether an existing installation upgrades cleanly, and whether the metadata version was bumped."
+            steps:
+              - call: {text: "Reading the schema diff.", tool: {name: Bash, input: {command: "git diff master...pr-99452 -- oap-server/server-core oap-server/server-storage-plugin/storage-banyandb-plugin | grep -E '^[+-].*(@Column|@BanyanDB|IndexRule)'", description: "Read the storage schema changes"}, result: {text: "one new column point_key, indexed by default, so one new index rule of that name; no SeriesID, ShardingKey or group change."}}, usage: {in: 1300, out: 130, cache_read: 5000}}
+              - call: {text: "Checking how index rules are installed today.", tool: {name: Bash, input: {command: "grep -rn 'IndexRule\\|reconcileRules' oap-server/server-storage-plugin/storage-banyandb-plugin --include='*.java' | head -20", description: "Find the index-rule installer"}, result: {text: "MetadataRegistry builds one rule per indexed tag; BanyanDBIndexRuleReconciler.reconcileRules installs them at startup."}}, usage: {in: 1900, out: 160, cache_read: 5400}}
+              - call: {text: "Does reconcileRules cover a new rule on an existing group?", tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/BanyanDBIndexRuleReconciler.java", offset: 60, limit: 80}, result: {text: "It updates a group in place and adds missing rules, but only when the metadata version differs."}}, usage: {in: 2400, out: 180, cache_read: 5800}}
+              - call: {text: "So the version has to move. Checking whether it did.", tool: {name: Bash, input: {command: "git diff master...pr-99452 | grep -nE 'METADATA_VERSION|schemaVersion|version = '", description: "Check for a metadata version bump"}, result: {text: "(no output; grep exit status 1)", failed: true, after: 2s}}, usage: {in: 2800, out: 140, cache_read: 6200}}
+              - call: {text: "Confirming the constant that would have had to change.", tool: {name: Bash, input: {command: "grep -rn 'METADATA_VERSION' oap-server --include='*.java'", description: "Locate the metadata version constant"}, result: {text: "BanyanDBSchemaRevision.java:24: public static final int METADATA_VERSION = 5;"}}, usage: {in: 3100, out: 150, cache_read: 6500}}
+              - call: {text: "Checking whether anything else in the release bumps it anyway.", tool: {name: Bash, input: {command: "git log --oneline origin/master -S 'METADATA_VERSION' | head -5", description: "History of the metadata version"}, result: {text: "last bumped 7 months ago for the sharding change."}}, usage: {in: 3800, out: 130, cache_read: 7200}}
+              - call: {text: "Schema findings: the new index rule is additive and safe for fresh installs, but BanyanDBIndexRuleReconciler only reconciles rules when METADATA_VERSION changes and the pull request does not bump it. So on an upgraded instance point_key would never be created, and the point path would silently fall back to a full scan. I did not start a stack to prove it: rebuilding the image and restarting containers would pull them out from under the other reviewers in this checkout. Blocking if it reproduces; one-line fix -- bump METADATA_VERSION to 6.", usage: {in: 4200, out: 420, cache_read: 7600}}
+          - name: pr-query-protocol
+            prompt: "Review pull request 99452 for the query layer: is the new GraphQL resolver additive, does the query-protocol submodule need a change, and does it stay consistent with the existing metrics query naming."
+            steps:
+              - call: {text: "Reading the resolver diff.", tool: {name: Bash, input: {command: "git diff master...pr-99452 -- oap-server/server-query-plugin", description: "Read the query plugin diff"}, result: {text: "readPointValues added; readMetricsValues untouched."}}, usage: {in: 1200, out: 130, cache_read: 4900}}
+              - call: {text: "Checking the schema the resolver has to match.", tool: {name: Bash, input: {command: "grep -rn 'readMetricsValues\\|readPointValues' oap-server/server-query-plugin/query-graphql-plugin/src/main/resources/query-protocol", description: "Look for the field in the GraphQL schema"}, result: {text: "readMetricsValues is declared; readPointValues is not."}}, usage: {in: 1700, out: 150, cache_read: 5300}}
+              - call: {text: "The schema lives in a submodule. Comparing its gitlink on master and on the branch.", tool: {name: Bash, input: {command: "git rev-parse master:oap-server/server-query-plugin/query-graphql-plugin/src/main/resources/query-protocol pr-99452:oap-server/server-query-plugin/query-graphql-plugin/src/main/resources/query-protocol", description: "Compare the query-protocol gitlink between master and the branch"}, result: {text: "9c2e47d1a0b35f86e4d7c0b1f2a93e5d8b6c4f07\n9c2e47d1a0b35f86e4d7c0b1f2a93e5d8b6c4f07", after: 3s}}, usage: {in: 2100, out: 160, cache_read: 5700}}
+              - call: {text: "The same commit on both sides, so the resolver is unreachable. Checking whether anything in the build would have caught it.", tool: {name: Bash, input: {command: "./mvnw -pl oap-server/server-query-plugin/query-graphql-plugin test | grep -E 'Tests run:|BUILD' | tail -2", description: "Run the query plugin tests"}, result: {text: "Failures: 0, Errors: 0, BUILD SUCCESS -- nothing in the module checks resolver methods against the schema.", after: 150s}}, usage: {in: 2600, out: 200, cache_read: 6100}}
+              - call: {text: "Confirming the naming convention for a new field.", tool: {name: Bash, input: {command: "grep -rn 'read[A-Z][A-Za-z]*Values' oap-server/server-query-plugin --include='*.java' | head", description: "Survey the resolver naming"}, result: {text: "only readMetricsValues and readLabeledMetricsValues match -- read-prefixed, ending in Values."}}, usage: {in: 2900, out: 170, cache_read: 6400}}
+              - call: {text: "Checking whether the CLI or the UI would need to move too.", tool: {name: Bash, input: {command: "grep -rln 'readMetricsValues' oap-server test/e2e-v2 --include='*.java' --include='*.yml' | wc -l", description: "Count users of the existing field"}, result: {text: "11 files use the existing field; none use the new one, as expected."}}, usage: {in: 3200, out: 140, cache_read: 6700}}
+              - call: {text: "Query findings: readPointValues is additive and breaks nothing, but the query-protocol submodule is not bumped, so the field is not in the schema and the resolver is dead code today -- nothing in the build catches it: no test checks resolvers against the schema, and a method with no schema field is simply never bound. Blocking in the sense that the feature does not work, not in the sense that it breaks anything. Naming matches the existing convention.", usage: {in: 3600, out: 400, cache_read: 7000}}
+          - name: pr-tests
+            prompt: "Review the test coverage of pull request 99452: which changed lines are exercised, which are not, and whether the end-to-end case actually asserts on the new path."
+            steps:
+              - call: {text: "Listing what the pull request adds.", tool: {name: Bash, input: {command: "git diff --stat master...pr-99452 -- '*Test*.java' 'test/e2e-v2'", description: "Size the test change"}, result: {text: "4 files, 208 insertions(+); two unit tests, one e2e case and its expected file."}}, usage: {in: 1300, out: 130, cache_read: 5000}}
+              - call: {text: "Reading the unit tests.", tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/test/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/ConditionBuilderTest.java"}, result: {text: "3 cases: single key, two keys, and a null tag name."}}, usage: {in: 1800, out: 140, cache_read: 5400}}
+              - call: {text: "Running them with coverage, then measuring it on the changed lines only.", tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-storage-plugin/storage-banyandb-plugin org.jacoco:jacoco-maven-plugin:0.8.12:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.12:report -Dtest='ConditionBuilderTest,BanyanDBMeasureReadDAOTest' && diff-cover oap-server/server-storage-plugin/storage-banyandb-plugin/target/site/jacoco/jacoco.xml --compare-branch=master --src-roots oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java | grep -E '(ConditionBuilder|BanyanDBMeasureReadDAO)\\.java' | sed 's|.*/||'", description: "Run the new unit tests and measure coverage on the changed lines"}, result: {text: "ConditionBuilder.java (100%)\nBanyanDBMeasureReadDAO.java (89.6%): Missing lines 140-146", after: 240s}}, usage: {in: 2400, out: 220, cache_read: 5900}}
+              - call: {text: "Coverage cannot show an input no test tries. Looking for an empty id list in the DAO test.", tool: {name: Bash, input: {command: "grep -nE 'emptyList|List\\.of\\(\\)' oap-server/server-storage-plugin/storage-banyandb-plugin/src/test/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/measure/BanyanDBMeasureReadDAOTest.java", description: "Check whether any test passes an empty id list"}, result: {text: "(no output; grep exit status 1)", failed: true}}, usage: {in: 2600, out: 150, cache_read: 6050}}
+              - call: {text: "Checking what the e2e case asserts.", tool: {name: Bash, input: {command: "grep -n 'query:\\|expected:' test/e2e-v2/cases/storage/banyandb/point-query/e2e.yaml | head -20", description: "Read the e2e assertions"}, result: {text: "two verify cases, each comparing a swctl metrics query with expected/metrics-point.yml; nothing observes which read path ran."}}, usage: {in: 2800, out: 170, cache_read: 6200}}
+              - call: {text: "Is there an existing way to assert the path?", tool: {name: Bash, input: {command: "grep -rhoE '\"banyandb_[a-z_]+\"' oap-server/server-storage-plugin/storage-banyandb-plugin --include='*.java' | sort -u", description: "Look for a plugin meter that names the query path"}, result: {text: "only banyandb_write_latency -- the plugin meters writes; nothing on the read side says which query path ran.", after: 1500ms}}, usage: {in: 3100, out: 180, cache_read: 6500}}
+              - call: {text: "Running the new end-to-end case as it stands.", tool: {name: Bash, input: {command: "e2e run -c test/e2e-v2/cases/storage/banyandb/point-query/e2e.yaml", description: "Run the new end-to-end case"}, result: {text: "passes, both verify cases green -- and the range path returns the same values, so it would pass with the point path switched off too.", after: 270s}}, usage: {in: 3500, out: 210, cache_read: 6900}}
+              - call: {text: "Test findings: on the changed lines, ConditionBuilder is fully covered and BanyanDBMeasureReadDAO misses lines 140-146, the whole range fallback. No test passes an empty id list, so that case is never tried. The new e2e case compares values the range path returns too, so it would pass with the point path switched off; the plugin meters only writes, so they should add a read-side counter tagged by query path and assert on it. Not blocking on its own, but it is why nobody noticed the schema problem.", usage: {in: 3900, out: 440, cache_read: 7300}}
+      usage: {in: 14200, out: 380, cache_read: 48000, cache_write: 2600}
+  - after: 300s
+    call:
+      text: "All four reported. Reading them together before I say anything."
+      usage: {in: 22000, out: 620, cache_read: 3000, cache_write: 73000}
+  - input: "Give me the four headlines."
+  - call: {text: "Correctness: an empty id list takes the point path. Schema: the index rule is never created on an upgraded instance because METADATA_VERSION is not bumped. Query: the resolver is not in the protocol schema, so the feature is unreachable. Tests: the unit tests never execute the range fallback or try an empty id list, and the new e2e case cannot tell the point path from the range path.", usage: {in: 22400, out: 480, cache_read: 78000}}
+  - input: "Start with the blocking ones. The empty id list -- is that real?"
+  - call:
+      text: "Checking the callers myself rather than trusting the child."
+      tool: {name: Bash, input: {command: "grep -rn 'readMeasureValues(' oap-server/server-core --include='*.java' -A3 | grep -B1 'ids' | head -20", description: "Inspect the readMeasureValues callers"}, result: {text: "two callers in core/query both pass an id list built from a service lookup.", after: 2s}}
+      usage: {in: 22800, out: 200, cache_read: 79000}
+  - call: {text: "Real. Both build the list from a lookup that returns empty when the service has no instances.", usage: {in: 23100, out: 240, cache_read: 80000}}
+  - input: "Can that lookup actually return empty in production, or only in tests?"
+  - call:
+      text: "Looking at the lookup."
+      tool: {name: Bash, input: {command: "grep -rn 'listServiceInstances\\|EMPTY_LIST\\|Collections.emptyList' oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/query | head", description: "Check whether the lookup can return empty"}, result: {text: "returns Collections.emptyList() when the service has no instance in the window -- ordinary on a scaled-to-zero service.", after: 1500ms}}
+      usage: {in: 23500, out: 190, cache_read: 81000}
+  - call: {text: "Ordinary in production: any service scaled to zero in the queried window. Finding stands, and it is the one I would call blocking.", usage: {in: 23800, out: 260, cache_read: 82000}}
+  - input: "Now the metadata version. The schema reviewer only read the reconciler. Does an upgrade really lose the rule?"
+  - call:
+      thinking: unavailable
+      text: "Reproducing it, now that the reviewers are done with the checkout: master's published image first, so the groups exist before the new code sees them."
+      tool: {name: Bash, input: {command: "docker pull -q ghcr.io/apache/skywalking/oap:$(git rev-parse master) && docker tag ghcr.io/apache/skywalking/oap:$(git rev-parse master) skywalking/oap:latest && e2e setup -c test/e2e-v2/cases/storage/banyandb/e2e.yaml", description: "Start a fresh stack on master's OAP image"}, result: {text: "stack up: banyandb healthy, OAP from master created the sw_metricsMinute group and its rules.", after: 215s}}
+      usage: {in: 24200, out: 220, cache_read: 83000}
+  - call:
+      text: "Building the branch image. It also retags latest, which is what the stack's OAP service runs."
+      tool: {name: Bash, input: {command: "make build.backend docker.oap TAG=pr-99452", description: "Build the OAP image from the pull request"}, result: {text: "skywalking/oap:pr-99452 and skywalking/oap:latest built from the branch.", after: 285s}}
+      usage: {in: 24280, out: 180, cache_read: 83200}
+  - call:
+      text: "Now only the OAP moves, the way an operator upgrades, and I ask BanyanDB what it has."
+      tool: {name: Bash, input: {command: "set -a && . test/e2e-v2/script/env && set +a && docker compose -p skywalking_e2e -f test/e2e-v2/cases/storage/banyandb/docker-compose.yml up -d --no-deps oap && sleep 90 && bydbctl -a http://127.0.0.1:17913 -u admin -p admin indexRule list -g sw_metricsMinute | grep -c point_key", description: "Upgrade the OAP in place and count the new index rule"}, result: {text: "0 -- the upgraded OAP started cleanly and point_key was never created on the existing group.", failed: true, after: 110s}}
+      usage: {in: 24350, out: 230, cache_read: 83500}
+  - call: {text: "Reproduced: an upgraded instance never gets point_key. Removing the stack.", tool: {name: Bash, input: {command: "e2e cleanup -c test/e2e-v2/cases/storage/banyandb/e2e.yaml", description: "Remove the reproduction stack"}, result: {text: "cleanup finished: the skywalking_e2e containers and network are removed.", after: 20s}}, usage: {in: 24500, out: 150, cache_read: 84000}}
+  - input: "And the installer really gates on the version?"
+  - call:
+      text: "Reading the gate."
+      tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/BanyanDBIndexRuleReconciler.java", offset: 55, limit: 45}, result: {text: "if (existing.getMetadataVersion() >= METADATA_VERSION) return; -- rules are only reconciled below that line."}}
+      usage: {in: 24900, out: 180, cache_read: 85000}
+  - call: {text: "Yes: an early return above the reconcile. One line in BanyanDBSchemaRevision fixes it.", usage: {in: 25100, out: 200, cache_read: 86000}}
+  - input: "Good. The submodule pointer next."
+  - call:
+      text: "Confirming it independently, on the submodule paths only."
+      tool: {name: Bash, input: {command: "git diff --submodule=log master...pr-99452 -- $(git config -f .gitmodules --get-regexp 'path$' | cut -d' ' -f2) | wc -l | tr -d ' '", description: "Count diff lines on every submodule path"}, result: {text: "0"}}
+      usage: {in: 25400, out: 150, cache_read: 87000}
+  - call: {text: "Zero lines on all four submodule paths, the query protocol's included: the pointer does not move, so readPointValues is not in the schema and nothing can call it.", usage: {in: 25700, out: 200, cache_read: 88000}}
+  - input: "Can they fix that in this pull request, or does it need a separate protocol one?"
+  - call:
+      text: "Checking how we did it last time a field was added."
+      tool: {name: Bash, input: {command: "git log --oneline --submodule=log -- '*query-protocol' | head -8", description: "Precedent for protocol submodule bumps"}, result: {text: "the last three field additions each landed as a protocol pull request first, then a pointer bump here.", after: 4s}}
+      usage: {in: 26000, out: 200, cache_read: 89000}
+  - call: {text: "Precedent is a separate protocol pull request first. So this one cannot merge complete -- either it lands with the resolver behind the schema bump, or it waits.", usage: {in: 26300, out: 300, cache_read: 90000}}
+  - input: "Now the duplication claim. I do not believe it -- those two builders were split on purpose."
+  - call:
+      thinking: "They know this tree better than my grep does. Check the history before I defend the finding."
+      text: "You are right to push. Reading the commit that split them."
+      tool: {name: Bash, input: {command: "git log --format='%h %s' -S 'ConditionBuilder' --diff-filter=A -- oap-server | tail -3", description: "Find the commit that introduced the split"}, result: {text: "a7c31f0 Separate BanyanDB condition building from the ES one (tag mapping is not shared)"}}
+      usage: {in: 26600, out: 210, cache_read: 91000}
+  - call: {text: "Dropping it. The split is deliberate and the commit message says so; the 18 differing lines are exactly the tag mapping. False positive -- my grep found a shape, not a duplication.", usage: {in: 26900, out: 320, cache_read: 92000}}
+  - input: "What about the null tag value?"
+  - call:
+      text: "Reading the line."
+      tool: {name: Read, input: {file_path: "oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/ConditionBuilder.java", offset: 120, limit: 25}, result: {text: "line 131: tagValue.getValue() with no guard above it."}}
+      usage: {in: 27200, out: 170, cache_read: 93000}
+  - input: "Is that reachable from a real query, though?"
+  - call:
+      text: "Tracing what can produce a null there."
+      tool: {name: Bash, input: {command: "grep -rn 'class LabeledValueDecoder' -A40 oap-server --include='*.java' | grep -n 'return null\\|Optional' | head", description: "Check whether the decoder can emit null"}, result: {text: "the decoder returns Optional.empty(), never null, and the caller filters empties.", after: 3s}}
+      usage: {in: 27500, out: 200, cache_read: 94000}
+  - call: {text: "Not reachable. The only producer returns an Optional and the caller filters it. Second false positive -- I would have left that comment on the pull request and wasted the contributor's afternoon.", usage: {in: 27800, out: 300, cache_read: 95000}}
+  - input: "So how many are left?"
+  - call: {text: "Three: the empty id list, the missing METADATA_VERSION bump, and the missing protocol schema. Plus one non-blocking note about the end-to-end assertions.", usage: {in: 28100, out: 220, cache_read: 96000}}
+  - input: "Rank them by what has to happen before merge."
+  - call: {text: "1) METADATA_VERSION bump -- one line, without it the feature is dead on every upgraded installation. 2) the empty id list guard -- three lines, it is a wrong-results bug not a crash. 3) the protocol schema -- not their code, needs a submodule pull request first. 4) e2e assertions -- ask, do not block.", usage: {in: 28400, out: 420, cache_read: 97000}}
+  - input: "Before you say any of that on the pull request, check its CI."
+  - call:
+      text: "Tallying the checks by outcome."
+      tool: {name: Bash, input: {command: "gh pr checks 99452 --json bucket -q '.[].bucket' | sort | uniq -c | sed 's/^ *//'", description: "Count the pull request's CI checks by outcome"}, result: {text: "1 fail\n38 pass\n2 pending", after: 3s}}
+      usage: {in: 28800, out: 160, cache_read: 98000}
+  - input: "Which job failed?"
+  - call:
+      text: "Naming it, and the run it belongs to."
+      tool:
+        name: Bash
+        input:
+          command: >-
+            gh pr checks 99452 --json workflow,name,bucket,link -q '.[] | select(.bucket == "fail") | [.workflow, .name, (.link | split("/") | .[7])] | @tsv'
+          description: "Name the failing check and its run"
+        result: {text: "E2E Storage Matrix\tStorage Readiness (BanyanDB)\t8812774", after: 3s}
+      usage: {in: 29000, out: 190, cache_read: 98600}
+  - call:
+      text: "Reading the failed step's log."
+      tool: {name: Bash, input: {command: "gh run view 8812774 --log-failed | cut -f3- | grep -F 'banyandb-1' | tail -2", description: "Read the failing job's log"}, result: {text: "2026-09-10T22:41:14.2071882Z  Container 8812774-banyandb-1  Waiting\n2026-09-10T22:46:14.2279310Z dependency failed to start: container 8812774-banyandb-1 is unhealthy", after: 8s}}
+      usage: {in: 29200, out: 200, cache_read: 99200}
+  - call: {text: "BanyanDB failed its health check and the OAP container was never created, so none of the pull request's code ran in that job.", usage: {in: 29300, out: 220, cache_read: 99600}}
+  - input: "Is that related to the change, or is it the flaky one?"
+  - call:
+      text: "Looking for the same signature in master's failed runs of that workflow."
+      tool:
+        name: Bash
+        input:
+          command: >-
+            gh run list -w e2e-storage-matrix.yaml -b master -L 30 --json databaseId,conclusion -q '.[] | select(.conclusion == "failure") | .databaseId' | while read -r id; do echo "$id $(gh run view "$id" --log-failed | grep -c 'banyandb-1 is unhealthy')"; done
+          description: "Count the same failure signature in master's failed runs"
+        result: {text: "8809412 1\n8803377 1\n8797105 0\n8790668 1", after: 25s}
+      usage: {in: 29500, out: 210, cache_read: 100000}
+  - call: {text: "Four of the last thirty master runs of that workflow failed, three of them exactly this way: BanyanDB unhealthy before the OAP was created. The fourth failed on something else. It happens on master before any of this code runs, so it is not this pull request. I will say so on it so nobody asks them to chase it.", usage: {in: 29700, out: 260, cache_read: 101000}}
+  - input: "Check the license headers while you are in there."
+  - call:
+      text: "Running the header check."
+      tool: {name: Bash, input: {command: "license-eye header check", description: "Check Apache license headers"}, result: {text: "invalid: 0 across the tree, which covers the 41 files the pull request touches.", after: 12s}}
+      usage: {in: 30000, out: 140, cache_read: 102000}
+  - input: "And checkstyle."
+  - call:
+      text: "Running it on the two touched modules."
+      tool: {name: Bash, input: {command: "./mvnw -q -pl oap-server/server-storage-plugin/storage-banyandb-plugin,oap-server/server-query-plugin/query-graphql-plugin checkstyle:check", description: "Run checkstyle on the touched modules"}, result: {text: "no violations.", after: 95s}}
+      usage: {in: 30300, out: 150, cache_read: 103000}
+  - queued: {text: "also confirm the two docs pages they edited still build", mode: prompt}
+  - call:
+      text: "The pages are rendered by the website build, so the check that applies here is the dead-link one CI runs."
+      tool: {name: Bash, input: {command: "git diff --name-only master...pr-99452 -- docs | xargs -n1 markdown-link-check -c .dlc.json -q", description: "Check the edited docs pages for dead links"}, result: {text: "no dead links reported for either page.", after: 9s}}
+      usage: {in: 30600, out: 160, cache_read: 104000}
+  - call: {text: "Both edited pages pass the same dead-link check CI runs on docs changes.", usage: {in: 30900, out: 140, cache_read: 105000}}
+  - input: "Does a change like this need a changelog entry?"
+  - call:
+      text: "Checking whether they added one."
+      tool: {name: Bash, input: {command: "git diff master...pr-99452 -- docs/en/changes/changes.md | head", description: "Look for a changelog entry"}, result: {text: "no change to docs/en/changes/changes.md."}}
+      usage: {in: 31200, out: 130, cache_read: 106000}
+  - input: "Do we actually require one for a storage-plugin change?"
+  - call:
+      text: "Checking the last ten storage-plugin merges."
+      tool: {name: Bash, input: {command: "git log --format=%h -10 -- oap-server/server-storage-plugin | xargs -I{} git show --name-only --format= {} | grep -c docs/en/changes/changes.md", description: "How often storage changes touch the changelog"}, result: {text: "9 -- nine of the last ten also touched the changelog.", after: 3s}}
+      usage: {in: 31500, out: 170, cache_read: 107000}
+  - call: {text: "Effectively yes -- nine of the last ten. Worth asking for, one line, not a blocker.", usage: {in: 31800, out: 200, cache_read: 108000}}
+  - input: "The description claims a three-times speedup. Is there anything backing that?"
+  - call:
+      text: "Looking for numbers in the pull request."
+      tool: {name: Bash, input: {command: "gh pr view 99452 --json body -q .body | grep -inE 'ms|benchmark|p99|speedup|3x'", description: "Search the description for measurements"}, result: {text: "one line: 'roughly 3x faster on our cluster'. No method, no numbers."}}
+      usage: {in: 32100, out: 180, cache_read: 109000}
+  - call: {text: "A claim with no method behind it. Given the schema finding, whatever they measured was probably measured on a fresh install where the index rule exists -- which nobody upgrading will have.", usage: {in: 32400, out: 320, cache_read: 110000}}
+  - input: "That is a good point. Ask them for numbers on an upgraded instance."
+  - call: {text: "Noted for the review comment: numbers from an upgraded instance, not a fresh one.", usage: {in: 32700, out: 160, cache_read: 111000}}
+  - input: "Is the branch behind master?"
+  - call:
+      text: "Checking."
+      tool: {name: Bash, input: {command: "git rev-list --left-right --count master...pr-99452", description: "Compare the branch with master"}, result: {text: "112\t23 -- 112 commits behind, 23 ahead."}}
+      usage: {in: 33000, out: 140, cache_read: 112000}
+  - input: "Would a rebase break anything you have looked at?"
+  - call:
+      text: "Checking whether master moved under the files it touches."
+      tool: {name: Bash, input: {command: "git log --oneline master --since='6 weeks ago' -- oap-server/server-storage-plugin/storage-banyandb-plugin | head", description: "Recent master activity in the same module"}, result: {text: "6 commits, one of them refactoring the DAO base class.", after: 2s}}
+      usage: {in: 33300, out: 190, cache_read: 113000}
+  - call: {text: "A rebase will conflict in BanyanDBMeasureReadDAO -- master refactored the base class three weeks ago. Better they rebase before we look again, or the line numbers in my review are already wrong.", usage: {in: 33600, out: 300, cache_read: 114000}}
+  - input: "Fine. That is enough investigation."
+  - call: {text: "Agreed. Three blocking items, one ask, one flaky job to discount, and a rebase.", usage: {in: 33900, out: 180, cache_read: 115000}}
+  - reset: {summary: "Summary: reviewed pull request 99452 (BanyanDB point-query pushdown, 41 files, +1842/-318) by fanning out four reviewers in one batch -- correctness, schema compatibility, query protocol and tests. Three blocking findings survived verification: an empty id list takes the point path (wrong results for a service scaled to zero), METADATA_VERSION is not bumped so the new index rule is never created on an upgraded instance (reproduced with an in-place upgrade), and the query-protocol submodule is not bumped so the new resolver is unreachable. Two child findings were dropped as false positives: the ConditionBuilder duplication (the split was deliberate, commit a7c31f0) and the null tag value (the decoder returns Optional, never null). The new e2e case cannot tell the point path from the range path. The one failing CI check, Storage Readiness (BanyanDB) in the E2E Storage Matrix workflow, fails the same way on master: BanyanDB unhealthy before the OAP starts. Nothing in the repository has been changed."}
+  - input: "Remind me where we landed."
+  - call: {text: "Three blocking, two dropped as false positives, one ask for numbers, one flaky job to discount, and they should rebase first.", usage: {in: 8400, out: 220, cache_read: 26000, cache_write: 3200}}
+  - input: "What is the smallest set of changes that gets this merged?"
+  - call: {text: "One line in BanyanDBSchemaRevision, three lines of guard in the DAO, and a query-protocol pull request that is not their code. Everything else is a comment, not a change.", usage: {in: 8700, out: 260, cache_read: 27000}}
+  - input: "Realistically, how long is that for the contributor?"
+  - call: {text: "The two in-repo fixes are an evening. The protocol pull request is however long a second review takes, which is why I would tell them about it now rather than after they fix the other two.", usage: {in: 9000, out: 240, cache_read: 28000}}
+  - input: "Is any of it something we should just do ourselves?"
+  - call: {text: "The protocol schema, arguably -- it is a two-line addition to a submodule they may not have thought about. But it is their feature, and taking it away teaches them nothing.", usage: {in: 9300, out: 250, cache_read: 29000}}
+  - input: "Would you approve it with those three done?"
+  - call: {text: "Yes, with the e2e assertion as a follow-up issue rather than a merge condition.", usage: {in: 9600, out: 160, cache_read: 30000}}
+  - input: "What do we do about the end-to-end assertions?"
+  - call: {text: "Ask them to add a read-side counter tagged by query path, next to banyandb_write_latency, and assert on it so the case fails when the point path is not taken. That is the assertion that would have caught the schema problem.", usage: {in: 9900, out: 230, cache_read: 31000}}
+  - input: "Can an end-to-end case even assert on one of the OAP's own meters?"
+  - call:
+      text: "Checking how the self-observability case does it."
+      tool: {name: Bash, input: {command: "grep -rln 'swctl' test/e2e-v2/cases/so11y", description: "Find how the so11y case queries OAP metrics"}, result: {text: "the so11y case queries the OAP's own metrics through swctl and compares them with expected files.", after: 400ms}}
+      usage: {in: 10200, out: 190, cache_read: 32000}
+  - call: {text: "Yes: the so11y case already does exactly that, so a new counter is assertable with the same pattern.", usage: {in: 10500, out: 150, cache_read: 33000}}
+  - input: "Check the new index rule name against the ones we already have."
+  - call:
+      text: "Checking how measure rule names are chosen."
+      tool: {name: Bash, input: {command: "grep -n 'getIndexRule\\|IndexRule.newBuilder' oap-server/server-storage-plugin/storage-banyandb-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/banyandb/MetadataRegistry.java | head", description: "See how measure index rules are named"}, result: {text: "measure rules come from TagMetadata, one per indexed tag, each carrying its tag's name."}}
+      usage: {in: 10800, out: 170, cache_read: 34000}
+  - input: "So is point_key consistent?"
+  - call: {text: "Yes, by construction: the rule takes its column's name like every other measure rule, and a field-level annotation only picks the index type. Nothing to raise.", usage: {in: 11100, out: 260, cache_read: 35000}}
+  - input: "Any concern about write amplification from an extra index?"
+  - call:
+      text: "Checking where the new column lives."
+      tool: {name: Bash, input: {command: "git diff --stat master...pr-99452 -- oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/analysis", description: "Size the core model change"}, result: {text: "2 files changed, 14 insertions(+); the column is on one metrics class and its storage builder, not the shared base."}}
+      usage: {in: 11400, out: 140, cache_read: 36000}
+  - call: {text: "One extra indexed tag on one measure is noise. Not worth raising.", usage: {in: 11700, out: 170, cache_read: 37000}}
+  - input: "Good enough."
+  - call: {text: "Then that is the review.", usage: {in: 11900, out: 90, cache_read: 38000}}
+  - input: "Write the findings down somewhere I can paste from."
+  # The only file this session writes: the review notes.
+  - call:
+      text: "Saving the ranked findings as review notes. Nothing else in the tree has been touched today and I am not going to start now."
+      tool:
+        name: Write
+        input:
+          file_path: docs/review-notes-99452.md
+          content: &notes |
+            # Review notes: pull request 99452
+
+            BanyanDB point-query pushdown. 41 files, +1842 / -318.
+            Reviewed by four separate readers sent out as one batch:
+            correctness, schema compatibility, query protocol,
+            tests. Nothing in this repository was changed by the
+            review.
+
+            ## Blocking
+
+            1. METADATA_VERSION is not bumped.
+               BanyanDBIndexRuleReconciler returns early when the
+               stored metadata version is current, so the point_key
+               index rule is never created on an upgraded instance
+               and the point path silently falls back to a full scan.
+               Reproduced with an in-place upgrade from a clean
+               master stack. One line.
+
+            2. An empty id list is treated as a point query.
+               isPointQuery tests ids.size() <= 1, so an empty list
+               takes the point path with no keys. Two core callers
+               build that list from a lookup that returns empty for
+               a service with no instances in the window. Wrong
+               results, not a crash. Three lines.
+
+            3. readPointValues is not in the query protocol.
+               The submodule pointer does not move, so the resolver is
+               unreachable. Precedent is a protocol pull request first,
+               then a pointer bump here.
+
+            ## Ask, do not block
+
+            - The new e2e case cannot tell the point path from the
+              range path. Add a read-side counter tagged by query
+              path and assert on it, the way the so11y case does.
+            - The "3x faster" claim needs numbers from an upgraded
+              instance, not a fresh one.
+            - A changelog entry: nine of the last ten storage-plugin
+              merges carried one.
+
+            ## Raised and withdrawn
+
+            - ConditionBuilder duplicating the elasticsearch one: the
+              split is deliberate (commit a7c31f0, tag mapping is not
+              shared).
+            - Null tag value at ConditionBuilder:131: unreachable, the
+              decoder returns Optional and the caller filters empties.
+
+            ## Not their problem
+
+            - Storage Readiness (BanyanDB) failed because BanyanDB
+              never became healthy, before the OAP container was
+              created. Three of the last 30 master runs of that
+              workflow failed the same way.
+            - The branch is 112 commits behind and will conflict in the
+              DAO. Ask for a rebase before the next read.
+        result: {text: "docs/review-notes-99452.md created, 56 lines."}
+        changes:
+          - path: docs/review-notes-99452.md
+            after: *notes
+      usage: {in: 12200, out: 780, cache_read: 39000}
+  - input: "Read it back to me."
+  - call:
+      text: "Here it is as written."
+      tool: {name: Read, input: {file_path: "docs/review-notes-99452.md"}, result: {text: "56 lines: three blocking, three asks, two withdrawn, two not-their-problem."}}
+      usage: {in: 13000, out: 160, cache_read: 41000}
+  - call: {text: "Three blocking, three asks, two things I raised and withdrew, and two that are not theirs. The withdrawn ones are in there on purpose -- a reviewer who only publishes what survived looks more certain than they were.", usage: {in: 13200, out: 300, cache_read: 42000}}
+  - input: "Good. I will paste it myself."
+  - call: {text: "Then nothing here is posted and nothing is merged. The only thing this session changed is that one notes file.", usage: {in: 13400, out: 170, cache_read: 43000}}
+  - input: "Thanks."
+  - call: {text: "Anytime. Four readers, five hypotheses, three that survived.", usage: {in: 13600, out: 100, cache_read: 44000}}
