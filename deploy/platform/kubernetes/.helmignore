@@ -16,13 +16,6 @@
 # under the License.
 #
 
-.EXPORT_ALL_VARIABLES:
-
-NAMESPACE ?= skywalking-showcase
-SAMPLE_SERVICES_NAMESPACE ?= sample-services
-CILIUM_SERVICES_NAMESPACE ?= cilium-services
-RELEASE ?= demo
-AGENTLESS ?= false
-SCALLER_ENABLE ?= false
-
-FEATURE_FLAGS ?= banyandb-monitor,java-agent-injector,cluster,banyandb,kubernetes-monitor,so11y,vm-monitor,als,event,istiod-monitor,satellite,rover,trace-profiling,mysql-monitor,postgresql-monitor,nginx-monitor,apisix-monitor,grafana,rabbitmq-monitor,mongodb-monitor,r3,rocketmq-monitor,pulsar-monitor,activemq-monitor,flink-monitor,asz
+# A killed `helm dep up` can leave its download directory behind. Helm 4 names it tmpcharts-<pid>, and Helm 3
+# named it tmpcharts. Keep either out of the chart, or its archives would ride in the release as chart files.
+tmpcharts*/

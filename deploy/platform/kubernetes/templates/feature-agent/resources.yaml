@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-{{- if or .Values.features.agent.enabled .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
-
+# The namespace is created whatever the features. rating, below, sits outside the sample-services guard, and
+# the r3, rover, event and trace-profiling features place resources here too.
 ---
 apiVersion: v1
 kind: Namespace
@@ -26,9 +26,26 @@ metadata:
   {{- if .Values.features.javaAgentInjector.enabled }}
     swck-injection: enabled
   {{- end }}
-  {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}
+  {{- if or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}
     istio-injection: enabled
   {{- end }}
+{{- /*
+The music application, from here to the end before rating, deploys only with a feature that uses it:
+  agent, java-agent-injector, mesh-with-agent: run it with SkyWalking agents, baked in, injected or in the mesh;
+  als, istiod-monitor: observe the mesh its sidecars form;
+  trace-profiling: profiles agent::songs;
+  rover: profiles its mesh services, and its access log watches their traffic;
+  apisix-monitor, activemq-monitor: scrape its frontend, an APISIX, and the exporter beside its ActiveMQ;
+  grafana, baseline: chart and predict the GENERAL and MESH services it produces;
+  event, only with SCALLER_ENABLE=true: its CronJobs scale songs, gateway and app.
+r3 is not listed: its load calls only rating, which deploys whatever the features.
+*/}}
+{{- if or .Values.features.agent.enabled .Values.features.javaAgentInjector.enabled .Values.features.meshWithAgent.enabled
+          .Values.features.als.enabled .Values.features.istiodMonitor.enabled
+          .Values.features.traceProfiling.enabled .Values.features.rover.enabled
+          .Values.features.apisixMonitor.enabled .Values.features.activemqMonitor.enabled
+          .Values.features.grafana.enabled .Values.features.baseline.enabled
+          (and .Values.features.event.enabled .Values.sampleServices.scaller.enabled) }}
 
 ---
 apiVersion: v1
@@ -64,7 +81,7 @@ spec:
         swck-java-agent-injected: "true"
         app: gateway
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "gateway"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -124,7 +141,7 @@ spec:
         swck-java-agent-injected: "true"
         app: songs
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -193,7 +210,7 @@ spec:
       labels:
         app: recommendation
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: recommendation
@@ -239,7 +256,7 @@ spec:
       labels:
         app: app
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: app
@@ -273,7 +290,7 @@ spec:
       labels:
         app: loadgen
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: app
@@ -458,7 +475,7 @@ spec:
       labels:
         app: frontend
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: frontend
@@ -608,7 +625,7 @@ spec:
       labels:
         app: rating
       annotations:
-        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent }}"
+        sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
     spec:
       containers:
         - name: rating

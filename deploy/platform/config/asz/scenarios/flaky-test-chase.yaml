@@ -1,0 +1,1040 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+session: 7e1c0000-0000-4a00-8a00-000000000018
+project: -Users-dev-e2e-flake
+title: chase the flaky end-to-end case
+interval: 10s
+steps:
+  # ---------------------------------------------------------------- reproduce
+  - input: "One end-to-end case fails roughly one run in twenty and always at a different assertion. Reproduce it reliably first, then find the race."
+  - system: {subtype: hook_result, fields: {content: "SessionStart: workspace clean, branch master, e2e CLI and docker available"}}
+  - inject: {type: project_instructions, text: "e2e suites live under test/e2e-v2/cases; each case is a docker-compose file plus an e2e.yaml of setup, trigger and verify steps, run with 'e2e run -c <case>/e2e.yaml'. Never edit expected/ to make a case pass."}
+  - call:
+      thinking: unavailable
+      text: "Finding which case that is before I run anything."
+      tool:
+        id: b1
+        name: Bash
+        input: {command: "gh run list --workflow e2e-profiling.yaml --branch master --status failure --limit 10 --json databaseId --jq '.[].databaseId' | xargs -I{} gh run view {} --json jobs --jq '.jobs[] | select(.conclusion == \"failure\") | .name' | sort | uniq -c | sort -rn | sed 's/^ *//'", description: "Count failed CI jobs across the last 10 failed runs"}
+        result: {text: "9 Profiling Task Handover BanyanDB\n1 Profiling Task Expiry BanyanDB", after: 21s}
+      usage: {in: 5210, out: 164, cache_read: 20870, cache_write: 3120}
+  - call:
+      text: "Mapping that job name back to its case file."
+      tool:
+        id: b2
+        name: Bash
+        input: {command: "grep -n -A1 'name: Profiling Task Handover BanyanDB' .github/workflows/e2e-profiling.yaml", description: "Find the case config behind the failing job"}
+        result: {text: "41:          - name: Profiling Task Handover BanyanDB\n42-            config: test/e2e-v2/cases/profiling/task-handover/e2e.yaml", after: 300ms}
+      usage: {in: 5480, out: 131, cache_read: 21950}
+  - call: {text: "Nine of the last ten failed jobs are Profiling Task Handover BanyanDB, which is test/e2e-v2/cases/profiling/task-handover/e2e.yaml. I will drive that case on its own.", usage: {in: 5810, out: 236, cache_read: 22940}}
+  - input: "Yes, that one. Run it a few times and see if you get a failure."
+  - call:
+      text: "The e2e CLI runs a case once per invocation, so first a small loop that numbers the runs and keeps container logs only for the ones that fail."
+      tool:
+        id: w0
+        name: Write
+        input:
+          file_path: /tmp/flake/loop.sh
+          content: |
+            #!/usr/bin/env bash
+            # usage: loop.sh <runs> <batch>
+            # Repeat the task handover case; keep container logs of failed runs only.
+            n=$1; batch=$2; failed=0
+            mkdir -p "/tmp/flake/$batch"
+            for i in $(seq -w 1 "$n"); do
+              dir="/tmp/flake/$batch/run-$i"
+              if e2e run -c test/e2e-v2/cases/profiling/task-handover/e2e.yaml -l "$dir" > "$dir.out" 2>&1; then
+                rm -rf "$dir"
+              else
+                failed=$((failed + 1)); echo "failed: $batch/run-$i"
+              fi
+            done
+            echo "$n runs, $failed failed"
+        result: "File created successfully at: /tmp/flake/loop.sh"
+      usage: {in: 6120, out: 548, cache_read: 23380}
+  - call:
+      text: "Ten in the foreground first, mostly to learn how long one run takes."
+      tool: {id: b3, name: Bash, input: {command: "bash /tmp/flake/loop.sh 10 b01", description: "Run the case ten times", timeout: 600000}, result: {text: "10 runs, 0 failed", after: 9m12s}}
+      usage: {in: 6400, out: 118, cache_read: 24010}
+  - call: {text: "Ten clean at about fifty-five seconds a run. At one in twenty, ten passes tell us nothing.", usage: {in: 6530, out: 187, cache_read: 24600}}
+  - input: "Keep going, ten is not enough."
+  - call:
+      text: "Forty more. That is well past the ten-minute foreground limit, so it goes to the background."
+      tool: {id: b4, name: Bash, input: {command: "bash /tmp/flake/loop.sh 40 b02", description: "Run the case forty times", run_in_background: true}, result: {text: "Command running in background with ID: bash_1", after: 300ms}}
+      usage: {in: 6690, out: 142, cache_read: 25080}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_1</task-id><status>completed</status></task-notification>"}
+    after: 36m50s
+  - call:
+      text: "Reading what the forty produced."
+      tool: {id: b5, name: Read, input: {file_path: /tmp/claude/tasks/bash_1.output}, result: "failed: b02/run-13\nfailed: b02/run-26\n40 runs, 2 failed"}
+      usage: {in: 6810, out: 109, cache_read: 25700}
+  - call:
+      text: "Two failures. Checking which assertion each one tripped."
+      tool: {id: b6, name: Bash, input: {command: "grep -m1 'failed to verify' /tmp/flake/b02/run-13.out /tmp/flake/b02/run-26.out", description: "Show the first verify failure of each failed run"}, result: {text: "/tmp/flake/b02/run-13.out:failed to verify segment list, retried 20 time(s): the actual data is:\n/tmp/flake/b02/run-26.out:failed to verify task finished, retried 20 time(s): the actual data is:", after: 400ms}}
+      usage: {in: 7050, out: 151, cache_read: 26420}
+  - call: {text: "Fifty runs, two failures, and they fail at different verify cases: one at the segment list, the other at the check that the task finished.", usage: {in: 7300, out: 262, cache_read: 27100}}
+  - input: "What did the failed run actually assert?"
+  - call:
+      text: "Reading the case definition."
+      tool: {id: b7, name: Read, input: {file_path: test/e2e-v2/cases/profiling/task-handover/e2e.yaml}, result: "38 lines. setup: compose up, set PATH, install swctl, then 'bash test/e2e-v2/script/prepare/legacy-wait.sh 20'. verify: retry 20 x 3s over handover-cases.yaml."}
+      usage: {in: 7620, out: 173, cache_read: 27860}
+  - call:
+      text: "And the verify cases it includes."
+      tool: {id: b8, name: Read, input: {file_path: test/e2e-v2/cases/profiling/task-handover/handover-cases.yaml}, result: "No create step: the compose file's create-task container has already stored the task. Four named cases: task notified, task finished (sends the profiled requests, then lists), segment list, segment analysis, each needing the one before."}
+      usage: {in: 7910, out: 166, cache_read: 28740}
+  - call: {text: "Every verify case needs the agent to have picked the stored task up in time, and which one gives up first depends on how much it sampled. The assertion moves; the cause may not.", usage: {in: 8190, out: 348, cache_read: 29460}}
+  - input: "Try it with the profiling case only, not the whole suite."
+  - call:
+      text: "It has been only this case since the first batch, since e2e run takes exactly one config. Confirming nothing from another case is left running between runs."
+      tool: {id: b9, name: Bash, input: {command: "docker ps -a --format '{{.Names}}' | wc -l | tr -d ' '", description: "Count leftover containers"}, result: {text: "0", after: 600ms}}
+      usage: {in: 8420, out: 170, cache_read: 30150}
+  - call: {text: "No leftovers: cleanup runs on every exit. So this is not cross-case interference.", usage: {in: 8560, out: 132, cache_read: 30800}}
+  - input: "Does it fail on a clean checkout too?"
+  - call:
+      text: "Twenty from a clean worktree, same images, so my own working tree is out of the picture."
+      tool: {id: b10, name: Bash, input: {command: "git worktree add /tmp/flake-clean HEAD && cd /tmp/flake-clean && bash /tmp/flake/loop.sh 20 c01", description: "Run twenty times from a clean worktree", run_in_background: true}, result: {text: "Command running in background with ID: bash_2", after: 400ms}}
+      usage: {in: 8810, out: 159, cache_read: 31390}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_2</task-id><status>completed</status></task-notification>"}
+    after: 19m05s
+  - call:
+      text: "Clean-worktree batch is done."
+      tool: {id: b11, name: Read, input: {file_path: /tmp/claude/tasks/bash_2.output}, result: "Preparing worktree (detached HEAD 4e1d2c7)\nfailed: c01/run-17\n20 runs, 1 failed"}
+      usage: {in: 8930, out: 98, cache_read: 31950}
+  - call: {text: "Yes. One in twenty from a clean checkout too. Nothing local about it.", usage: {in: 9070, out: 141, cache_read: 32520}}
+  - input: "Fine. Loop it fifty times and capture every failure log."
+  - call:
+      text: "Fifty, in the background. The loop already keeps the container logs of every failed run."
+      tool: {id: b12, name: Bash, input: {command: "bash /tmp/flake/loop.sh 50 b04", description: "Run the case fifty times", run_in_background: true}, result: {text: "Command running in background with ID: bash_3", after: 300ms}}
+      usage: {in: 9230, out: 133, cache_read: 33100}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_3</task-id><status>completed</status></task-notification>"}
+    after: 46m10s
+  - call:
+      text: "Fifty done."
+      tool: {id: b13, name: Read, input: {file_path: /tmp/claude/tasks/bash_3.output}, result: "failed: b04/run-07\nfailed: b04/run-23\nfailed: b04/run-44\n50 runs, 3 failed"}
+      usage: {in: 9360, out: 87, cache_read: 33680}
+  - call:
+      text: "Confirming the logs were kept for all three."
+      tool: {id: b14, name: Bash, input: {command: "ls -d /tmp/flake/b04/run-*/", description: "List kept failure log directories"}, result: {text: "/tmp/flake/b04/run-07/\n/tmp/flake/b04/run-23/\n/tmp/flake/b04/run-44/", after: 200ms}}
+      usage: {in: 9520, out: 104, cache_read: 34300}
+  - input: "Any pattern in which assertion fails?"
+  - call:
+      text: "Pulling the first failed verify case out of each."
+      tool: {id: b15, name: Bash, input: {command: "grep -h -m1 'failed to verify' /tmp/flake/b04/run-07.out /tmp/flake/b04/run-23.out /tmp/flake/b04/run-44.out", description: "Collect the failing verify case of each run"}, result: {text: "failed to verify segment list, retried 20 time(s): the actual data is:\nfailed to verify segment analysis, retried 20 time(s): the actual data is:\nfailed to verify task finished, retried 20 time(s): the actual data is:", after: 400ms}}
+      usage: {in: 9790, out: 197, cache_read: 35080}
+  - call: {text: "Three failures, three different verify cases, and each checks data the agent can only collect once it has the task. That is a timing shape, not a logic bug.", usage: {in: 10110, out: 305, cache_read: 35900}}
+  - input: "Run it again with the same seed and see if it is reproducible."
+  - call:
+      text: "There is no seed in this case: the trigger is a fixed request list and the images are built from the commits pinned in script/env. The nearest thing is replaying the same inputs one run at a time."
+      tool: {id: b16, name: Bash, input: {command: "for b in s01 s02 s03; do bash /tmp/flake/loop.sh 1 $b; done", description: "Run the case three times, one batch each"}, result: {text: "1 runs, 0 failed\n1 runs, 0 failed\n1 runs, 0 failed", after: 2m51s}}
+      usage: {in: 10380, out: 214, cache_read: 36620}
+  - call: {text: "Three single runs on identical inputs, three passes. Whatever varies is not an input.", usage: {in: 10500, out: 146, cache_read: 37180}}
+  - input: "So the inputs are fixed. What else varies between runs?"
+  - call:
+      thinking: "Everything the case controls is pinned. What is left is when each container becomes ready and what the backend and agent do before the first trace arrives."
+      text: "Container readiness timing is the only thing left that the case does not pin."
+      usage: {in: 10760, out: 322, cache_read: 37900}
+  - input: "Try pinning the container start order."
+  - call:
+      text: "Reading the compose file first."
+      tool: {id: b17, name: Read, input: {file_path: test/e2e-v2/cases/profiling/task-handover/docker-compose.yml}, result: "47 lines. seed-oap depends_on banyandb; create-task, a one-shot swctl, stores the profile task through seed-oap by --service-id and exits; oap depends_on create-task (service_completed_successfully); provider, an agent left at its default 20 s task poll, reports to oap and depends_on it (service_healthy)."}
+      usage: {in: 11030, out: 158, cache_read: 38560}
+  - call:
+      text: "And what healthy means for oap."
+      tool: {id: b18, name: Bash, input: {command: "grep -n -m1 '/dev/tcp/127.0.0.1/11800' test/e2e-v2/script/docker-compose/base-compose.yml", description: "Show the oap health check"}, result: {text: "39:      test: [\"CMD\", \"bash\", \"-c\", \"cat < /dev/null > /dev/tcp/127.0.0.1/11800\"]", after: 300ms}}
+      usage: {in: 11240, out: 139, cache_read: 39310}
+  - call: {text: "The order is already pinned: the task is stored before oap starts, and the provider waits for oap to be healthy. But healthy is a TCP connect to port 11800: it says the gRPC server is listening, not that anything behind it is ready to answer.", usage: {in: 11470, out: 296, cache_read: 40020}}
+  # ------------------------------------------------- the inconclusive middle
+  - input: "Still failing? Show me the two logs side by side."
+  - call:
+      text: "Diffing a passing run against the failing run next to it, with timestamps stripped."
+      tool: {id: b19, name: Bash, input: {command: "diff <(sed -E 's/[0-9:.-]{8,}//g' /tmp/flake/b04/run-22.out) <(sed -E 's/[0-9:.-]{8,}//g' /tmp/flake/b04/run-23.out) | head -n 4", description: "Diff a passing and a failing run"}, result: {text: "212c212,219\n< verified segment analysis, retried 2 time(s)\n---\n> failed to verify segment analysis, retried 20 time(s): the actual data is:", after: 500ms}}
+      usage: {in: 11690, out: 207, cache_read: 40780}
+  - call: {text: "Setup output is identical once timestamps go. The passing run verified that case on its third try; the failing one never did in twenty-one. Nothing structural.", usage: {in: 11850, out: 219, cache_read: 41400}}
+  - input: "That looks like noise. Run it another ten."
+  - call:
+      text: "Ten more, in the foreground this time."
+      tool: {id: b20, name: Bash, input: {command: "bash /tmp/flake/loop.sh 10 b05", description: "Run the case ten more times", timeout: 600000}, result: {text: "10 runs, 0 failed", after: 9m08s}}
+      usage: {in: 12010, out: 96, cache_read: 42010}
+  - call: {text: "Ten clean. Still not reproducing on demand.", usage: {in: 12250, out: 94, cache_read: 43090}}
+  - input: "Nothing. Try with the OAP log level at debug."
+  - call:
+      text: "Switching the backend's root logger to DEBUG for one batch, and putting it back afterwards whatever happens."
+      tool: {id: b22, name: Bash, input: {command: "F=test/e2e-v2/script/prepare/setup-oap/log4j2.xml; sed -i.bak 's/<Root level=\"INFO\">/<Root level=\"DEBUG\">/' $F && bash /tmp/flake/loop.sh 20 b06; mv $F.bak $F", description: "Run twenty times with the oap at debug logging", run_in_background: true}, result: {text: "Command running in background with ID: bash_4", after: 300ms}}
+      usage: {in: 12470, out: 188, cache_read: 43770}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_4</task-id><status>completed</status></task-notification>"}
+    after: 31m40s
+  - call:
+      text: "Debug batch finished."
+      tool: {id: b23, name: Read, input: {file_path: /tmp/claude/tasks/bash_4.output}, result: "20 runs, 0 failed"}
+      usage: {in: 12600, out: 81, cache_read: 44320}
+  - input: "Debug logging changes the timing, doesn't it."
+  - call: {text: "It does, and in the direction that hides this: runs took about ninety-five seconds instead of fifty-five, and all twenty passed. That is a heisenbug tell, not a result.", usage: {in: 12780, out: 266, cache_read: 44990}}
+  - input: "Right, so we cannot trust that. Go back to the default level."
+  - call:
+      text: "Checking the logger config came back to INFO, then ten at the default level in the foreground."
+      tool: {id: b24, name: Bash, input: {command: "git diff --quiet test/e2e-v2/script/prepare/setup-oap/log4j2.xml && echo 'log4j2.xml unchanged' && bash /tmp/flake/loop.sh 10 b07", description: "Confirm the logger is restored and run ten times", timeout: 600000}, result: {text: "log4j2.xml unchanged\nfailed: b07/run-06\n10 runs, 1 failed", after: 9m38s}}
+      usage: {in: 12960, out: 150, cache_read: 45640}
+  - call: {text: "Back at INFO and it failed once in ten. So the debug batch was masking it, not curing it.", usage: {in: 13240, out: 181, cache_read: 46830}}
+  - input: "Run it under load, maybe it needs contention."
+  - call:
+      text: "Forty runs with four CPU hogs alongside, so there is a real count to compare against."
+      tool: {id: b26, name: Bash, input: {command: "stress-ng --cpu 4 --timeout 50m & S=$!; bash /tmp/flake/loop.sh 40 b08; kill $S", description: "Run forty times under CPU load", run_in_background: true}, result: {text: "Command running in background with ID: bash_5", after: 300ms}}
+      usage: {in: 13430, out: 164, cache_read: 47480}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_5</task-id><status>completed</status></task-notification>"}
+    after: 47m15s
+  - call:
+      text: "Loaded batch finished."
+      tool: {id: b27, name: Read, input: {file_path: /tmp/claude/tasks/bash_5.output}, result: "stress-ng: info:  [48211] dispatching hogs: 4 cpu\nfailed: b08/run-03\nfailed: b08/run-09\nfailed: b08/run-16\nfailed: b08/run-27\nfailed: b08/run-35\n40 runs, 5 failed"}
+      usage: {in: 13560, out: 99, cache_read: 48070}
+  - call: {text: "Five in forty under load, against about one in twenty-five without. Contention widens the window, the first real evidence so far.", usage: {in: 13720, out: 284, cache_read: 48760}}
+  - input: "Try the same thing on the second runner, in case it is this machine."
+  - call:
+      text: "Copying the loop over and running forty there, no load, to compare with this machine's plain rate."
+      tool: {id: b28, name: Bash, input: {command: "scp /tmp/flake/loop.sh runner-2:/tmp/flake/ && ssh runner-2 'cd ~/skywalking && bash /tmp/flake/loop.sh 40 r01'", description: "Run forty times on the second runner", run_in_background: true}, result: {text: "Command running in background with ID: bash_6", after: 1s}}
+      usage: {in: 13880, out: 151, cache_read: 49390}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_6</task-id><status>completed</status></task-notification>"}
+    after: 38m05s
+  - call:
+      text: "Second runner finished."
+      tool: {id: b29, name: Read, input: {file_path: /tmp/claude/tasks/bash_6.output}, result: "failed: r01/run-31\n40 runs, 1 failed"}
+      usage: {in: 14000, out: 83, cache_read: 49960}
+  - call: {text: "One in forty on the second runner, in line with this one. Not this machine either.", usage: {in: 14120, out: 143, cache_read: 50520}}
+  - input: "We have burned hours and know only what it is not. Say so plainly."
+  - call: {text: "Plainly: two hundred and forty-three runs, thirteen failures, and I can reproduce it only by waiting, not by asking. Ruled out: inputs, my working tree, this machine, other cases. CPU load triples it and debug logging hides it, so it is timing, and nothing yet says where.", usage: {in: 14290, out: 402, cache_read: 51200}}
+  - input: "I do not see it either. Take a step back: what is actually asynchronous in that case?"
+  - call:
+      thinking: "Three edges: the agent's gRPC channel connecting, the agent polling for profile tasks on its own schedule, and the backend holding the task where a poll can see it. The case waits on the first only indirectly and on the other two not at all."
+      text: "Three asynchronous edges, and the case waits explicitly on none of them."
+      usage: {in: 14460, out: 388, cache_read: 51850}
+  - input: "List them."
+  - call: {text: "One, the agent's channel to the backend, which the oap health check approximates with a TCP connect. Two, the agent asking for profile tasks, which it does on its own twenty-second schedule. Three, the backend holding the task where that question can see it. The case covers all three with legacy-wait.sh 20.", usage: {in: 14650, out: 351, cache_read: 52480}}
+  - input: "Check the profiling task one first."
+  - call:
+      text: "Finding the backend side of the agent's task query."
+      tool: {id: b30, name: Bash, input: {command: "git grep -l getProfileTaskCommands -- oap-server | sed 's#.*/##'", description: "Find the handler for the agent's task query"}, result: {text: "ProfileTaskQueryHandler.java", after: 900ms}}
+      usage: {in: 14860, out: 142, cache_read: 53130}
+  - call:
+      text: "It answers from ProfileTaskLookupCache. Reading that."
+      tool: {id: b31, name: Read, input: {file_path: oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java}, result: "71 lines. tasksByService is null until refresh() first runs; getProfileTaskList returns List.of() while it is null. scheduleRefresh() runs refresh() every refreshMillis."}
+      usage: {in: 15100, out: 163, cache_read: 53850}
+  - call: {text: "Until the first refresh() finishes, every service gets an empty task list, which to the agent means there is no task. Nothing makes a query wait for that first load.", usage: {in: 15320, out: 246, cache_read: 54520}}
+  - input: "Inconclusive again. Keep the runs going in the background while you read."
+  - call:
+      text: "Fifty more in the background while I read."
+      tool: {id: b32, name: Bash, input: {command: "bash /tmp/flake/loop.sh 50 b10", description: "Run the case fifty times while reading", run_in_background: true}, result: {text: "Command running in background with ID: bash_7", after: 300ms}}
+      usage: {in: 15470, out: 107, cache_read: 55090}
+  - input: "Read the e2e case definition properly."
+  - call:
+      text: "Reading it line by line this time."
+      tool: {id: b33, name: Read, input: {file_path: test/e2e-v2/cases/profiling/task-handover/e2e.yaml, offset: 16, limit: 23}, result: "setup ends with 'bash test/e2e-v2/script/prepare/legacy-wait.sh 20'. No step waits on the provider registering or on the task reaching the agent."}
+      usage: {in: 15710, out: 158, cache_read: 55820}
+  - call:
+      text: "And the helper it calls."
+      tool: {id: b34, name: Read, input: {file_path: test/e2e-v2/script/prepare/legacy-wait.sh}, result: "26 lines. Sleeps $1 seconds, then a TCP probe of 127.0.0.1:11800 whose result is ignored."}
+      usage: {in: 15930, out: 139, cache_read: 56510}
+  - call: {text: "So the only synchronisation in the whole case is a twenty-second sleep, plus a probe that cannot fail.", usage: {in: 16080, out: 172, cache_read: 57150}}
+  - input: "Is there any wait between the OAP being up and the agent starting?"
+  - call: {text: "Only the health check, satisfied the moment port 11800 accepts a connection. The provider starts right after, and nothing checks whether the task cache has loaded.", usage: {in: 16250, out: 278, cache_read: 57830}}
+  - input: "That is a guess. Prove it."
+  - call:
+      text: "Pulling the port-open and first-load times out of a failed run's oap log, plus when oap finally handed the task to the agent."
+      tool: {id: b35, name: Bash, input: {command: "grep -h -e 'listening on 11800' -e 'profile task cache' -e 'sent to agent' /tmp/flake/b04/run-23/oap/std.log | sed -E 's/^[0-9-]+ ([0-9:,]+) .* - /\\1 /'", description: "Extract readiness timestamps from a failed run's oap log"}, result: {text: "09:14:04,118 profile task cache refresh scheduled every 10000 ms\n09:14:07,212 Server started, host 0.0.0.0 listening on 11800\n09:14:14,121 profile task cache first load: 1 service(s)\n09:14:33,902 profile task sent to agent: e2e-service-provider/provider1", after: 700ms}}
+      usage: {in: 16470, out: 204, cache_read: 58540}
+  - call: {text: "There it is. The port opened at 07.2 and the first load came at 14.1: seven seconds of oap answering with an empty list for a task already in storage. The task went out at 33.9, one twenty-second poll after 13.9, so its first poll landed 0.2 seconds before the first load.", usage: {in: 16700, out: 388, cache_read: 59260}}
+  # ------------------------------------------------------------- two bisects
+  - input: "Split it: one of you on the receiver side, one on the agent side."
+  - call:
+      text: "Sending one to bisect the backend startup ordering."
+      agent:
+        name: bisect-receiver
+        prompt: "Bisect the backend startup ordering for profile tasks: where is ProfileTaskQueryHandler registered, when does ProfileTaskLookupCache first load, and when does the gRPC port open, in terms of the module lifecycle. Say whether a query can be answered before the first load, for a task that was in storage before the node started."
+        after: 20s
+        notify: true
+        steps:
+          - call: {text: "Finding the registration and scheduling sites.", tool: {id: ra1, name: Bash, input: {command: "git grep -n -e addHandler -e scheduleRefresh -- '*ProfileTaskReceiverProvider.java' | cut -d: -f2- | sed 's/: */: /'", description: "Find handler registration and refresh scheduling"}, result: {text: "60: .addHandler(new ProfileTaskQueryHandler(taskCache));\n65: taskCache.scheduleRefresh();", after: 800ms}}, usage: {in: 1420, out: 131, cache_read: 5980}}
+          - call: {text: "Reading the provider.", tool: {id: ra2, name: Read, input: {file_path: oap-server/server-receiver-plugin/skywalking-profile-receiver-plugin/src/main/java/org/apache/skywalking/oap/server/receiver/profile/provider/ProfileTaskReceiverProvider.java}, result: "72 lines. prepare() is empty; start() looks up ProfileTaskLookupCache and adds ProfileTaskQueryHandler; notifyAfterCompleted() calls taskCache.scheduleRefresh()."}, usage: {in: 1880, out: 152, cache_read: 6420}}
+          - call: {text: "Checking the lifecycle order.", tool: {id: ra3, name: Bash, input: {command: "grep -n -e 'provider.start()' -e 'provider.notifyAfterCompleted()' -e 'provider.notifyBootCompleted()' oap-server/server-library/library-module/src/main/java/org/apache/skywalking/oap/server/library/module/BootstrapFlow.java", description: "Read the module lifecycle order"}, result: {text: "46:            provider.start();\n52:            provider.notifyAfterCompleted();\n57:            provider.notifyBootCompleted();", after: 500ms}}, usage: {in: 2150, out: 144, cache_read: 6890}}
+          - call: {text: "And where the port opens.", tool: {id: ra4, name: Bash, input: {command: "grep -n -e 'public void notify' -e 'grpcServer.start()' oap-server/server-receiver-plugin/skywalking-sharing-server-plugin/src/main/java/org/apache/skywalking/oap/server/receiver/sharing/server/SharingServerModuleProvider.java", description: "Find where the gRPC server starts"}, result: {text: "173:    public void notifyAfterCompleted() throws ModuleStartException {\n177:    public void notifyBootCompleted() throws ModuleStartException {\n180:                grpcServer.start();", after: 500ms}}, usage: {in: 2430, out: 138, cache_read: 7310}}
+          - call: {text: "Confirmed. Order is start(), then notifyAfterCompleted(), then notifyBootCompleted(), each for every provider. ProfileTaskQueryHandler is added in start(); ProfileTaskLookupCache.scheduleRefresh() runs in notifyAfterCompleted() with the first load one refreshMillis later; the port opens in notifyBootCompleted(). From the port opening until that first load, a query gets an empty task list.", usage: {in: 2810, out: 336, cache_read: 7740}}
+      usage: {in: 16940, out: 243, cache_read: 59980, cache_write: 2380}
+  - call:
+      text: "And one to bisect what the agent does in the same window."
+      agent:
+        name: bisect-agent-side
+        prompt: "Bisect the Java agent side: how soon after its channel connects does it first ask for profile tasks, and when does it ask again if the answer is empty. Read ../skywalking-java; describe the behaviour, do not propose agent changes."
+        after: 20s
+        notify: true
+        steps:
+          - call: {text: "Finding the poll interval.", tool: {id: ag1, name: Bash, input: {command: "grep -rn GET_PROFILE_TASK_INTERVAL ../skywalking-java/apm-sniffer/apm-agent-core/src/main/java | sed 's#.*/##'", description: "Find the task poll interval"}, result: {text: "AsyncProfilerTaskChannelService.java:115:                    ), 0, Config.Collector.GET_PROFILE_TASK_INTERVAL, TimeUnit.SECONDS\nConfig.java:216:        public static int GET_PROFILE_TASK_INTERVAL = 20;\nProfileTaskChannelService.java:52: * task list every {@link Config.Collector#GET_PROFILE_TASK_INTERVAL} second. 2. When there is a new profile task\nProfileTaskChannelService.java:131:                ), 0, Config.Collector.GET_PROFILE_TASK_INTERVAL, TimeUnit.SECONDS", after: 1100ms}}, usage: {in: 1310, out: 122, cache_read: 5760}}
+          - call: {text: "Reading how the query is scheduled.", tool: {id: ag2, name: Read, input: {file_path: ../skywalking-java/apm-sniffer/apm-agent-core/src/main/java/org/apache/skywalking/apm/agent/core/profile/ProfileTaskChannelService.java, offset: 118, limit: 20}, result: "boot() schedules the task-list query with initial delay 0, then every GET_PROFILE_TASK_INTERVAL seconds."}, usage: {in: 1690, out: 147, cache_read: 6150}}
+          - call: {text: "Checking what a tick does before the channel is up.", tool: {id: ag3, name: Bash, input: {command: "grep -n CONNECTED ../skywalking-java/apm-sniffer/apm-agent-core/src/main/java/org/apache/skywalking/apm/agent/core/profile/ProfileTaskChannelService.java", description: "Find the channel status checks"}, result: {text: "78:        if (status == GRPCChannelStatus.CONNECTED) {\n168:        if (GRPCChannelStatus.CONNECTED.equals(status)) {", after: 600ms}}, usage: {in: 1920, out: 128, cache_read: 6530}}
+          - call: {text: "Fixed twenty-second tick from boot, and a tick only queries once the channel is CONNECTED. An empty list is a normal answer, so it waits for the next tick. Working as designed: one empty answer costs twenty seconds of the profiling window.", usage: {in: 2350, out: 284, cache_read: 6910}}
+      usage: {in: 17150, out: 236, cache_read: 60640}
+  - input: "What did the receiver one find?"
+  - call: {text: "Handler added in start(), the cache's first load scheduled one refresh interval out from notifyAfterCompleted(), and the port opened later still in notifyBootCompleted(). In between, the handler truthfully reports that the cache has no task.", usage: {in: 17510, out: 372, cache_read: 61380}}
+  - input: "And the agent side?"
+  - call: {text: "The agent polls every twenty seconds from boot and only once connected. An empty answer is normal to it, so one poll in that window costs twenty seconds, and legacy-wait.sh 20 does not cover that.", usage: {in: 17720, out: 291, cache_read: 62050}}
+  - input: "So both point at the same window."
+  - call: {text: "The same window, yes, and it matches the run-23 timestamps. Two independent bisects landing there is as close to proof as this gets without forcing it.", usage: {in: 17890, out: 214, cache_read: 62700}}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_7</task-id><status>completed</status></task-notification>"}
+    after: 31m20s
+  - call:
+      text: "The background fifty finished while the bisects ran."
+      tool: {id: b36, name: Read, input: {file_path: /tmp/claude/tasks/bash_7.output}, result: "failed: b10/run-19\nfailed: b10/run-38\n50 runs, 2 failed"}
+      usage: {in: 18010, out: 97, cache_read: 63230}
+  - call:
+      text: "Checking both against the same timeline."
+      tool: {id: b37, name: Bash, input: {command: "for r in run-19 run-38; do grep -h -e 'listening on 11800' -e 'first load' /tmp/flake/b10/$r/oap/std.log | cut -c12-23 | paste -sd' ' -; done", description: "Port-open and first-load times of the two new failures"}, result: {text: "12:36:18,640 12:36:25,588\n12:53:51,207 12:53:58,093", after: 500ms}}
+      usage: {in: 18230, out: 176, cache_read: 63910}
+  - call: {text: "Two more failures, both with a seven-second gap between the port opening and the first load. Same shape as run-23.", usage: {in: 18420, out: 193, cache_read: 64560}}
+  - input: "Reproduce that window deliberately."
+  - call:
+      thinking: "Widen the gap until no agent can miss it: push the first scheduled load out to 45 s, so the polls at connect and connect+20 s both fall before it. Keep the patch out of the tree by applying and restoring it inside one command."
+      text: "A throwaway patch that lives for one command only: push the first scheduled load to 45 seconds, rebuild the image, run five, and restore the file whatever happens. Build plus five failing runs is past the foreground limit, so it goes to the background."
+      tool: {id: b38, name: Bash, input: {command: "F=oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java; sed -i.orig 's/this::refresh, refreshMillis, refreshMillis/this::refresh, 45_000L, refreshMillis/' $F && ./mvnw -q -Pbackend,dist -DskipTests package && make docker.oap && bash /tmp/flake/loop.sh 5 f01; mv $F.orig $F", description: "Build with the first load delayed to 45 s and run five times", run_in_background: true}, result: {text: "Command running in background with ID: bash_8", after: 400ms}}
+      usage: {in: 18690, out: 431, cache_read: 65250, cache_write: 1900}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_8</task-id><status>completed</status></task-notification>"}
+    after: 16m15s
+  - call:
+      text: "Forced batch finished."
+      tool: {id: b39, name: Read, input: {file_path: /tmp/claude/tasks/bash_8.output}, result: "naming to docker.io/library/skywalking/oap:latest done\nfailed: f01/run-1\nfailed: f01/run-2\nfailed: f01/run-3\nfailed: f01/run-4\nfailed: f01/run-5\n5 runs, 5 failed"}
+      usage: {in: 18810, out: 102, cache_read: 65880}
+  - call:
+      text: "Checking the patch really came back out of the tree."
+      tool: {id: b40, name: Bash, input: {command: "git diff --quiet -- oap-server && echo 'oap-server: no changes'", description: "Confirm the backend tree is clean"}, result: {text: "oap-server: no changes", after: 300ms}}
+      usage: {in: 18960, out: 117, cache_read: 66510}
+  - call: {text: "Five out of five with the first load pushed to 45 seconds, and the tree is clean again. The race is confirmed and reproducible on demand.", usage: {in: 19120, out: 203, cache_read: 67180}}
+  - reset: {summary: "Summary: the Profiling Task Handover BanyanDB e2e case (test/e2e-v2/cases/profiling/task-handover/e2e.yaml: create-task stores a profile task through seed-oap, then oap starts and its agent must pick the task up) fails about 1 run in 25: 15 failures in 293 runs, 5 of 40 under CPU load, 0 of 20 at DEBUG logging. Cause, confirmed by two bisects: ProfileTaskReceiverProvider adds ProfileTaskQueryHandler in start(); ProfileTaskLookupCache.scheduleRefresh() runs in notifyAfterCompleted() with its first load one refreshMillis (10 s) out; the gRPC port opens in notifyBootCompleted(). Until that load, agents get an empty task list for a task already in storage and, polling every 20 s (GET_PROFILE_TASK_INTERVAL), learn of the task too late for legacy-wait.sh 20. Forcing the first load to 45_000L inside one command (tree restored) fails 5/5; the local oap image still carries it. Fix: load the cache synchronously in start() before the handler is added, so tasks stored before start-up are served from the first answer; replace the sleep with a wait on service registration."}
+  - input: "Good. Now fix it properly, backend first."
+  # -------------------------------------------------------------------- fix
+  - call:
+      thinking: "The honest fix makes the cache hold its first generation before the port can open, instead of making the test wait longer. start() runs for every provider before any notifyBootCompleted(), so loading there closes the window for every task stored before the node started, which is the one this case has."
+      text: "Adding a synchronous warmUp() to the cache, to be called from the receiver's start()."
+      tool:
+        id: e1
+        name: Edit
+        input:
+          file_path: oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java
+          old_string: |2
+                public void scheduleRefresh() {
+          new_string: |2
+                /**
+                 * Load the first generation now, on the caller's thread. Until it has run,
+                 * getProfileTaskList cannot tell "no task" from "not loaded yet".
+                 */
+                public void warmUp() {
+                    refresh();
+                }
+
+                public void scheduleRefresh() {
+        result: "The file oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java has been updated successfully."
+        changes:
+          - path: oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java
+            before: |
+              /*
+               * Licensed to the Apache Software Foundation (ASF) under one or more
+               * contributor license agreements.  See the NOTICE file distributed with
+               * this work for additional information regarding copyright ownership.
+               * The ASF licenses this file to You under the Apache License, Version 2.0
+               * (the "License"); you may not use this file except in compliance with
+               * the License.  You may obtain a copy of the License at
+               *
+               *     http://www.apache.org/licenses/LICENSE-2.0
+               *
+               * Unless required by applicable law or agreed to in writing, software
+               * distributed under the License is distributed on an "AS IS" BASIS,
+               * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+               * See the License for the specific language governing permissions and
+               * limitations under the License.
+               *
+               */
+
+              package org.apache.skywalking.oap.server.core.profiling.trace;
+
+              import java.io.IOException;
+              import java.util.List;
+              import java.util.Map;
+              import java.util.concurrent.Executors;
+              import java.util.concurrent.ScheduledExecutorService;
+              import java.util.concurrent.TimeUnit;
+              import java.util.stream.Collectors;
+              import lombok.extern.slf4j.Slf4j;
+              import org.apache.skywalking.oap.server.core.query.type.ProfileTask;
+              import org.apache.skywalking.oap.server.core.storage.StorageModule;
+              import org.apache.skywalking.oap.server.core.storage.profiling.trace.IProfileTaskQueryDAO;
+              import org.apache.skywalking.oap.server.library.module.ModuleManager;
+              import org.apache.skywalking.oap.server.library.module.Service;
+
+              @Slf4j
+              public class ProfileTaskLookupCache implements Service {
+                  private final ModuleManager moduleManager;
+                  private final long refreshMillis;
+                  private final ScheduledExecutorService refresher = Executors.newSingleThreadScheduledExecutor();
+                  private volatile Map<String, List<ProfileTask>> tasksByService;
+
+                  public ProfileTaskLookupCache(ModuleManager moduleManager, long refreshMillis) {
+                      this.moduleManager = moduleManager;
+                      this.refreshMillis = refreshMillis;
+                  }
+
+                  public void scheduleRefresh() {
+                      refresher.scheduleWithFixedDelay(this::refresh, refreshMillis, refreshMillis, TimeUnit.MILLISECONDS);
+                      log.info("profile task cache refresh scheduled every {} ms", refreshMillis);
+                  }
+
+                  public List<ProfileTask> getProfileTaskList(String serviceId) {
+                      final Map<String, List<ProfileTask>> current = tasksByService;
+                      return current == null ? List.of() : current.getOrDefault(serviceId, List.of());
+                  }
+
+                  private void refresh() {
+                      try {
+                          final Map<String, List<ProfileTask>> loaded = moduleManager.find(StorageModule.NAME).provider()
+                              .getService(IProfileTaskQueryDAO.class)
+                              .getTaskList(null, null, null, null, 1000).stream()
+                              .collect(Collectors.groupingBy(ProfileTask::getServiceId));
+                          if (tasksByService == null) {
+                              log.info("profile task cache first load: {} service(s)", loaded.size());
+                          }
+                          tasksByService = loaded;
+                      } catch (IOException e) {
+                          log.warn("profile task cache refresh failed", e);
+                      }
+                  }
+              }
+            after: |
+              /*
+               * Licensed to the Apache Software Foundation (ASF) under one or more
+               * contributor license agreements.  See the NOTICE file distributed with
+               * this work for additional information regarding copyright ownership.
+               * The ASF licenses this file to You under the Apache License, Version 2.0
+               * (the "License"); you may not use this file except in compliance with
+               * the License.  You may obtain a copy of the License at
+               *
+               *     http://www.apache.org/licenses/LICENSE-2.0
+               *
+               * Unless required by applicable law or agreed to in writing, software
+               * distributed under the License is distributed on an "AS IS" BASIS,
+               * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+               * See the License for the specific language governing permissions and
+               * limitations under the License.
+               *
+               */
+
+              package org.apache.skywalking.oap.server.core.profiling.trace;
+
+              import java.io.IOException;
+              import java.util.List;
+              import java.util.Map;
+              import java.util.concurrent.Executors;
+              import java.util.concurrent.ScheduledExecutorService;
+              import java.util.concurrent.TimeUnit;
+              import java.util.stream.Collectors;
+              import lombok.extern.slf4j.Slf4j;
+              import org.apache.skywalking.oap.server.core.query.type.ProfileTask;
+              import org.apache.skywalking.oap.server.core.storage.StorageModule;
+              import org.apache.skywalking.oap.server.core.storage.profiling.trace.IProfileTaskQueryDAO;
+              import org.apache.skywalking.oap.server.library.module.ModuleManager;
+              import org.apache.skywalking.oap.server.library.module.Service;
+
+              @Slf4j
+              public class ProfileTaskLookupCache implements Service {
+                  private final ModuleManager moduleManager;
+                  private final long refreshMillis;
+                  private final ScheduledExecutorService refresher = Executors.newSingleThreadScheduledExecutor();
+                  private volatile Map<String, List<ProfileTask>> tasksByService;
+
+                  public ProfileTaskLookupCache(ModuleManager moduleManager, long refreshMillis) {
+                      this.moduleManager = moduleManager;
+                      this.refreshMillis = refreshMillis;
+                  }
+
+                  /**
+                   * Load the first generation now, on the caller's thread. Until it has run,
+                   * getProfileTaskList cannot tell "no task" from "not loaded yet".
+                   */
+                  public void warmUp() {
+                      refresh();
+                  }
+
+                  public void scheduleRefresh() {
+                      refresher.scheduleWithFixedDelay(this::refresh, refreshMillis, refreshMillis, TimeUnit.MILLISECONDS);
+                      log.info("profile task cache refresh scheduled every {} ms", refreshMillis);
+                  }
+
+                  public List<ProfileTask> getProfileTaskList(String serviceId) {
+                      final Map<String, List<ProfileTask>> current = tasksByService;
+                      return current == null ? List.of() : current.getOrDefault(serviceId, List.of());
+                  }
+
+                  private void refresh() {
+                      try {
+                          final Map<String, List<ProfileTask>> loaded = moduleManager.find(StorageModule.NAME).provider()
+                              .getService(IProfileTaskQueryDAO.class)
+                              .getTaskList(null, null, null, null, 1000).stream()
+                              .collect(Collectors.groupingBy(ProfileTask::getServiceId));
+                          if (tasksByService == null) {
+                              log.info("profile task cache first load: {} service(s)", loaded.size());
+                          }
+                          tasksByService = loaded;
+                      } catch (IOException e) {
+                          log.warn("profile task cache refresh failed", e);
+                      }
+                  }
+              }
+      usage: {in: 6840, out: 488, cache_read: 9120, cache_write: 21400}
+  - input: "Who calls warmUp?"
+  - call: {text: "Nobody yet. It has to be called from ProfileTaskReceiverProvider.start(), before the handler is added. start() runs for every provider before any notifyBootCompleted(), so the port cannot be open yet.", usage: {in: 7020, out: 231, cache_read: 30610}}
+  - input: "Wire it up then."
+  - call:
+      text: "Calling it in start(), ahead of the handler registration."
+      tool:
+        id: e2
+        name: Edit
+        input:
+          file_path: oap-server/server-receiver-plugin/skywalking-profile-receiver-plugin/src/main/java/org/apache/skywalking/oap/server/receiver/profile/provider/ProfileTaskReceiverProvider.java
+          old_string: |2
+                    getManager().find(SharingServerModule.NAME).provider()
+          new_string: |2
+                    // Load the first generation before the handler exists: the gRPC port opens in
+                    // notifyBootCompleted(), and an agent told "no task" does not ask again for 20 s.
+                    taskCache.warmUp();
+                    getManager().find(SharingServerModule.NAME).provider()
+        result: "The file oap-server/server-receiver-plugin/skywalking-profile-receiver-plugin/src/main/java/org/apache/skywalking/oap/server/receiver/profile/provider/ProfileTaskReceiverProvider.java has been updated successfully."
+        changes:
+          - path: oap-server/server-receiver-plugin/skywalking-profile-receiver-plugin/src/main/java/org/apache/skywalking/oap/server/receiver/profile/provider/ProfileTaskReceiverProvider.java
+            before: |
+              /*
+               * Licensed to the Apache Software Foundation (ASF) under one or more
+               * contributor license agreements.  See the NOTICE file distributed with
+               * this work for additional information regarding copyright ownership.
+               * The ASF licenses this file to You under the Apache License, Version 2.0
+               * (the "License"); you may not use this file except in compliance with
+               * the License.  You may obtain a copy of the License at
+               *
+               *     http://www.apache.org/licenses/LICENSE-2.0
+               *
+               * Unless required by applicable law or agreed to in writing, software
+               * distributed under the License is distributed on an "AS IS" BASIS,
+               * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+               * See the License for the specific language governing permissions and
+               * limitations under the License.
+               *
+               */
+
+              package org.apache.skywalking.oap.server.receiver.profile.provider;
+
+              import org.apache.skywalking.oap.server.core.CoreModule;
+              import org.apache.skywalking.oap.server.core.profiling.trace.ProfileTaskLookupCache;
+              import org.apache.skywalking.oap.server.core.server.GRPCHandlerRegister;
+              import org.apache.skywalking.oap.server.library.module.ModuleDefine;
+              import org.apache.skywalking.oap.server.library.module.ModuleProvider;
+              import org.apache.skywalking.oap.server.library.module.ModuleStartException;
+              import org.apache.skywalking.oap.server.receiver.profile.module.ProfileModule;
+              import org.apache.skywalking.oap.server.receiver.profile.provider.handler.ProfileTaskQueryHandler;
+              import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule;
+
+              public class ProfileTaskReceiverProvider extends ModuleProvider {
+
+                  private ProfileTaskLookupCache taskCache;
+
+                  @Override
+                  public String name() {
+                      return "default";
+                  }
+
+                  @Override
+                  public Class<? extends ModuleDefine> module() {
+                      return ProfileModule.class;
+                  }
+
+                  @Override
+                  public ConfigCreator newConfigCreator() {
+                      return null;
+                  }
+
+                  @Override
+                  public void prepare() {
+                  }
+
+                  @Override
+                  public void start() throws ModuleStartException {
+                      taskCache = getManager().find(CoreModule.NAME).provider()
+                          .getService(ProfileTaskLookupCache.class);
+                      getManager().find(SharingServerModule.NAME).provider()
+                          .getService(GRPCHandlerRegister.class)
+                          .addHandler(new ProfileTaskQueryHandler(taskCache));
+                  }
+
+                  @Override
+                  public void notifyAfterCompleted() {
+                      taskCache.scheduleRefresh();
+                  }
+
+                  @Override
+                  public String[] requiredModules() {
+                      return new String[] {CoreModule.NAME, SharingServerModule.NAME};
+                  }
+              }
+            after: |
+              /*
+               * Licensed to the Apache Software Foundation (ASF) under one or more
+               * contributor license agreements.  See the NOTICE file distributed with
+               * this work for additional information regarding copyright ownership.
+               * The ASF licenses this file to You under the Apache License, Version 2.0
+               * (the "License"); you may not use this file except in compliance with
+               * the License.  You may obtain a copy of the License at
+               *
+               *     http://www.apache.org/licenses/LICENSE-2.0
+               *
+               * Unless required by applicable law or agreed to in writing, software
+               * distributed under the License is distributed on an "AS IS" BASIS,
+               * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+               * See the License for the specific language governing permissions and
+               * limitations under the License.
+               *
+               */
+
+              package org.apache.skywalking.oap.server.receiver.profile.provider;
+
+              import org.apache.skywalking.oap.server.core.CoreModule;
+              import org.apache.skywalking.oap.server.core.profiling.trace.ProfileTaskLookupCache;
+              import org.apache.skywalking.oap.server.core.server.GRPCHandlerRegister;
+              import org.apache.skywalking.oap.server.library.module.ModuleDefine;
+              import org.apache.skywalking.oap.server.library.module.ModuleProvider;
+              import org.apache.skywalking.oap.server.library.module.ModuleStartException;
+              import org.apache.skywalking.oap.server.receiver.profile.module.ProfileModule;
+              import org.apache.skywalking.oap.server.receiver.profile.provider.handler.ProfileTaskQueryHandler;
+              import org.apache.skywalking.oap.server.receiver.sharing.server.SharingServerModule;
+
+              public class ProfileTaskReceiverProvider extends ModuleProvider {
+
+                  private ProfileTaskLookupCache taskCache;
+
+                  @Override
+                  public String name() {
+                      return "default";
+                  }
+
+                  @Override
+                  public Class<? extends ModuleDefine> module() {
+                      return ProfileModule.class;
+                  }
+
+                  @Override
+                  public ConfigCreator newConfigCreator() {
+                      return null;
+                  }
+
+                  @Override
+                  public void prepare() {
+                  }
+
+                  @Override
+                  public void start() throws ModuleStartException {
+                      taskCache = getManager().find(CoreModule.NAME).provider()
+                          .getService(ProfileTaskLookupCache.class);
+                      // Load the first generation before the handler exists: the gRPC port opens in
+                      // notifyBootCompleted(), and an agent told "no task" does not ask again for 20 s.
+                      taskCache.warmUp();
+                      getManager().find(SharingServerModule.NAME).provider()
+                          .getService(GRPCHandlerRegister.class)
+                          .addHandler(new ProfileTaskQueryHandler(taskCache));
+                  }
+
+                  @Override
+                  public void notifyAfterCompleted() {
+                      taskCache.scheduleRefresh();
+                  }
+
+                  @Override
+                  public String[] requiredModules() {
+                      return new String[] {CoreModule.NAME, SharingServerModule.NAME};
+                  }
+              }
+      usage: {in: 7250, out: 412, cache_read: 31280}
+  - input: "Now run it with the forced delay."
+  - call:
+      text: "The same five-run batch that failed five out of five, same throwaway patch, applied and restored inside the command again. This time the build includes the fix."
+      tool: {id: b41, name: Bash, input: {command: "F=oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java; sed -i.orig 's/this::refresh, refreshMillis, refreshMillis/this::refresh, 45_000L, refreshMillis/' $F && ./mvnw -q -Pbackend,dist -DskipTests package && make docker.oap && bash /tmp/flake/loop.sh 5 f02; mv $F.orig $F", description: "Rerun the forced reproduction on the fixed build", run_in_background: true}, result: {text: "Command running in background with ID: bash_9", after: 400ms}}
+      usage: {in: 7430, out: 198, cache_read: 31960}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_9</task-id><status>completed</status></task-notification>"}
+    after: 11m50s
+  - call:
+      text: "Forced batch on the fixed build finished."
+      tool: {id: b42, name: Read, input: {file_path: /tmp/claude/tasks/bash_9.output}, result: "naming to docker.io/library/skywalking/oap:latest done\n5 runs, 0 failed"}
+      usage: {in: 7560, out: 96, cache_read: 32620}
+  - call: {text: "Five out of five pass with the 45-second delay that used to fail every run. The warm-up gives oap the stored task before its port opens, so the delayed scheduled load no longer matters for it. A task created after start-up still waits up to one refresh, as it always did; this case creates none.", usage: {in: 7710, out: 251, cache_read: 33290}}
+  - input: "Make sure the throwaway is really gone."
+  - call:
+      text: "Checking that only the fix is in the backend diff, then rebuilding the image so it no longer carries the 45-second patch."
+      tool: {id: b43r, name: Bash, input: {command: "git diff --shortstat -- oap-server | sed 's/^ *//' && grep -c 45_000L oap-server/server-core/src/main/java/org/apache/skywalking/oap/server/core/profiling/trace/ProfileTaskLookupCache.java; ./mvnw -q -Pbackend,dist -DskipTests package && make docker.oap", description: "Check the backend diff and rebuild the oap image", timeout: 600000}, result: {text: "2 files changed, 11 insertions(+)\n0\nnaming to docker.io/library/skywalking/oap:latest done", after: 6m30s}}
+      usage: {in: 7880, out: 187, cache_read: 33950}
+  - input: "Do not stop there. The case itself is still sleeping twenty seconds and hoping."
+  - call:
+      text: "Agreed. Writing a gate that waits for the provider to register, which is what the sleep was standing in for."
+      tool:
+        id: w1
+        name: Write
+        input:
+          file_path: test/e2e-v2/script/prepare/wait-for-service.sh
+          content: &waitsh |
+            #!/usr/bin/env bash
+            # Licensed to the Apache Software Foundation (ASF) under one or more
+            # contributor license agreements.  See the NOTICE file distributed with
+            # this work for additional information regarding copyright ownership.
+            # The ASF licenses this file to You under the Apache License, Version 2.0
+            # (the "License"); you may not use this file except in compliance with
+            # the License.  You may obtain a copy of the License at
+            #
+            #     http://www.apache.org/licenses/LICENSE-2.0
+            #
+            # Unless required by applicable law or agreed to in writing, software
+            # distributed under the License is distributed on an "AS IS" BASIS,
+            # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+            # See the License for the specific language governing permissions and
+            # limitations under the License.
+
+            # Wait until a service has registered with the backend, instead of sleeping
+            # a fixed time. Usage: wait-for-service.sh <service-name>
+            # oap_host and oap_12800 are exported by the e2e runner from the compose file.
+            set -euo pipefail
+
+            SERVICE=${1:?usage: wait-for-service.sh <service-name>}
+            TIMEOUT=${SW_E2E_READY_TIMEOUT:-120}
+            deadline=$(( $(date +%s) + TIMEOUT ))
+
+            until swctl --display yaml --base-url="http://${oap_host}:${oap_12800}/graphql" service ls \
+                | grep -q "name: ${SERVICE}$"; do
+              if [ "$(date +%s)" -ge "${deadline}" ]; then
+                echo "timed out after ${TIMEOUT}s waiting for ${SERVICE} to register" >&2
+                exit 1
+              fi
+              sleep 2
+            done
+            echo "registered: ${SERVICE}"
+        result: "File created successfully at: test/e2e-v2/script/prepare/wait-for-service.sh"
+        changes:
+          - path: test/e2e-v2/script/prepare/wait-for-service.sh
+            after: *waitsh
+      usage: {in: 8050, out: 704, cache_read: 34620}
+  - call:
+      text: "Making it executable and linting it."
+      tool: {id: b43, name: Bash, input: {command: "chmod +x test/e2e-v2/script/prepare/wait-for-service.sh && shellcheck test/e2e-v2/script/prepare/wait-for-service.sh && echo 'shellcheck: clean'", description: "Mark the gate executable and lint it"}, result: {text: "shellcheck: clean", after: 2s}}
+      usage: {in: 8230, out: 136, cache_read: 35290}
+  - input: "Use it from the case."
+  - call:
+      text: "Swapping the sleep for the gate. Setup commands run from the repository root, like the install.sh line above it."
+      tool:
+        id: e4
+        name: Edit
+        input:
+          file_path: test/e2e-v2/cases/profiling/task-handover/e2e.yaml
+          old_string: |2
+                - name: wait for the agent
+                  command: bash test/e2e-v2/script/prepare/legacy-wait.sh 20
+          new_string: |2
+                - name: wait for the provider to register
+                  command: bash test/e2e-v2/script/prepare/wait-for-service.sh e2e-service-provider
+        result: "The file test/e2e-v2/cases/profiling/task-handover/e2e.yaml has been updated successfully."
+        changes:
+          - path: test/e2e-v2/cases/profiling/task-handover/e2e.yaml
+            before: |
+              # Licensed to the Apache Software Foundation (ASF) under one or more
+              # contributor license agreements.  See the NOTICE file distributed with
+              # this work for additional information regarding copyright ownership.
+              # The ASF licenses this file to You under the Apache License, Version 2.0
+              # (the "License"); you may not use this file except in compliance with
+              # the License.  You may obtain a copy of the License at
+              #
+              #     http://www.apache.org/licenses/LICENSE-2.0
+              #
+              # Unless required by applicable law or agreed to in writing, software
+              # distributed under the License is distributed on an "AS IS" BASIS,
+              # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+              # See the License for the specific language governing permissions and
+              # limitations under the License.
+
+              setup:
+                env: compose
+                file: docker-compose.yml
+                timeout: 20m
+                init-system-environment: ../../../script/env
+                steps:
+                  - name: set PATH
+                    command: export PATH=/tmp/skywalking-infra-e2e/bin:$PATH
+                  - name: install swctl
+                    command: bash test/e2e-v2/script/prepare/setup-e2e-shell/install.sh swctl
+                  - name: wait for the agent
+                    command: bash test/e2e-v2/script/prepare/legacy-wait.sh 20
+
+              verify:
+                retry:
+                  count: 20
+                  interval: 3s
+                cases:
+                  - includes:
+                      - handover-cases.yaml
+
+              cleanup:
+                on: always
+            after: |
+              # Licensed to the Apache Software Foundation (ASF) under one or more
+              # contributor license agreements.  See the NOTICE file distributed with
+              # this work for additional information regarding copyright ownership.
+              # The ASF licenses this file to You under the Apache License, Version 2.0
+              # (the "License"); you may not use this file except in compliance with
+              # the License.  You may obtain a copy of the License at
+              #
+              #     http://www.apache.org/licenses/LICENSE-2.0
+              #
+              # Unless required by applicable law or agreed to in writing, software
+              # distributed under the License is distributed on an "AS IS" BASIS,
+              # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+              # See the License for the specific language governing permissions and
+              # limitations under the License.
+
+              setup:
+                env: compose
+                file: docker-compose.yml
+                timeout: 20m
+                init-system-environment: ../../../script/env
+                steps:
+                  - name: set PATH
+                    command: export PATH=/tmp/skywalking-infra-e2e/bin:$PATH
+                  - name: install swctl
+                    command: bash test/e2e-v2/script/prepare/setup-e2e-shell/install.sh swctl
+                  - name: wait for the provider to register
+                    command: bash test/e2e-v2/script/prepare/wait-for-service.sh e2e-service-provider
+
+              verify:
+                retry:
+                  count: 20
+                  interval: 3s
+                cases:
+                  - includes:
+                      - handover-cases.yaml
+
+              cleanup:
+                on: always
+      usage: {in: 8740, out: 318, cache_read: 36700}
+  - call:
+      text: "One run to see the gate work."
+      tool: {id: b46, name: Bash, input: {command: "bash /tmp/flake/loop.sh 1 g01 && grep -m1 'registered:' /tmp/flake/g01/run-1.out", description: "Run the case once and show the gate's line"}, result: {text: "1 runs, 0 failed\nregistered: e2e-service-provider", after: 58s}}
+      usage: {in: 8910, out: 121, cache_read: 37350}
+  - input: "Is there an older wait helper that this replaces?"
+  - call:
+      text: "legacy-wait.sh is what the case called. Checking nothing else uses it."
+      tool: {id: b47, name: Bash, input: {command: "git grep -l legacy-wait.sh | grep -v -c profiling/task-handover", description: "Count other users of the old wait helper"}, result: {text: "0", after: 700ms}}
+      usage: {in: 9610, out: 147, cache_read: 39980}
+  - call:
+      text: "Nothing else uses it, and it is the same sleep-and-hope. Removing it in the change that replaces it."
+      tool:
+        id: b48
+        name: Bash
+        input: {command: "git rm -q test/e2e-v2/script/prepare/legacy-wait.sh && git status --short test/e2e-v2/script/prepare/", description: "Remove the superseded wait helper"}
+        result: {text: "D  test/e2e-v2/script/prepare/legacy-wait.sh\n?? test/e2e-v2/script/prepare/wait-for-service.sh", after: 400ms}
+        changes:
+          - path: test/e2e-v2/script/prepare/legacy-wait.sh
+            before: |
+              #!/usr/bin/env bash
+              # Licensed to the Apache Software Foundation (ASF) under one or more
+              # contributor license agreements.  See the NOTICE file distributed with
+              # this work for additional information regarding copyright ownership.
+              # The ASF licenses this file to You under the Apache License, Version 2.0
+              # (the "License"); you may not use this file except in compliance with
+              # the License.  You may obtain a copy of the License at
+              #
+              #     http://www.apache.org/licenses/LICENSE-2.0
+              #
+              # Unless required by applicable law or agreed to in writing, software
+              # distributed under the License is distributed on an "AS IS" BASIS,
+              # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+              # See the License for the specific language governing permissions and
+              # limitations under the License.
+
+              # Give the stack a fixed time to settle. Usage: legacy-wait.sh <seconds>
+              set -e
+
+              SECONDS_TO_WAIT=${1:-20}
+              echo "waiting ${SECONDS_TO_WAIT}s for the stack to settle"
+              sleep "${SECONDS_TO_WAIT}"
+
+              # A courtesy probe nothing acts on: a closed port still lets the case go on.
+              (echo > /dev/tcp/127.0.0.1/11800) 2>/dev/null || true
+              echo "done waiting"
+      usage: {in: 9800, out: 184, cache_read: 40630}
+  - input: "Does the gate's timeout cover the oap health check start period?"
+  - call:
+      text: "Reading how long oap may take to become healthy."
+      tool: {id: b49, name: Bash, input: {command: "grep -n -A2 'OAP installs' test/e2e-v2/script/docker-compose/base-compose.yml", description: "Show the oap health check timing"}, result: {text: "43:      # OAP installs ~3000 BanyanDB measure schemas at boot — under Docker\n44-      # Desktop on Mac (or any rate-limited daemon) the install can take\n45-      # 60-120s before the gRPC port is ready. start_period gives that", after: 300ms}}
+      usage: {in: 10010, out: 163, cache_read: 41290}
+  - call: {text: "It does not have to. Compose brings the stack up, oap's start period included, before the first setup step runs, and the provider starts only once oap is healthy. The gate's 120 seconds covers the provider's first report alone, and SW_E2E_READY_TIMEOUT raises it on a slow runner.", usage: {in: 10220, out: 352, cache_read: 41950}}
+  - input: "The expected file still asserts an exact segment order, doesn't it."
+  - call:
+      text: "Reading the segment expectation."
+      tool: {id: b50, name: Read, input: {file_path: test/e2e-v2/cases/profiling/task-handover/expected/profile-segment-list.yml}, result: "52 lines. Segments sit under {{- contains . }} and spans under {{- contains .spans}}."}
+      usage: {in: 10390, out: 141, cache_read: 42600}
+  - call: {text: "No, it does not. Both segments and spans are matched with contains, so order is not asserted. Nothing to change there, and the project rule says expected/ is not where a flaky case gets fixed anyway.", usage: {in: 10540, out: 232, cache_read: 43240}}
+  - input: "Then run the full batch again."
+  - call:
+      text: "Twenty on the fixed build, in the background."
+      tool: {id: b51, name: Bash, input: {command: "bash /tmp/flake/loop.sh 20 b11", description: "Run twenty times on the fixed build", run_in_background: true}, result: {text: "Command running in background with ID: bash_10", after: 300ms}}
+      usage: {in: 10690, out: 101, cache_read: 43870}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_10</task-id><status>completed</status></task-notification>"}
+    after: 18m45s
+  - call:
+      text: "Fixed-build batch finished."
+      tool: {id: b52, name: Read, input: {file_path: /tmp/claude/tasks/bash_10.output}, result: "20 runs, 0 failed"}
+      usage: {in: 10810, out: 88, cache_read: 44440}
+  - input: "Run it under load again, the way it failed the first time."
+  - call:
+      text: "Same four CPU hogs as the batch that failed five in forty. Twenty this time."
+      tool: {id: b53, name: Bash, input: {command: "stress-ng --cpu 4 --timeout 30m & S=$!; bash /tmp/flake/loop.sh 20 b12; kill $S", description: "Run twenty times under the original CPU load", run_in_background: true}, result: {text: "Command running in background with ID: bash_11", after: 300ms}}
+      usage: {in: 10980, out: 142, cache_read: 45090}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_11</task-id><status>completed</status></task-notification>"}
+    after: 23m30s
+  - call:
+      text: "Loaded batch on the fixed build finished."
+      tool: {id: b54, name: Read, input: {file_path: /tmp/claude/tasks/bash_11.output}, result: "stress-ng: info:  [51907] dispatching hogs: 4 cpu\n20 runs, 0 failed"}
+      usage: {in: 11110, out: 93, cache_read: 45680}
+  - call: {text: "Twenty for twenty under the load that used to fail one run in eight.", usage: {in: 11240, out: 138, cache_read: 46270}}
+  - input: "Do the single-run check a few more times as well, it is the cheapest one."
+  - call:
+      text: "Four single runs, back to back."
+      tool: {id: b55, name: Bash, input: {command: "for b in s04 s05 s06 s07; do bash /tmp/flake/loop.sh 1 $b; done", description: "Run the case four times, one batch each"}, result: {text: "1 runs, 0 failed\n1 runs, 0 failed\n1 runs, 0 failed\n1 runs, 0 failed", after: 3m52s}}
+      usage: {in: 11400, out: 117, cache_read: 46910}
+  - input: "How many clean runs have we got now?"
+  - call:
+      text: "Counting every run on the fixed build, and any kept failure directory."
+      tool: {id: b56, name: Bash, input: {command: "ls /tmp/flake/{f02,g01,b11,b12,s04,s05,s06,s07}/*.out | wc -l | tr -d ' '; ls -d /tmp/flake/{f02,g01,b11,b12,s04,s05,s06,s07}/run-*/ 2>/dev/null | wc -l | tr -d ' '", description: "Count runs and failures since the fix"}, result: {text: "50\n0", after: 400ms}}
+      usage: {in: 11590, out: 173, cache_read: 47580}
+  - call: {text: "Fifty runs on the fixed build, no failures: five under the forced 45-second delay that used to fail every time, twenty under the load that gave five in forty before.", usage: {in: 11760, out: 326, cache_read: 48220}}
+  - input: "Anything else in the tree with the same shape of bug?"
+  - call:
+      text: "Sweeping server-core for other things that fill on a schedule."
+      tool: {id: b57, name: Bash, input: {command: "git grep -l -e scheduleWithFixedDelay -e scheduleAtFixedRate -- oap-server/server-core/src/main/java | sed 's#.*/##'", description: "List scheduled jobs in server-core"}, result: {text: "CacheUpdateTimer.java\nEndpointNameGrouping.java\nDSLClassLoaderManager.java\nHierarchyService.java\nProfileTaskLookupCache.java\nRemoteClientManager.java\nPersistenceTimer.java\nDataTTLKeeperTimer.java\nWatermarkWatcher.java", after: 1100ms}}
+      usage: {in: 11930, out: 162, cache_read: 48870}
+  - call: {text: "Eight others, mostly write-side timers for persistence, TTL and watermarks. Whether a read-side one answers before its first run deserves its own look; I would keep this change narrow and open an issue.", usage: {in: 12100, out: 298, cache_read: 49520}}
+  - queued: {text: "agreed, separate issue - just note it in the commit body", mode: prompt}
+  - call:
+      text: "Opening the follow-up issue first so the commit can point at it."
+      tool: {id: b58, name: Bash, input: {command: "gh issue create --title 'Audit server-core scheduled caches for reads before first load' --body 'Follow-up to the profile task cache fix: check each scheduled cache in server-core for reads served before its first load.'", description: "Open the follow-up issue"}, result: {text: "https://git.example.org/apache/skywalking/issues/99712", after: 3s}}
+      usage: {in: 12290, out: 247, cache_read: 50180}
+  - call:
+      text: "Committing on a branch with that noted."
+      tool:
+        id: b59
+        name: Bash
+        input:
+          command: |
+            git switch -q -c fix/profile-task-cache-warm && git add oap-server test/e2e-v2 && git commit -q -F - <<'MSG'
+            Warm the profile task cache before its gRPC handler is reachable
+
+            ProfileTaskLookupCache scheduled its first load from notifyAfterCompleted(),
+            one refresh interval out, while the gRPC port opens in notifyBootCompleted().
+            Agents polling in between got an empty task list, even for a task already
+            in storage, and asked again only 20s later, failing the Profiling Task
+            Handover BanyanDB e2e case about 1 run in 25.
+
+            - ProfileTaskReceiverProvider loads the cache in start(), before the handler
+            - wait-for-service.sh replaces legacy-wait.sh's fixed sleep
+
+            Other scheduled caches in server-core are not audited here: #99712
+            MSG
+            git show --stat --format='%h %s' HEAD | sed 's/^ *//'
+          description: Create the branch and commit the fix
+        result: {text: "9c41ab2 Warm the profile task cache before its gRPC handler is reachable\n\n.../core/profiling/trace/ProfileTaskLookupCache.java | 8 ++++++++\n.../provider/ProfileTaskReceiverProvider.java | 3 +++\n.../cases/profiling/task-handover/e2e.yaml | 4 ++--\ntest/e2e-v2/script/prepare/legacy-wait.sh | 26 --------------------------\n.../e2e-v2/script/prepare/wait-for-service.sh | 34 ++++++++++++++++++++++++++++++++++\n5 files changed, 47 insertions(+), 28 deletions(-)", after: 1400ms}
+      usage: {in: 12520, out: 516, cache_read: 50860}
+  - input: "Did shellcheck and the license header check pass?"
+  - call:
+      text: "Running both on the committed tree."
+      tool: {id: b60, name: Bash, input: {command: "license-eye header check && shellcheck test/e2e-v2/script/prepare/*.sh && echo 'shellcheck: clean'", description: "Run the license header and shell lint checks"}, result: {text: "INFO Totally checked 5263 files, valid: 4102, invalid: 0, ignored: 1161, fixed: 0\nshellcheck: clean", after: 38s}}
+      usage: {in: 12700, out: 150, cache_read: 51520}
+  - input: "Good. What is the failure rate now, honestly?"
+  - call: {text: "Zero in fifty, five of them under the forced delay that used to fail every time and twenty under load. Before the fix it was about one in twenty-five, so this is encouraging, not proof, and it is one machine.", usage: {in: 12880, out: 318, cache_read: 52190}}
+  - input: "Then let a hundred run in the background, I have meetings until the afternoon."
+  - call:
+      text: "A hundred on the committed tree, in the background."
+      tool: {id: b61, name: Bash, input: {command: "bash /tmp/flake/loop.sh 100 h01", description: "Run the case a hundred times on the committed fix", run_in_background: true}, result: {text: "Command running in background with ID: bash_12", after: 300ms}}
+      usage: {in: 13030, out: 118, cache_read: 52850}
+  - input: "While that runs, write up what actually happened."
+  - call: {text: "The case was never flaky in itself. On the node the agent reports to, the backend added the profile task handler in start(), the cache behind it scheduled its first load in notifyAfterCompleted() ten seconds out, and the gRPC port opened in between, in notifyBootCompleted(). An agent that polled in that window was told the cache had no task, though storage held one, and it polls only every twenty seconds, so the case's fixed wait ran out first. Load made the provider's start line up with the window more often. Two changes: the cache loads before the handler exists, and the case waits for the provider to register instead of sleeping.", usage: {in: 13210, out: 702, cache_read: 53510}}
+  - input: "Why did it always fail at a different assertion?"
+  - call: {text: "The verify cases run as a chain: notified, finished, segments, analysis. A late task starves whichever link needs more data than the agent collected, so one missing input showed up as different assertions.", usage: {in: 13390, out: 367, cache_read: 54180}}
+  - input: "Is the warmUp call going to slow every start-up?"
+  - call: {text: "By one storage query in start(), tens of milliseconds against a start-up measured in tens of seconds. If it fails, refresh() logs a warning and the scheduled refresh takes over, as today.", usage: {in: 13560, out: 334, cache_read: 54830}}
+  - input: "Why not just set the initial delay to zero?"
+  - call: {text: "That shrinks the window to one storage query but does not close it: the load would still race the port opening. Loading in start() puts it strictly before.", usage: {in: 13720, out: 311, cache_read: 55480}}
+  - input: "Is the hundred-run batch still going?"
+    after: 1h10m
+  - call:
+      text: "Checking how far it has got."
+      tool: {id: b62, name: Bash, input: {command: "ls /tmp/flake/h01/*.out | wc -l | tr -d ' '; ls -d /tmp/flake/h01/run-*/ 2>/dev/null | wc -l | tr -d ' '", description: "Count runs so far and kept failures"}, result: {text: "76\n0", after: 300ms}}
+      usage: {in: 13900, out: 146, cache_read: 11240, cache_write: 45800}
+  - error: "API Error: Request timed out."
+  - call: {text: "That timeout was my request to the API, not the run; the batch is a background job and unaffected. It is on run 76 of 100 with no failures so far.", usage: {in: 14080, out: 188, cache_read: 57160}}
+  - queued: {mode: task-notification, text: "<task-notification><task-id>bash_12</task-id><status>completed</status></task-notification>"}
+    after: 22m40s
+  - call:
+      text: "The hundred finished."
+      tool: {id: b63, name: Read, input: {file_path: /tmp/claude/tasks/bash_12.output}, result: "100 runs, 0 failed"}
+      usage: {in: 14200, out: 84, cache_read: 57790}
+  - call: {text: "A hundred for a hundred on the committed fix, a hundred and fifty clean in total.", usage: {in: 14330, out: 121, cache_read: 58420}}
+  - input: "Fine. Open the pull request with what we have."
+  - call:
+      text: "Pushing the branch and opening it against master."
+      tool: {id: b64, name: Bash, input: {command: "git push -q -u origin fix/profile-task-cache-warm && gh pr create --fill --base master", description: "Push and open the pull request"}, result: {text: "https://git.example.org/apache/skywalking/pull/99713", after: 6s}}
+      usage: {in: 14510, out: 203, cache_read: 59090}
+  - input: "Add the reproduction recipe to the description, people will not believe one in twenty."
+  - call:
+      text: "Writing the recipe down."
+      tool:
+        id: w2
+        name: Write
+        input:
+          file_path: /tmp/flake/pr-body.md
+          content: |
+            Fixes the Profiling Task Handover BanyanDB e2e flake (about 1 run in 25, 1 in 8 under CPU load).
+
+            Reproduce on master: in ProfileTaskLookupCache.scheduleRefresh(), change the initial
+            delay from refreshMillis to 45_000L, rebuild the oap image, run the case. It fails
+            every time: the agent's first two polls land before the first load.
+
+            Scope: tasks stored before a node starts. A task created later still appears at the
+            node's next refresh, as today.
+
+            With this change the same patch passes 5/5, and 145 runs without it pass,
+            20 of them under `stress-ng --cpu 4`.
+
+            Follow-up audit of other scheduled caches: #99712
+        result: "File created successfully at: /tmp/flake/pr-body.md"
+      usage: {in: 14700, out: 436, cache_read: 59760}
+  - call:
+      text: "Putting it on the pull request."
+      tool: {id: b65, name: Bash, input: {command: "gh pr edit 99713 --body-file /tmp/flake/pr-body.md", description: "Update the pull request description"}, result: {text: "https://git.example.org/apache/skywalking/pull/99713", after: 2s}}
+      usage: {in: 14880, out: 117, cache_read: 60430}
+  - input: "Last thing: start the long stress run and leave it, I want the number in the morning."
+  - call:
+      text: "Starting five hundred runs. At about fifty-five seconds a run that is most of the night; failed runs keep their logs, and the count will be in /tmp/flake/stress-500.log."
+      tool:
+        id: stress
+        name: Bash
+        input: {command: "bash /tmp/flake/loop.sh 500 stress | tee /tmp/flake/stress-500.log", description: "Five hundred run stress test", run_in_background: true}
+      usage: {in: 15060, out: 214, cache_read: 61100}

@@ -1,0 +1,74 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.asz.enabled }}
+# The scenarios the feed picks from: every .yaml that `make feature-asz` copied into generated/asz-scenarios/.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asz-scenarios
+data:
+{{ range $path, $bytes := .Files.Glob "generated/asz-scenarios/*.yaml" }}
+{{- $path | replace "generated/asz-scenarios/" "" | indent 2 }}: |
+{{ $.Files.Get $path | indent 4 }}
+{{ end }}
+
+---
+# The collector's configuration. It lives apart from /asz/data, because `asz scenario build` writes its own
+# asz.yaml there and refuses a file it did not write. A file that lists adapters replaces the whole default
+# list, so all three are listed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asz-config
+data:
+  asz.yaml: |
+    storage:
+      root: /asz/data
+    adapters:
+      - name: claude-code-local
+        enabled: true
+        source_root: /asz/data/_source
+        exclude:
+          - /private/tmp/**
+        # Derive Claude Code's token metric from the landed files, so the AI_AGENT metric rules have data.
+        metrics: true
+        metrics_lookback: none
+        collector:
+          mode: watch
+          interval: 60s
+      - name: claude-code-changes
+        enabled: true
+        source_root: /asz/data/_source/plugins/data
+        exclude:
+          - /private/tmp/**
+        collector:
+          mode: watch
+          interval: 60s
+      - name: claude-code-otlp
+        enabled: false
+    export:
+      otlp:
+        protocol: grpc
+        endpoint: {{ template "skywalking.oap.address.grpc" . }}
+        tls: false
+        service_name: Claude Code
+        instance_id: Claude Code showcase runner
+        layer: AI_AGENT
+        logs: true
+        metrics: true
+{{- end }}
