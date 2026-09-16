@@ -38,10 +38,10 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-SW_OAP_IMAGE_TAG ?= 476afadecdc0a410bf5c64de48f6ead8e6030b00
+SW_OAP_IMAGE_TAG ?= d13d9e06084fd4889a7027ef0f00a8701c124220
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= 03666d578a86cdb0ec39fbd8bbfd4cbd04fd91c4
+SW_UI_IMAGE_TAG ?= 0f9ea4082b18d12e93b712c559b2ffe14a556f13
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
