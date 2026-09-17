@@ -19,3 +19,7 @@
 # A killed `helm dep up` can leave its download directory behind. Helm 4 names it tmpcharts-<pid>, and Helm 3
 # named it tmpcharts. Keep either out of the chart, or its archives would ride in the release as chart files.
 tmpcharts*/
+
+# The asz scenarios come from the asz-scenarios image. Copies an earlier deploy left in generated/ would
+# otherwise still ride in the Helm release as chart files, and take half of its 1 MiB Secret.
+generated/asz-scenarios/

@@ -930,6 +930,9 @@ features:
   asz:
     enabled: false
     image: ~
+    # The image carrying the scenarios under /scenarios (services/asz-scenarios). An init container copies
+    # them for the feed.
+    scenariosImage: ~
     # One generated conversation this often, each picked at random from the scenarios.
     every: 30m
 

@@ -16,24 +16,6 @@
 # under the License.
 #
 {{- if .Values.features.asz.enabled }}
-# The scenarios the feed picks from: every .yaml that `make feature-asz` copied into generated/asz-scenarios/.
-#
-# One ConfigMap per scenario, not one for all of them. A ConfigMap may hold at most 1 MiB, and the
-# scenarios carry the system prompt and the tool schemas each call sends, which a real agent sends
-# tens of kilobytes of. Together they passed that limit, and the API server refuses the whole object
-# rather than the file that crossed it, so a single map would have failed the install with an error
-# naming Helm instead of the scenario. A projected volume puts them back in one directory.
-{{- range $path, $bytes := .Files.Glob "generated/asz-scenarios/*.yaml" }}
-{{- $file := $path | replace "generated/asz-scenarios/" "" }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: asz-scenario-{{ $file | replace ".yaml" "" }}
-data:
-  {{ $file }}: |
-{{ $.Files.Get $path | indent 4 }}
----
-{{ end }}
 # The collector's configuration. It lives apart from /asz/data, because `asz scenario build` writes its own
 # asz.yaml there and refuses a file it did not write. A file that lists adapters replaces the whole default
 # list, so all three are listed.

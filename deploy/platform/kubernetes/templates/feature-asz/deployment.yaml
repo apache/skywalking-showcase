@@ -37,9 +37,29 @@ spec:
         app: claude-asz-mock
       annotations:
         sidecar.istio.io/inject: "false"
-        # The feed reads its scenario set once, at start, so a changed scenario or configuration rolls the pod.
+        # The feed reads its scenario set once, at start. A new scenario image changes the pod spec, and this
+        # checksum rolls the pod when the configuration changes.
         checksum/config: {{ include (print $.Template.BasePath "/feature-asz/configmaps.yaml") . | sha256sum }}
     spec:
+      # The scenarios ride in their own image, not in the Helm release: Helm keeps a release in one Secret of
+      # at most 1 MiB, and the scenarios alone come close to it. They are copied into an emptyDir for the feed.
+      initContainers:
+        - name: scenarios
+          image: {{ .Values.features.asz.scenariosImage }}
+          command: ["sh", "-c", "cp /scenarios/*.yaml /asz/scenarios/"]
+          # Root, because /scenarios in the pinned image is a 0444 directory, which only root can enter. The
+          # copies keep mode 0444, which the feed's user can read.
+          securityContext:
+            runAsUser: 0
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: scenarios
+              mountPath: /asz/scenarios
       containers:
         # The feed: one whole conversation every features.asz.every, picked at random, written as Claude Code's
         # own files under /asz/data/_source.
@@ -79,15 +99,10 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: 2Gi
-        # One ConfigMap per scenario, projected back into one directory: see configmaps.yaml
-        # for why they are not a single map.
+        # The scenarios, copied in by the init container.
         - name: scenarios
-          projected:
-            sources:
-{{- range $path, $bytes := .Files.Glob "generated/asz-scenarios/*.yaml" }}
-              - configMap:
-                  name: asz-scenario-{{ $path | replace "generated/asz-scenarios/" "" | replace ".yaml" "" }}
-{{- end }}
+          emptyDir:
+            sizeLimit: 32Mi
         - name: config
           configMap:
             name: asz-config

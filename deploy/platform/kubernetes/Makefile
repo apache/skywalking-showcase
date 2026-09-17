@@ -59,6 +59,7 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.grafana.plugin.version=$(SW_GRA
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.r3.image=$(SW_R3_IMAGE):$(SW_R3_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.image=$(SW_PREDICTOR_IMAGE)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.image=$(SW_ASZ_IMAGE):$(SW_ASZ_IMAGE_TAG)
+HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.scenariosImage=$(SW_ASZ_SCENARIOS_IMAGE):$(SW_ASZ_SCENARIOS_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.scaller.enabled=$(SCALLER_ENABLE)
 
 ifeq ($(DEBUG),true)
@@ -265,8 +266,6 @@ feature-grafana:
 .PHONY: feature-asz
 feature-asz:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.enabled=true)
-	@mkdir -p ./generated/asz-scenarios/
-	@cp ../config/asz/scenarios/*.yaml ./generated/asz-scenarios/
 
 .PHONY: feature-mesh-with-agent
 feature-mesh-with-agent:
@@ -325,7 +324,7 @@ feature-flink-monitor:
 clean-generated:
 	@rm -rf ./generated/
 
-feature-grafana feature-asz: clean-generated
+feature-grafana: clean-generated
 
 # Remove everything a deploy generates: the copies for Helm, and the charts `helm dep up` downloads.
 .PHONY: clean
