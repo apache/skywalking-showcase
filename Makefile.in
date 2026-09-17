@@ -44,8 +44,10 @@ SW_OAP_IMAGE_TAG ?= 289b4b3bd2e271ef6b617cfb3f64987fe29a8265
 
 # Must be at or after 0ce1f8d6 (#165), which added the conversation inspector's Prompt tab: the
 # panel that rebuilds the request and the response behind a model call.
+# 53c1f63b (#166) beyond that: before it the tab read a message of one text block as two messages
+# depending on whether it was the newest, and warned of a rewritten history on nearly every call.
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= 0ce1f8d6a8484b127abf83897b0aa4f5f567f363
+SW_UI_IMAGE_TAG ?= 53c1f63b635bc8efbaec0e4bc28ec9539e526328
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
