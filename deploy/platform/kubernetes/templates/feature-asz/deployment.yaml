@@ -79,9 +79,15 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: 2Gi
+        # One ConfigMap per scenario, projected back into one directory: see configmaps.yaml
+        # for why they are not a single map.
         - name: scenarios
-          configMap:
-            name: asz-scenarios
+          projected:
+            sources:
+{{- range $path, $bytes := .Files.Glob "generated/asz-scenarios/*.yaml" }}
+              - configMap:
+                  name: asz-scenario-{{ $path | replace "generated/asz-scenarios/" "" | replace ".yaml" "" }}
+{{- end }}
         - name: config
           configMap:
             name: asz-config
