@@ -38,24 +38,13 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-# Must also be at or after 289b4b3bd2 (#14084): it serves an AI agent conversation and the stored
-# files behind it, which is what the UI's prompt panel reads.
 SW_OAP_IMAGE_TAG ?= 289b4b3bd2e271ef6b617cfb3f64987fe29a8265
 
-# Must be at or after 0ce1f8d6 (#165), which added the conversation inspector's Prompt tab: the
-# panel that rebuilds the request and the response behind a model call.
-# 53c1f63b (#166) beyond that: before it the tab read a message of one text block as two messages
-# depending on whether it was the newest, and warned of a rewritten history on nearly every call.
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 SW_UI_IMAGE_TAG ?= 53c1f63b635bc8efbaec0e4bc28ec9539e526328
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
-# Must be at or after acd2f52 (#12), where a scenario gained `system_prompt` and `tools`. Every
-# scenario here writes them, and an older image refuses the key rather than ignoring it.
-# 0f9612b (#13) beyond that: `asz scenario check` on these scenarios only agrees across both
-# formats from there, because four of them use reasoning text. The feed itself writes one format,
-# so the deployment does not depend on it; anyone verifying a scenario against this image does.
 SW_ASZ_IMAGE ?= ghcr.io/apache/skywalking-ai-sessionizer
 SW_ASZ_IMAGE_TAG ?= 0f9612b060390f36e43c753bfeb087cc0500efb5
 
