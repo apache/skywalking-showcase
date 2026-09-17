@@ -21,4 +21,7 @@
 # The build context is the scenario directory, deploy/platform/config/asz/scenarios.
 FROM busybox:1.36
 
+# WORKDIR creates /scenarios as 0755 first. COPY would create it with its own --chmod mode, and a 0444
+# directory cannot be entered by a non-root user, such as an init container running as asz's 65532.
+WORKDIR /scenarios
 COPY --chmod=0444 *.yaml /scenarios/
