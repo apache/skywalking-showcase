@@ -59,3 +59,12 @@ datasources:
     url: http://oap:3200/zipkin
     jsonData:
       streamingEnabled: false
+  - access: proxy
+    editable: false
+    isDefault: false
+    name: OTLPTraceQL
+    orgId: 1
+    type: tempo
+    url: http://oap:3200/otlp
+    jsonData:
+      streamingEnabled: false

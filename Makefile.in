@@ -38,10 +38,10 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-SW_OAP_IMAGE_TAG ?= 289b4b3bd2e271ef6b617cfb3f64987fe29a8265
+SW_OAP_IMAGE_TAG ?= ecb087cbfd23a89581367ca70adc74f511a9e70c
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= 53c1f63b635bc8efbaec0e4bc28ec9539e526328
+SW_UI_IMAGE_TAG ?= dc31135cadee387263931f359819e7a8c7971bdc
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
@@ -74,6 +74,10 @@ GRAFANA_IMAGE ?= grafana/grafana:12.4.2
 
 OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
 OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
+# @feature: otlp-trace; the OpenTelemetry Operator's auto-instrumentation images, copied into the music application's containers at start
+OTEL_INSTRUMENTATION_JAVA_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.11.0
+OTEL_INSTRUMENTATION_NODEJS_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.56.0
+OTEL_INSTRUMENTATION_PYTHON_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.50b0
 
 SW_R3_IMAGE ?= ghcr.io/skyapm/r3
 SW_R3_IMAGE_TAG ?= 0.1.0

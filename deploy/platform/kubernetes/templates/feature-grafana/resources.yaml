@@ -100,6 +100,15 @@ data:
       url: http://{{ include "skywalking.oap.address.host" . }}:3200/zipkin
       jsonData:
         streamingEnabled: false
+    - access: proxy
+      editable: false
+      isDefault: false
+      name: OTLPTraceQL
+      orgId: 1
+      type: tempo
+      url: http://{{ include "skywalking.oap.address.host" . }}:3200/otlp
+      jsonData:
+        streamingEnabled: false
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -157,6 +166,9 @@ spec:
             - name: dashboard-configs
               mountPath: /var/lib/grafana/dashboards/skywalking/trace-skywalking.json
               subPath: trace-skywalking.json
+            - name: dashboard-configs
+              mountPath: /var/lib/grafana/dashboards/skywalking/trace-otlp.json
+              subPath: trace-otlp.json
       volumes: # require create configmap from deploy/platform/config/grafana/dashboards
         - name: grafana-config
           configMap:

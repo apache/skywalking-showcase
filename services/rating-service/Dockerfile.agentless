@@ -22,4 +22,5 @@ WORKDIR /workspace
 
 COPY . .
 
-CMD go build . -o rating && ./rating
+RUN go build -o rating .
+CMD ["./rating"]

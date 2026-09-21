@@ -369,6 +369,9 @@ data:
       - prometheus
       - skywalking
     nginx_config:
+      # Two workers rather than one per CPU: APISIX's default sizes the workers by the node, not by the container's
+      # 256Mi limit, and each worker costs ~30MB, so a 16-CPU node put the frontend in an OOMKilled loop.
+      worker_processes: 2
       http_server_configuration_snippet: |
         location ~ \.(gif|jpg|png|js|css|html)$ {
           root /app/build;
@@ -559,7 +562,8 @@ spec:
           resources:
             limits:
               cpu: 100m
-              memory: "256Mi"
+              # The 128m heap plus the JVM's own footprint does not fit 256Mi; it was OOMKilled on start.
+              memory: "512Mi"
             requests:
               cpu: 100m
               memory: "128Mi"

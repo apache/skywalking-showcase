@@ -1,0 +1,486 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+{{- if .Values.features.otlpTrace.enabled }}
+{{- $ns := .Values.features.otlpTrace.namespace }}
+{{- $hub := .Values.sampleServices.hub }}
+{{- $tag := .Values.sampleServices.tag }}
+{{- $collector := printf "%s-opentelemetry-collector.%s.svc.cluster.local" .Release.Name .Release.Namespace }}
+{{- /*
+A second copy of the music application: the agentless images, the OpenTelemetry auto-instrumentation copied in by an
+init container and switched on through the runtime's own hook (JAVA_TOOL_OPTIONS, NODE_OPTIONS, PYTHONPATH), the APISIX
+frontend traced by its built-in opentelemetry plugin, and the spans exported over OTLP/HTTP, the SDKs' default, to the
+OpenTelemetry Collector, which hands them to the OAP as OTLP and as Zipkin. The same Selenium load generator drives the
+frontend page, so the traces start at frontend. It has its own namespace because the services address each other by
+fixed hostnames, frontend, gateway, songs, rcmd, rating, app and activemq.
+The page carries no browser agent, and the Go rating service has no runtime instrumentation and appears only as the
+callee of recommendation's spans.
+*/}}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+{{- range $svc := list "frontend" "gateway" "songs" "rcmd" "app" "rating" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc }}
+  namespace: {{ $ns }}
+spec:
+  selector:
+    app: {{ $svc }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: activemq
+  namespace: {{ $ns }}
+spec:
+  selector:
+    app: activemq
+  ports:
+    - name: openwire
+      protocol: TCP
+      port: 61616
+      targetPort: 61616
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: activemq
+  namespace: {{ $ns }}
+  labels:
+    app: activemq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: activemq
+  template:
+    metadata:
+      labels:
+        app: activemq
+    spec:
+      containers:
+        - name: activemq
+          image: rmohr/activemq:5.15.9
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 61616
+          env:
+            - name: ACTIVEMQ_OPTS
+              value: "-Xmx128m -Xms128m"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              # The broker's JVM needs more than its 128m heap; 256Mi got it OOM-killed.
+              memory: 512Mi
+{{- range $svc := list "gateway" "songs" }}
+---
+# Java: the OpenTelemetry Java agent, attached through JAVA_TOOL_OPTIONS, which the agentless image's java picks up.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc }}
+  namespace: {{ $ns }}
+  labels:
+    app: {{ $svc }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $svc }}
+  template:
+    metadata:
+      labels:
+        app: {{ $svc }}
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      initContainers:
+        - name: otel-instrumentation
+          image: {{ $.Values.features.otlpTrace.instrumentation.java }}
+          command: ["cp", "/javaagent.jar", "/otel-auto-instrumentation/javaagent.jar"]
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+      containers:
+        - name: {{ $svc }}
+          image: "{{ $hub }}/{{ if eq $svc "gateway" }}gateway-service{{ else }}songs-service{{ end }}:{{ $tag }}-agentless"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/otel-auto-instrumentation/javaagent.jar
+            - name: OTEL_SERVICE_NAME
+              value: {{ $svc }}
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace={{ $ns }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://{{ $collector }}:4318
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            {{- if eq $svc "songs" }}
+            - name: ACTIVE_MQ_URL
+              value: tcp://activemq:61616
+            - name: ACTIVE_MQ_QUEUE
+              value: queue-songs-ping
+            {{- end }}
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 384Mi
+            limits:
+              memory: 768Mi
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+              readOnly: true
+      volumes:
+        - name: otel-auto-instrumentation
+          emptyDir: {}
+{{- end }}
+---
+# Python: the auto-instrumentation's sitecustomize is put first on PYTHONPATH.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation
+  namespace: {{ $ns }}
+  labels:
+    app: rcmd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rcmd
+  template:
+    metadata:
+      labels:
+        app: rcmd
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      initContainers:
+        - name: otel-instrumentation
+          image: {{ .Values.features.otlpTrace.instrumentation.python }}
+          command: ["cp", "-r", "/autoinstrumentation/.", "/otel-auto-instrumentation"]
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+      containers:
+        - name: recommendation
+          image: "{{ $hub }}/recommendation-service:{{ $tag }}-agentless"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: PYTHONPATH
+              value: /otel-auto-instrumentation/opentelemetry/instrumentation/auto_instrumentation:/otel-auto-instrumentation
+            - name: OTEL_SERVICE_NAME
+              value: recommendation
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace={{ $ns }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://{{ $collector }}:4318
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+              readOnly: true
+      volumes:
+        - name: otel-auto-instrumentation
+          emptyDir: {}
+---
+# Node.js: the auto-instrumentation is required through NODE_OPTIONS before the app's own code.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: {{ $ns }}
+  labels:
+    app: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      initContainers:
+        - name: otel-instrumentation
+          image: {{ .Values.features.otlpTrace.instrumentation.nodejs }}
+          command: ["cp", "-r", "/autoinstrumentation/.", "/otel-auto-instrumentation"]
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+      containers:
+        - name: app
+          image: "{{ $hub }}/app:{{ $tag }}-agentless"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: NODE_OPTIONS
+              value: --require /otel-auto-instrumentation/autoinstrumentation.js
+            - name: OTEL_NODE_RESOURCE_DETECTORS
+              value: env,host,os,process,serviceinstance
+            - name: OTEL_SERVICE_NAME
+              value: app
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace={{ $ns }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://{{ $collector }}:4318
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: otel-auto-instrumentation
+              mountPath: /otel-auto-instrumentation
+              readOnly: true
+      volumes:
+        - name: otel-auto-instrumentation
+          emptyDir: {}
+---
+# Go: no runtime instrumentation; the agentless image builds the binary at start, so its probe waits.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating
+  namespace: {{ $ns }}
+  labels:
+    app: rating
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating
+  template:
+    metadata:
+      labels:
+        app: rating
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: rating
+          image: "{{ $hub }}/rating-service:{{ $tag }}-agentless"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apisix-config
+  namespace: {{ $ns }}
+data:
+  config: |
+    apisix:
+      node_listen: 80
+      enable_ipv6: false
+      enable_admin: false
+      config_center: yaml
+    plugin_attr:
+      opentelemetry:
+        resource:
+          service.name: frontend
+          service.namespace: {{ $ns }}
+        collector:
+          address: {{ $collector }}:4318
+          request_timeout: 3
+    plugins:
+      - opentelemetry
+    nginx_config:
+      # Two workers rather than one per CPU: the frontend proxies two routes and serves a static page, and APISIX's
+      # default sizes the workers by the node, not by the container's memory limit.
+      worker_processes: 2
+      http_server_configuration_snippet: |
+        location ~ \.(gif|jpg|png|js|css|html)$ {
+          root /app/build;
+          index index.html;
+        }
+  # The two routes the page calls, traced by the opentelemetry plugin; its default sampler is always_off, so each route
+  # turns it on. The static page is served by the nginx location above and is not traced.
+  apisix: |
+    routes:
+      - uri: /homepage
+        service_id: 1
+        plugins:
+          opentelemetry:
+            sampler:
+              name: always_on
+      - uri: /test
+        service_id: 1
+        plugins:
+          opentelemetry:
+            sampler:
+              name: always_on
+    services:
+      - id: 1
+        upstream_id: 1
+    upstreams:
+      - id: 1
+        nodes:
+          "app:80": 1
+        type: roundrobin
+    #END
+---
+# The APISIX frontend of the copy; the page it serves carries no browser agent, so the traces start here.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: {{ $ns }}
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ $hub }}/frontend:{{ $tag }}-agentless"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          ports:
+            - containerPort: 80
+              name: http
+          volumeMounts:
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/config.yaml
+              subPath: config
+            - name: apisix-config
+              mountPath: /usr/local/apisix/conf/apisix.yaml
+              subPath: apisix
+      volumes:
+        - name: apisix-config
+          configMap:
+            name: apisix-config
+---
+# Drives the copy: the same Selenium load generator as the agent copy, clicking through the frontend page.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgen
+  namespace: {{ $ns }}
+  labels:
+    app: loadgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgen
+  template:
+    metadata:
+      labels:
+        app: loadgen
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: loadgen
+          image: "{{ $hub }}/load-gen:{{ $tag }}"
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: URL
+              value: http://frontend/index.html
+{{- end }}

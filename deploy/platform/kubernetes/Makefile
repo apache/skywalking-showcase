@@ -61,6 +61,10 @@ HELM_OPTIONS := $(HELM_OPTIONS) --set features.baseline.image=$(SW_PREDICTOR_IMA
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.image=$(SW_ASZ_IMAGE):$(SW_ASZ_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set features.asz.scenariosImage=$(SW_ASZ_SCENARIOS_IMAGE):$(SW_ASZ_SCENARIOS_IMAGE_TAG)
 HELM_OPTIONS := $(HELM_OPTIONS) --set sampleServices.scaller.enabled=$(SCALLER_ENABLE)
+# Horizon's TraceQL (Tempo API) endpoint. The chart computes the UI's query/admin/zipkin URLs itself but not this
+# one, and the OAP host is derived from $(RELEASE), so it is set here rather than in values.yaml. Port =
+# skywalking.oap.ports.traceql; Horizon probes OAP's default /skywalking, /zipkin and /otlp paths under it.
+HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.ui.config.oap.traceql.url=http://$(RELEASE)-oap:3200
 
 ifeq ($(DEBUG),true)
 	HELM_OPTIONS := $(HELM_OPTIONS) --dry-run --debug
@@ -259,6 +263,17 @@ feature-grafana:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.grafana.enabled=true)
 	@mkdir -p ./generated/dashboard-configs/
 	@cp ../config/grafana/dashboards/*.json ./generated/dashboard-configs/
+
+# A second copy of the music application, from the agentless images, instrumented at start by the OpenTelemetry
+# auto-instrumentation and exporting OTLP to the OpenTelemetry Collector, which delivers every span to the OAP twice:
+# as OTLP on the gRPC port, stored natively, and converted to Zipkin on 9411.
+.PHONY: feature-otlp-trace
+feature-otlp-trace:
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.java=$(OTEL_INSTRUMENTATION_JAVA_IMAGE))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.nodejs=$(OTEL_INSTRUMENTATION_NODEJS_IMAGE))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.python=$(OTEL_INSTRUMENTATION_PYTHON_IMAGE))
 
 # @feature: asz; deploy the SkyWalking AI Sessionizer. No real Claude Code runs in the showcase, so
 # asz's scenario feed generates the conversations, and asz collects them and pushes them to the OAP
