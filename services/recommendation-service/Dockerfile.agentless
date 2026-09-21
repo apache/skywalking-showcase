@@ -16,7 +16,8 @@
 # under the License.
 #
 
-FROM python:3
+# Pinned: python:3 moved to 3.14, where this Flask fails at import (pkgutil.get_loader is gone).
+FROM python:3.12-slim
 
 WORKDIR /workspace
 

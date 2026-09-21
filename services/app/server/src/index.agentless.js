@@ -27,7 +27,8 @@ const app = express();
 
 app.get('/homepage', async (req, res) => {
     const headers = {};
-    for (const header in ['x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 'x-b3-sampled', 'x-b3-flags']) {
+    // `of`, not `in`: the loop used to visit the array indices and forwarded nothing.
+    for (const header of ['traceparent', 'tracestate', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 'x-b3-sampled', 'x-b3-flags']) {
         if (req.headers[header]) {
             headers[header] = req.headers[header];
         }

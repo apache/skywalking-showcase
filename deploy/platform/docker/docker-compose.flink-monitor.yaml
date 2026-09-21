@@ -15,23 +15,10 @@
 
 version: "3"
 
+# Flink monitoring. OAP and BanyanDB come from the base file (single-node or cluster), which also
+# enables the `flink/*` OTel rules; this file only adds a Flink cluster, a sample job, and a
+# collector that scrapes the two Prometheus reporters into OAP.
 services:
-  oap:
-    extends:
-      file: ../../script/docker-compose/base-compose.yml
-      service: oap
-    ports:
-      - "12800:12800"
-    networks:
-      - e2e
-
-  banyandb:
-    extends:
-      file: ../../script/docker-compose/base-compose.yml
-      service: banyandb
-    ports:
-      - 17912
-
   jobmanager:
     image: flink:2.0-preview1
     environment:
@@ -41,7 +28,7 @@ services:
         metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
         metrics.reporter.prom.port: 9260
     ports:
-      - "8081:8081"
+      - "8082:8081" # Flink web UI; host 8081 is the SkyWalking UI
       - "9260:9260"
     command: jobmanager
     healthcheck:
@@ -50,7 +37,7 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - e2e
+      - sw
 
   taskmanager:
     image: flink:2.0-preview1
@@ -72,7 +59,7 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - e2e
+      - sw
 
   executeJob:
     image: flink:2.0-preview1
@@ -83,12 +70,12 @@ services:
       bash -c "
       ./bin/flink run -m jobmanager:8081 examples/streaming/WindowJoin.jar"
     networks:
-      - e2e
+      - sw
 
   otel-collector:
-    image: otel/opentelemetry-collector:${OTEL_COLLECTOR_VERSION}
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
     networks:
-      - e2e
+      - sw
     command: [ "--config=/etc/otel-collector-config.yaml" ]
     volumes:
       - ./config/flink/otel-collector-flink-config.yaml:/etc/otel-collector-config.yaml
@@ -99,4 +86,4 @@ services:
         condition: service_healthy
 
 networks:
-  e2e:
+  sw:

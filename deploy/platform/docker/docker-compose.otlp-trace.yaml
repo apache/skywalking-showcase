@@ -1,0 +1,224 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# @feature: otlp-trace; a second copy of the music application from the agentless images, instrumented at start by the
+# OpenTelemetry auto-instrumentation (copied out of the operator's images into shared volumes) and exporting OTLP to
+# its own collector, which hands every span to the OAP as OTLP and as Zipkin. The copy lives on its own network, where
+# the aliases give the services the fixed hostnames they address each other by: gateway, songs, rcmd, rating, app,
+# activemq. The Go rating service has no runtime instrumentation and appears only as recommendation's callee.
+
+version: '2.1'
+
+x-otel-export: &otel-export
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-trace-collector:4318
+  OTEL_TRACES_EXPORTER: otlp
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-services
+
+services:
+  otel-trace-collector:
+    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
+    networks: [ sw, otel ]
+    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    volumes:
+      - ./config/otel-collector-config-otlp-trace.yaml:/etc/otel-collector-config.yaml
+    expose:
+      - 4317
+      - 4318
+    depends_on:
+      oap:
+        condition: service_healthy
+
+  # One-shot copies of the auto-instrumentation into the volumes the services mount.
+  otel-instrumentation-java:
+    image: ${OTEL_INSTRUMENTATION_JAVA_IMAGE}
+    command: [ "cp", "/javaagent.jar", "/otel/javaagent.jar" ]
+    volumes:
+      - otel-java:/otel
+  otel-instrumentation-nodejs:
+    image: ${OTEL_INSTRUMENTATION_NODEJS_IMAGE}
+    command: [ "cp", "-r", "/autoinstrumentation/.", "/otel" ]
+    volumes:
+      - otel-nodejs:/otel
+  otel-instrumentation-python:
+    image: ${OTEL_INSTRUMENTATION_PYTHON_IMAGE}
+    command: [ "cp", "-r", "/autoinstrumentation/.", "/otel" ]
+    volumes:
+      - otel-python:/otel
+
+  otel-gateway:
+    restart: unless-stopped
+    image: ${HUB}/gateway-service:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ gateway ]
+    environment:
+      <<: *otel-export
+      OTEL_SERVICE_NAME: gateway
+      JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
+    volumes:
+      - otel-java:/otel:ro
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    depends_on:
+      otel-instrumentation-java:
+        condition: service_completed_successfully
+      otel-trace-collector:
+        condition: service_started
+
+  otel-songs:
+    restart: unless-stopped
+    image: ${HUB}/songs-service:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ songs ]
+    environment:
+      <<: *otel-export
+      OTEL_SERVICE_NAME: songs
+      JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
+      ACTIVE_MQ_URL: tcp://activemq:61616
+      ACTIVE_MQ_QUEUE: queue-songs-ping
+    volumes:
+      - otel-java:/otel:ro
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    depends_on:
+      otel-instrumentation-java:
+        condition: service_completed_successfully
+      otel-trace-collector:
+        condition: service_started
+      otel-activemq:
+        condition: service_started
+
+  otel-rcmd:
+    restart: unless-stopped
+    image: ${HUB}/recommendation-service:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ rcmd ]
+    environment:
+      <<: *otel-export
+      OTEL_SERVICE_NAME: recommendation
+      PYTHONPATH: /otel/opentelemetry/instrumentation/auto_instrumentation:/otel
+    volumes:
+      - otel-python:/otel:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    depends_on:
+      otel-instrumentation-python:
+        condition: service_completed_successfully
+      otel-trace-collector:
+        condition: service_started
+
+  otel-app:
+    restart: unless-stopped
+    image: ${HUB}/app:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ app ]
+    environment:
+      <<: *otel-export
+      OTEL_SERVICE_NAME: app
+      NODE_OPTIONS: --require /otel/autoinstrumentation.js
+      OTEL_NODE_RESOURCE_DETECTORS: env,host,os,process,serviceinstance
+    volumes:
+      - otel-nodejs:/otel:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    depends_on:
+      otel-instrumentation-nodejs:
+        condition: service_completed_successfully
+      otel-trace-collector:
+        condition: service_started
+
+  otel-rating:
+    restart: unless-stopped
+    image: ${HUB}/rating-service:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ rating ]
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  otel-activemq:
+    image: rmohr/activemq:5.15.9
+    networks:
+      otel:
+        aliases: [ activemq ]
+    environment:
+      ACTIVEMQ_OPTS: "-Xmx128m -Xms128m"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Drives the copy: one home page every two seconds, app -> gateway -> songs, rcmd -> songs, rating.
+  # The APISIX frontend of the copy, traced by APISIX's own opentelemetry plugin (config/apisix-otlp-trace); the page it
+  # serves carries no browser agent, so the traces start here.
+  otel-frontend:
+    restart: unless-stopped
+    image: ${HUB}/frontend:${TAG}-agentless
+    networks:
+      otel:
+        aliases: [ frontend ]
+    volumes:
+      - ./config/apisix-otlp-trace/apisix.yaml:/usr/local/apisix/conf/apisix.yaml
+      - ./config/apisix-otlp-trace/config.yaml:/usr/local/apisix/conf/config.yaml
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    depends_on:
+      otel-app:
+        condition: service_healthy
+      otel-trace-collector:
+        condition: service_started
+  # The same Selenium load generator as the agent copy, driving the frontend page.
+  otel-loadgen:
+    restart: unless-stopped
+    image: ${HUB}/load-gen:${TAG}
+    networks: [ otel ]
+    environment:
+      URL: http://frontend/index.html
+    depends_on:
+      otel-frontend:
+        condition: service_started
+networks:
+  sw:
+  otel:
+
+volumes:
+  otel-java:
+  otel-nodejs:
+  otel-python:

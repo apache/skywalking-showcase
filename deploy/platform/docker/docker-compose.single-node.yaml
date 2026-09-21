@@ -42,6 +42,7 @@ services:
     ports:
       - "11800:11800"
       - "12800:12800"
+      - "3200:3200" # @feature: grafana; the Tempo API, for a Grafana outside this compose
     environment:
       SW_HEALTH_CHECKER: default # @feature: health-check;
       SW_OTEL_RECEIVER: default # @feature: vm; enable the OC receiver that receives the VM metrics
@@ -50,8 +51,14 @@ services:
       SW_STORAGE_BANYANDB_TARGETS: banyandb:17912
       SW_TELEMETRY: prometheus # @feature: so11y; expose the metrics of self o11y through prometheus
       SW_PROMETHEUS_FETCHER: default # @feature: so11y; fetch the metrics of self o11y through prometheus
+      SW_TRACEQL: default # @feature: grafana; serve the Tempo API (TraceQL) that the Grafana trace dashboards query
+      SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true" # @feature: grafana; the /skywalking datasource, traces from the SkyWalking agents
+      SW_TRACEQL_ENABLE_DATASOURCE_OTLP: "true" # @feature: otlp-trace,grafana; the /otlp datasource, OTLP traces stored natively (receiver-otel.otlpTraceStorage: otlp, the default)
+      SW_RECEIVER_ZIPKIN: default # @feature: otlp-trace; the collector hands every span of the OpenTelemetry-instrumented copy to the Zipkin store too
+      SW_QUERY_ZIPKIN: default # @feature: otlp-trace,grafana; the Zipkin query API and the /zipkin datasource
+      SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true" # @feature: otlp-trace,grafana; the /zipkin datasource
       JAVA_OPTS: "-Xms2048m -Xmx2048m"
-      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-sleuth,go-runtime,java-agent,go-agent
+      SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-micrometer,go-runtime,java-agent,go-agent
     healthcheck:
       test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/11800"]
       interval: 30s
@@ -65,12 +72,30 @@ services:
     image: ${SW_UI_IMAGE}:${SW_UI_IMAGE_TAG}
     networks: [ sw ]
     ports:
-      - "9999:8080"
+      - "8081:8081"
     depends_on:
       oap:
         condition: service_healthy
     environment:
-      SW_OAP_ADDRESS: http://oap:12800
+      # The Horizon image reads these three (its /app/horizon.yaml is fully env-tokenized);
+      # the old SW_OAP_ADDRESS of the booster UI is not a Horizon setting.
+      HORIZON_OAP_QUERY_URL: http://oap:12800
+      HORIZON_OAP_ADMIN_URL: http://oap:17128
+      HORIZON_OAP_ZIPKIN_URL: http://oap:9412/zipkin # SW_QUERY_ZIPKIN above serves this
+      # OAP's Tempo API (SW_TRACEQL above); Horizon probes /skywalking, /zipkin and /otlp under it, OAP's default paths.
+      HORIZON_OAP_TRACEQL_URL: http://oap:3200
+      # The same two PUBLICLY-KNOWN demo accounts as deploy/platform/kubernetes/values.yaml
+      # (passwords `admin` and `skywalking`); the image ships with NO users, so without this
+      # the UI serves the login page but every login is refused. Compose interpolates `$`,
+      # hence every `$` of the argon2 hashes is doubled here; the container gets single `$`.
+      HORIZON_AUTH_LOCAL_USERS: >-
+        [{"username":"admin","passwordHash":"$$argon2id$$v=19$$m=65536,t=3,p=4$$eemqy1r72oSXR58y8VpRqw$$Bn/dULrmJTHEi3263KfgWDEwQmUsqNLi3xwyv/DekHM","roles":["admin"]},
+        {"username":"skywalking","passwordHash":"$$argon2id$$v=19$$m=65536,t=3,p=4$$Zqj8HhQDqm8d5c2MipHYZw$$BsaCnu4bdd4uadIldx3wwYLsdo47Thxb7Lv1MXpWG2Q","roles":["viewer","maintainer","template-viewer"]}]
+      # `template-viewer` is not a built-in role: read-only access to the Dashboard-setup pages,
+      # defined as in the Kubernetes values and layered ONTO the built-ins (`keep`).
+      HORIZON_RBAC_BUILTIN_ROLES: keep
+      HORIZON_RBAC_ROLES: '{"template-viewer":["overview-template:read","layer-template:read","translation:read","alarm-setup:read","infra-3d-setup:read","setup:read"]}'
+      HORIZON_RBAC_LANDING_BY_ROLE: '{"template-viewer":"/"}'
 
 networks:
   sw:

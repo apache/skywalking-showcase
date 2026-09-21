@@ -35,8 +35,17 @@ const GATEWAY = process.env.GATEWAY || 'gateway';
 const app = express();
 
 app.get('/homepage', async (req, res) => {
-    const top = await axios.get(`http://${GATEWAY}/songs/top`);
-    const rcmd = await axios.get(`http://${GATEWAY}/rcmd`);
+    // The SkyWalking agent propagates its own sw8 header; the mesh's Envoy sidecars propagate W3C trace context and
+    // B3, which the app has to carry across itself for a mesh trace to continue past this hop.
+    const headers = {};
+    for (const header of ['traceparent', 'tracestate', 'x-b3-traceid', 'x-b3-spanid', 'x-b3-parentspanid', 'x-b3-sampled', 'x-b3-flags']) {
+        if (req.headers[header]) {
+            headers[header] = req.headers[header];
+        }
+    }
+
+    const top = await axios.get(`http://${GATEWAY}/songs/top`, { headers });
+    const rcmd = await axios.get(`http://${GATEWAY}/rcmd`, { headers });
 
     res.json({
         top: top.data,

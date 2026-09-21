@@ -42,6 +42,16 @@ metadata:
 data:
   config.yaml: |
     receivers:
+      {{- if .Values.features.otlpTrace.enabled }}
+      # @feature: otlp-trace; the OpenTelemetry-instrumented copy of the music application exports its spans here over
+      # OTLP/HTTP, the SDKs' default; gRPC stays open for anything else pointed at the collector
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+      {{- end }}
       {{- $root := . -}}
       {{- range $idx, $config := $configs -}}
       {{- if not (include $config $root | trim | empty) }}
@@ -62,6 +72,15 @@ data:
           insecure: true
       {{- end }}
       {{- end }}
+      {{- if .Values.features.otlpTrace.enabled }}
+      # @feature: otlp-trace; the same spans go to the OAP twice: natively as OTLP, and as Zipkin for the Zipkin store
+      otlp/traces:
+        endpoint: "{{ include "skywalking.oap.address.grpc" . }}"
+        tls:
+          insecure: true
+      zipkin/traces:
+        endpoint: "http://{{ include "skywalking.oap.address.host" . }}:9411/api/v2/spans"
+      {{- end }}
       logging:
         verbosity: detailed
 
@@ -73,6 +92,11 @@ data:
 
     service:
       pipelines:
+      {{- if .Values.features.otlpTrace.enabled }}
+        traces:
+          receivers: [ otlp ]
+          exporters: [ otlp/traces, zipkin/traces ]
+      {{- end }}
       {{- $root := . }}
       {{- range $idx, $config := $configs }}
       {{- if not (include $config $root | trim | empty) }}

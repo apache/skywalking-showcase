@@ -31,6 +31,8 @@ def health():
 def application():
     headers = {}
     for key in [
+        'traceparent',
+        'tracestate',
         'x-b3-traceid',
         'x-b3-spanid',
         'x-b3-parentspanid',
