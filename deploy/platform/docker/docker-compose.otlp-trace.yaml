@@ -16,36 +16,35 @@
 # under the License.
 #
 # @feature: otlp-trace; a second copy of the music application from the agentless images, instrumented at start by the
-# OpenTelemetry auto-instrumentation (copied out of the operator's images into shared volumes) and exporting OTLP to
-# its own collector, which hands every span to the OAP as OTLP and as Zipkin. The copy lives on its own network, where
-# the aliases give the services the fixed hostnames they address each other by: gateway, songs, rcmd, rating, app,
-# activemq. The Go rating service has no runtime instrumentation and appears only as recommendation's callee.
+# OpenTelemetry auto-instrumentation (copied out of the operator's images into shared volumes) and exporting every span
+# straight to the OAP, which stores it natively and serves it at the TraceQL /otlp datasource. The copy lives on its own
+# network, where the aliases give the services the fixed hostnames they address each other by: frontend, gateway, songs,
+# rcmd, rating, app, activemq. The Go rating service has no runtime instrumentation and appears only as
+# recommendation's callee.
 
 version: '2.1'
 
+# Every span goes straight to the OAP; no collector sits in the trace path. The OAP serves OTLP on both of its
+# own ports, gRPC on 11800 and OTLP/HTTP on 12800, so each sender uses the transport its instrumentation has.
 x-otel-export: &otel-export
-  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-trace-collector:4318
   OTEL_TRACES_EXPORTER: otlp
   OTEL_METRICS_EXPORTER: none
   OTEL_LOGS_EXPORTER: none
   OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-services
+x-otel-grpc: &otel-grpc
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://oap:11800
+# The Python auto-instrumentation image carries no gRPC exporter, so it goes over OTLP/HTTP.
+x-otel-http: &otel-http
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://oap:12800
 
 services:
-  otel-trace-collector:
-    image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
+  # The OAP joins this copy's network so the services can reach it by name. Only the OAP crosses over: the copy
+  # keeps its own network because its services answer to the same hostnames as the agent copy on `sw`.
+  oap:
     networks: [ sw, otel ]
-    command: [ "--config=/etc/otel-collector-config.yaml" ]
-    volumes:
-      - ./config/otel-collector-config-otlp-trace.yaml:/etc/otel-collector-config.yaml
-    expose:
-      - 4317
-      - 4318
-    depends_on:
-      oap:
-        condition: service_healthy
 
-  # One-shot copies of the auto-instrumentation into the volumes the services mount.
   otel-instrumentation-java:
     image: ${OTEL_INSTRUMENTATION_JAVA_IMAGE}
     command: [ "cp", "/javaagent.jar", "/otel/javaagent.jar" ]
@@ -69,7 +68,7 @@ services:
       otel:
         aliases: [ gateway ]
     environment:
-      <<: *otel-export
+      <<: [ *otel-export, *otel-grpc ]
       OTEL_SERVICE_NAME: gateway
       JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
     volumes:
@@ -81,8 +80,8 @@ services:
     depends_on:
       otel-instrumentation-java:
         condition: service_completed_successfully
-      otel-trace-collector:
-        condition: service_started
+      oap:
+        condition: service_healthy
 
   otel-songs:
     restart: unless-stopped
@@ -91,7 +90,7 @@ services:
       otel:
         aliases: [ songs ]
     environment:
-      <<: *otel-export
+      <<: [ *otel-export, *otel-grpc ]
       OTEL_SERVICE_NAME: songs
       JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
       ACTIVE_MQ_URL: tcp://activemq:61616
@@ -105,8 +104,8 @@ services:
     depends_on:
       otel-instrumentation-java:
         condition: service_completed_successfully
-      otel-trace-collector:
-        condition: service_started
+      oap:
+        condition: service_healthy
       otel-activemq:
         condition: service_started
 
@@ -117,7 +116,7 @@ services:
       otel:
         aliases: [ rcmd ]
     environment:
-      <<: *otel-export
+      <<: [ *otel-export, *otel-http ]
       OTEL_SERVICE_NAME: recommendation
       PYTHONPATH: /otel/opentelemetry/instrumentation/auto_instrumentation:/otel
     volumes:
@@ -129,8 +128,8 @@ services:
     depends_on:
       otel-instrumentation-python:
         condition: service_completed_successfully
-      otel-trace-collector:
-        condition: service_started
+      oap:
+        condition: service_healthy
 
   otel-app:
     restart: unless-stopped
@@ -139,7 +138,7 @@ services:
       otel:
         aliases: [ app ]
     environment:
-      <<: *otel-export
+      <<: [ *otel-export, *otel-grpc ]
       OTEL_SERVICE_NAME: app
       NODE_OPTIONS: --require /otel/autoinstrumentation.js
       OTEL_NODE_RESOURCE_DETECTORS: env,host,os,process,serviceinstance
@@ -157,8 +156,8 @@ services:
     depends_on:
       otel-instrumentation-nodejs:
         condition: service_completed_successfully
-      otel-trace-collector:
-        condition: service_started
+      oap:
+        condition: service_healthy
 
   otel-rating:
     restart: unless-stopped
@@ -202,8 +201,8 @@ services:
     depends_on:
       otel-app:
         condition: service_healthy
-      otel-trace-collector:
-        condition: service_started
+      oap:
+        condition: service_healthy
   # The same Selenium load generator as the agent copy, driving the frontend page.
   otel-loadgen:
     restart: unless-stopped

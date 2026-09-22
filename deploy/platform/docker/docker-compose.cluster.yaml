@@ -61,9 +61,11 @@ services:
       SW_TRACEQL: default # @feature: grafana; serve the Tempo API (TraceQL) that the Grafana trace dashboards query
       SW_TRACEQL_ENABLE_DATASOURCE_SKYWALKING: "true" # @feature: grafana; the /skywalking datasource, traces from the SkyWalking agents
       SW_TRACEQL_ENABLE_DATASOURCE_OTLP: "true" # @feature: otlp-trace,grafana; the /otlp datasource, OTLP traces stored natively (receiver-otel.otlpTraceStorage: otlp, the default)
-      SW_RECEIVER_ZIPKIN: default # @feature: otlp-trace; the collector hands every span of the OpenTelemetry-instrumented copy to the Zipkin store too
-      SW_QUERY_ZIPKIN: default # @feature: otlp-trace,grafana; the Zipkin query API and the /zipkin datasource
-      SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true" # @feature: otlp-trace,grafana; the /zipkin datasource
+      # The Zipkin store is fed by Istio's sidecars, which only the Kubernetes layout runs, so here it stays empty;
+      # the receiver and the query are on so the ZipkinTraceQL datasource and its dashboard answer rather than 404.
+      SW_RECEIVER_ZIPKIN: default # @feature: grafana; the Zipkin receiver on 9411
+      SW_QUERY_ZIPKIN: default # @feature: grafana; the Zipkin query API and the /zipkin datasource
+      SW_TRACEQL_ENABLE_DATASOURCE_ZIPKIN: "true" # @feature: grafana; the /zipkin datasource
       JAVA_OPTS: "-Dmode=no-init -Xms2048m -Xmx2048m" # @feature: cluster; start the cluster nodes in no-init mode
       SW_METER_ANALYZER_ACTIVE_FILES: datasource,threadpool,satellite,spring-micrometer,go-runtime,java-agent,go-agent
     healthcheck:
