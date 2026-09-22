@@ -19,14 +19,19 @@
 {{- $ns := .Values.features.otlpTrace.namespace }}
 {{- $hub := .Values.sampleServices.hub }}
 {{- $tag := .Values.sampleServices.tag }}
-{{- $collector := printf "%s-opentelemetry-collector.%s.svc.cluster.local" .Release.Name .Release.Namespace }}
+{{- /* The spans go straight to the OAP: gRPC on 11800 where the instrumentation speaks it, OTLP/HTTP on 12800
+       for the Python agent and the APISIX plugin, which are HTTP-only. */}}
+{{- $oapGrpc := include "skywalking.oap.address.grpc" . }}
+{{- $oapHttp := include "skywalking.oap.address.http" . }}
+{{- $oapHost := include "skywalking.oap.address.host" . }}
 {{- /*
 A second copy of the music application: the agentless images, the OpenTelemetry auto-instrumentation copied in by an
 init container and switched on through the runtime's own hook (JAVA_TOOL_OPTIONS, NODE_OPTIONS, PYTHONPATH), the APISIX
-frontend traced by its built-in opentelemetry plugin, and the spans exported over OTLP/HTTP, the SDKs' default, to the
-OpenTelemetry Collector, which hands them to the OAP as OTLP and as Zipkin. The same Selenium load generator drives the
-frontend page, so the traces start at frontend. It has its own namespace because the services address each other by
-fixed hostnames, frontend, gateway, songs, rcmd, rating, app and activemq.
+frontend traced by its built-in opentelemetry plugin, and every span exported straight to the OAP, which stores it
+natively for the TraceQL /otlp datasource. No collector sits in the trace path. The Zipkin store stays the mesh's:
+Istio's sidecars send it their own spans, so /zipkin shows the mesh and /otlp this copy.
+The same Selenium load generator drives the frontend page, so the traces start at frontend. It has its own namespace
+because the services address each other by fixed hostnames, frontend, gateway, songs, rcmd, rating, app and activemq.
 The page carries no browser agent, and the Go rating service has no runtime instrumentation and appears only as the
 callee of recommendation's spans.
 */}}
@@ -141,9 +146,9 @@ spec:
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.namespace={{ $ns }}
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
-              value: http/protobuf
+              value: grpc
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://{{ $collector }}:4318
+              value: http://{{ $oapGrpc }}
             - name: OTEL_TRACES_EXPORTER
               value: otlp
             - name: OTEL_METRICS_EXPORTER
@@ -216,10 +221,11 @@ spec:
               value: recommendation
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.namespace={{ $ns }}
+            # The Python auto-instrumentation image carries no gRPC exporter, so this one goes over OTLP/HTTP.
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
               value: http/protobuf
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://{{ $collector }}:4318
+              value: {{ $oapHttp }}
             - name: OTEL_TRACES_EXPORTER
               value: otlp
             - name: OTEL_METRICS_EXPORTER
@@ -287,9 +293,9 @@ spec:
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.namespace={{ $ns }}
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
-              value: http/protobuf
+              value: grpc
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://{{ $collector }}:4318
+              value: http://{{ $oapGrpc }}
             - name: OTEL_TRACES_EXPORTER
               value: otlp
             - name: OTEL_METRICS_EXPORTER
@@ -372,7 +378,7 @@ data:
           service.name: frontend
           service.namespace: {{ $ns }}
         collector:
-          address: {{ $collector }}:4318
+          address: {{ $oapHost }}:12800
           request_timeout: 3
     plugins:
       - opentelemetry

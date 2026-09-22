@@ -38,7 +38,7 @@ ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-SW_OAP_IMAGE_TAG ?= ecb087cbfd23a89581367ca70adc74f511a9e70c
+SW_OAP_IMAGE_TAG ?= 03ecf41fd7ac34635370c91e2bf01e0424fa85eb
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 SW_UI_IMAGE_TAG ?= dc31135cadee387263931f359819e7a8c7971bdc

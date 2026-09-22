@@ -270,7 +270,6 @@ feature-grafana:
 .PHONY: feature-otlp-trace
 feature-otlp-trace:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.enabled=true)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.java=$(OTEL_INSTRUMENTATION_JAVA_IMAGE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.nodejs=$(OTEL_INSTRUMENTATION_NODEJS_IMAGE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.python=$(OTEL_INSTRUMENTATION_PYTHON_IMAGE))

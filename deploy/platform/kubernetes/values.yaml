@@ -929,9 +929,9 @@ features:
     enabled: false
     image: ~
   # @feature: otlp-trace; a second copy of the music application, from the agentless images, instrumented at start by the
-  # OpenTelemetry auto-instrumentation (the APISIX frontend by its own opentelemetry plugin) and exporting OTLP to the
-  # OpenTelemetry Collector, which hands every span to the OAP as OTLP, stored natively for Grafana's /otlp, and as Zipkin
-  # for the Zipkin store and /zipkin
+  # OpenTelemetry auto-instrumentation (the APISIX frontend by its own opentelemetry plugin) and exporting every span
+  # straight to the OAP, gRPC on 11800 or OTLP/HTTP on 12800, stored natively for Grafana's /otlp. No collector sits in
+  # the trace path; the Zipkin store stays the mesh's.
   otlpTrace:
     enabled: false
     # Its own namespace: the services address each other by the same fixed hostnames as the agent copy.
