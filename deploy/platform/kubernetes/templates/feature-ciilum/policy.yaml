@@ -16,6 +16,9 @@
 # under the License.
 #
 {{- if .Values.features.cilium.enabled }}
+{{- /* The OAP and Satellite pods are matched twice: by the chart's legacy labels (app, component), which a release
+installed before skywalking-helm 5.1.0 keeps across upgrades, and by the Kubernetes recommended labels
+(app.kubernetes.io/instance, app.kubernetes.io/component), the only ones a release installed since then carries. */}}
 
 ---
 
@@ -39,6 +42,9 @@ spec:
         - matchLabels:
             "k8s:app": demo
             "k8s:component": satellite
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
   egress:
     - toEndpoints:
         - matchLabels:
@@ -60,6 +66,8 @@ spec:
             "k8s:app": gateway
         - matchLabels:
             "k8s:component": satellite
+        - matchLabels:
+            "k8s:app.kubernetes.io/component": satellite
       toPorts:
         - ports:
             - port: "80"
@@ -91,6 +99,9 @@ spec:
         - matchLabels:
             "k8s:app": demo
             "k8s:component": satellite
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
   egress:
     - toEndpoints:
         - matchLabels:
@@ -112,6 +123,8 @@ spec:
             "k8s:app": app
         - matchLabels:
             "k8s:component": satellite
+        - matchLabels:
+            "k8s:app.kubernetes.io/component": satellite
       toPorts:
         - ports:
             - port: "80"
@@ -142,8 +155,14 @@ spec:
             "k8s:app": demo
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:app": demo
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": oap
   egress:
     - toEndpoints:
         - matchLabels:
@@ -164,8 +183,13 @@ spec:
         - matchLabels:
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:app": demo
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": oap
       toPorts:
         - ports:
             - port: "80"
@@ -197,8 +221,14 @@ spec:
             "k8s:app": demo
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:app": demo
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": oap
   egress:
     - toEndpoints:
         - matchLabels:
@@ -217,7 +247,11 @@ spec:
         - matchLabels:
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/component": oap
       toPorts:
         - ports:
             - port: "80"
@@ -258,8 +292,14 @@ spec:
             "k8s:app": demo
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:app": demo
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": oap
         - matchLabels:
             "k8s:app.kubernetes.io/name": opentelemetry-collector
             "k8s:component": standalone-collector
@@ -284,8 +324,14 @@ spec:
             "k8s:app": demo
             "k8s:component": satellite
         - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": satellite
+        - matchLabels:
             "k8s:app": demo
             "k8s:component": oap
+        - matchLabels:
+            "k8s:app.kubernetes.io/instance": demo
+            "k8s:app.kubernetes.io/component": oap
         - matchLabels:
             "k8s:app.kubernetes.io/name": opentelemetry-collector
             "k8s:component": standalone-collector

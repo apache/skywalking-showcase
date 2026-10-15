@@ -18,6 +18,9 @@
 FROM apache/skywalking-python:1.2.0-grpc-py3.10-slim
 
 WORKDIR /workspace
+# The base image's agent wheel lacks the generated skywalking.protocol package, so the agent fails to start
+# ("No module named 'skywalking.protocol'"); the same release from PyPI carries it.
+RUN pip install --no-deps --force-reinstall apache-skywalking==1.2.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY src .

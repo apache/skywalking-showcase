@@ -264,15 +264,14 @@ feature-grafana:
 	@mkdir -p ./generated/dashboard-configs/
 	@cp ../config/grafana/dashboards/*.json ./generated/dashboard-configs/
 
-# A second copy of the music application, from the agentless images, instrumented at start by the OpenTelemetry
-# auto-instrumentation and exporting OTLP to the OpenTelemetry Collector, which delivers every span to the OAP twice:
-# as OTLP on the gRPC port, stored natively, and converted to Zipkin on 9411.
+# @feature: otlp-trace; the OpenTelemetry Astronomy Shop, installed by `deploy` as its own release in its own namespace,
+# since its services take fixed names (frontend, kafka, otel-collector, ...). Its collector sends every span to the OAP.
 .PHONY: feature-otlp-trace
 feature-otlp-trace:
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.enabled=true)
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.java=$(OTEL_INSTRUMENTATION_JAVA_IMAGE))
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.nodejs=$(OTEL_INSTRUMENTATION_NODEJS_IMAGE))
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.otlpTrace.instrumentation.python=$(OTEL_INSTRUMENTATION_PYTHON_IMAGE))
+	$(eval OTEL_DEMO_HELM_OPTIONS := --version $(OTEL_DEMO_CHART_VERSION) -f ../config/opentelemetry-demo/values.yaml)
+	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) --set default.image.repository=$(OTEL_DEMO_IMAGE) --set default.image.tag=$(OTEL_DEMO_IMAGE_TAG))
+	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) --set opentelemetry-collector.alternateConfig.exporters.otlp_grpc/oap.endpoint=$(RELEASE)-oap.$(NAMESPACE).svc:11800)
+	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) $(if $(filter true,$(DEBUG)),--dry-run --debug))
 
 # @feature: asz; deploy the SkyWalking AI Sessionizer. No real Claude Code runs in the showcase, so
 # asz's scenario feed generates the conversations, and asz collects them and pushes them to the OAP
@@ -350,6 +349,9 @@ deploy: clean-generated $(features)
 	@rm -rf ./charts/ ./tmpcharts/ ./tmpcharts-*/ ./Chart.lock
 	helm dep up .
 	helm -n $(NAMESPACE) upgrade --install $(RELEASE) . --create-namespace --timeout=20m $(HELM_OPTIONS)
+ifneq ($(findstring otlp-trace,$(FEATURE_FLAGS)),)
+	helm -n $(OTEL_DEMO_NAMESPACE) upgrade --install $(OTEL_DEMO_RELEASE) $(OTEL_DEMO_CHART) --create-namespace --timeout=20m $(OTEL_DEMO_HELM_OPTIONS)
+endif
 ifneq ($(DEBUG),true)
 	$(info rollout restart to allow the new sidecar to be injected.)
 	kubectl -n $(SAMPLE_SERVICES_NAMESPACE) get deployments -o name | xargs kubectl -n $(SAMPLE_SERVICES_NAMESPACE) rollout restart
@@ -358,6 +360,9 @@ endif
 .PHONY: undeploy
 undeploy:
 	helm -n $(NAMESPACE) delete $(RELEASE) --wait || true
+ifneq ($(findstring otlp-trace,$(FEATURE_FLAGS)),)
+	helm -n $(OTEL_DEMO_NAMESPACE) delete $(OTEL_DEMO_RELEASE) --wait || true
+endif
 ifneq ($(findstring cilium,$(FEATURE_FLAGS)),)
 	cilium uninstall
 endif

@@ -24,7 +24,7 @@ services:
     networks: [ sw ]
     privileged: true
     environment:
-      SW_AGENT_NAME: gateway
+      SW_AGENT_NAME: agent::gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/actuator/health" ]
@@ -43,7 +43,7 @@ services:
     privileged: true
     networks: [ sw ]
     environment:
-      SW_AGENT_NAME: songs
+      SW_AGENT_NAME: agent::songs
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
       ACTIVE_MQ_URL: tcp://activemq:61616
       ACTIVE_MQ_QUEUE: queue-songs-ping      
@@ -63,7 +63,7 @@ services:
     image: ${HUB}/recommendation-service:${TAG}
     networks: [ sw ]
     environment:
-      SW_AGENT_NAME: recommendation
+      SW_AGENT_NAME: agent::recommendation
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/health" ]
@@ -81,8 +81,8 @@ services:
     ports:
       - "9090:80"
     environment:
-      SW_AGENT_NAME_SERVER: app
-      REACT_APP_SW_AGENT_NAME_UI: ui
+      SW_AGENT_NAME_SERVER: agent::app
+      REACT_APP_SW_AGENT_NAME_UI: agent::ui
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: ${BACKEND_SERVICE}:11800
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/health" ]
@@ -115,7 +115,7 @@ services:
       ACTIVEMQ_SUNJMX_START: "-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.rmi.port=1616 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
       ACTIVEMQ_BROKER_NAME: activemq-broker
     expose:
-      - 1616:1616
+      - "1616"
     volumes:
       - ./config/activemq/activemq.xml:/opt/activemq/conf/activemq.xml
     networks: [ sw ]
@@ -130,7 +130,7 @@ services:
     image: ${HUB}/rating-service:${TAG}
     networks: [ sw ]
     environment:
-      SW_AGENT_NAME: rating
+      SW_AGENT_NAME: agent::rating
       SW_AGENT_REPORTER_GRPC_BACKEND_SERVICE: ${BACKEND_SERVICE}:11800
     healthcheck:
       test: [ "CMD-SHELL", "curl http://localhost/rating" ]

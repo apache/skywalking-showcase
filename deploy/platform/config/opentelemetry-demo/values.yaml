@@ -1,0 +1,108 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# @feature: otlp-trace; values for the OpenTelemetry Astronomy Shop chart
+# (oci://ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-demo), installed by the kubernetes Makefile as
+# its own release in its own namespace. The image and the OAP address the collector exports to are set there.
+#
+# The demo's own observability backends and its AI and docs components are off; its collector sends every span to the
+# OAP, and accepts and drops the metrics and logs the services also send.
+
+components:
+  agent:
+    enabled: false
+  chatbot:
+    enabled: false
+  mcp:
+    enabled: false
+  telemetry-docs:
+    enabled: false
+
+jaeger:
+  enabled: false
+prometheus:
+  enabled: false
+grafana:
+  enabled: false
+opensearch:
+  enabled: false
+
+opentelemetry-collector:
+  # One collector for the whole demo; the chart's default daemonset and its node and cluster metrics need cluster-wide
+  # permissions that a trace feed does not.
+  mode: deployment
+  presets:
+    annotationDiscovery:
+      metrics:
+        enabled: false
+    clusterMetrics:
+      enabled: false
+    hostMetrics:
+      enabled: false
+    kubeletMetrics:
+      enabled: false
+    kubernetesAttributes:
+      enabled: false
+  command:
+    extraArgs: []
+  # Replaces the demo's collector config instead of merging into it, which would keep its exporters to the backends
+  # turned off above.
+  alternateConfig:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: ${env:MY_POD_IP}:4317
+          http:
+            endpoint: ${env:MY_POD_IP}:4318
+            # The storefront page sends its browser spans through frontend-proxy's /otlp-http route.
+            cors:
+              allowed_origins:
+                - "http://*"
+                - "https://*"
+    processors:
+      memory_limiter:
+        check_interval: 5s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+    exporters:
+      otlp_grpc/oap:
+        # Set by the Makefile to the showcase OAP's gRPC port.
+        endpoint: ""
+        tls:
+          insecure: true
+        sending_queue:
+          batch: {}
+      nop: {}
+    extensions:
+      health_check:
+        endpoint: ${env:MY_POD_IP}:13133
+    service:
+      extensions: [ health_check ]
+      pipelines:
+        traces:
+          receivers: [ otlp ]
+          processors: [ memory_limiter ]
+          exporters: [ otlp_grpc/oap ]
+        metrics:
+          receivers: [ otlp ]
+          processors: [ memory_limiter ]
+          exporters: [ nop ]
+        logs:
+          receivers: [ otlp ]
+          processors: [ memory_limiter ]
+          exporters: [ nop ]

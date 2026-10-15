@@ -21,6 +21,10 @@
 NAMESPACE ?= skywalking-showcase
 SAMPLE_SERVICES_NAMESPACE ?= sample-services
 CILIUM_SERVICES_NAMESPACE ?= cilium-services
+# @feature: otlp-trace; where the OpenTelemetry Astronomy Shop is installed, as its own release
+OTEL_DEMO_NAMESPACE ?= otel-demo
+OTEL_DEMO_RELEASE ?= otel-demo
+OTEL_DEMO_CHART ?= oci://ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-demo
 RELEASE ?= demo
 AGENTLESS ?= false
 SCALLER_ENABLE ?= false

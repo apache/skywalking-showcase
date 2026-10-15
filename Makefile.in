@@ -37,11 +37,13 @@ ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-# banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965).
-SW_OAP_IMAGE_TAG ?= 03ecf41fd7ac34635370c91e2bf01e0424fa85eb
+# banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965); otlp-trace needs the
+# Trace Analysis Language, which lands in 7f6a353a (#14129), for the OTLP layers.
+SW_OAP_IMAGE_TAG ?= cf1c2be22c6ac8c85910de5199f2ce655161c0ad
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= dc31135cadee387263931f359819e7a8c7971bdc
+# otlp-trace needs the OpenTelemetry layer dashboards, which land in f3e3f193 (#193).
+SW_UI_IMAGE_TAG ?= 1401336608215a6dfbcaafbb6d80a4a5d927bd0e
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
@@ -74,10 +76,11 @@ GRAFANA_IMAGE ?= grafana/grafana:12.4.2
 
 OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
 OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
-# @feature: otlp-trace; the OpenTelemetry Operator's auto-instrumentation images, copied into the music application's containers at start
-OTEL_INSTRUMENTATION_JAVA_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.11.0
-OTEL_INSTRUMENTATION_NODEJS_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.56.0
-OTEL_INSTRUMENTATION_PYTHON_IMAGE ?= ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.50b0
+# @feature: otlp-trace; the OpenTelemetry Astronomy Shop. Its images are tagged <version>-<service>; the chart's version
+# is the one whose appVersion is OTEL_DEMO_IMAGE_TAG.
+OTEL_DEMO_IMAGE ?= ghcr.io/open-telemetry/demo
+OTEL_DEMO_IMAGE_TAG ?= 3.1.0
+OTEL_DEMO_CHART_VERSION ?= 0.42.4
 
 SW_R3_IMAGE ?= ghcr.io/skyapm/r3
 SW_R3_IMAGE_TAG ?= 0.1.0

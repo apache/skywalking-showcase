@@ -31,5 +31,8 @@ header:
     - '**/gradlew.bat'
     - 'LICENSE'
     - 'NOTICE'
+    # The OpenTelemetry Astronomy Shop's own files, copied unchanged; they carry the OpenTelemetry Authors' Apache-2.0 header.
+    - 'deploy/platform/docker/config/opentelemetry-demo/init.sql'
+    - 'deploy/platform/docker/config/opentelemetry-demo/otel-config.yml'
 
   comment: on-failure
