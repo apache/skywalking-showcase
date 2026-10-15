@@ -48,7 +48,7 @@ SW_UI_IMAGE_TAG ?= 1401336608215a6dfbcaafbb6d80a4a5d927bd0e
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
 SW_ASZ_IMAGE ?= ghcr.io/apache/skywalking-ai-sessionizer
-SW_ASZ_IMAGE_TAG ?= 0f9612b060390f36e43c753bfeb087cc0500efb5
+SW_ASZ_IMAGE_TAG ?= eb30abaa42566c3db6969d48bf7052b5b65fd445
 # The scenarios its feed picks from, as an image built from services/asz-scenarios. They are too large to
 # ride in the Helm release, which Helm keeps in one Secret of at most 1 MiB. The tag is one publish-images
 # pushed after a merge.
