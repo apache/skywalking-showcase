@@ -33,13 +33,10 @@ data:
         source_root: /asz/data/_source
         exclude:
           - /private/tmp/**
-        # Derive Claude Code's token metric from the landed files, so the AI_AGENT metric rules have data.
-        metrics: true
-        metrics_lookback: none
         collector:
           mode: watch
           interval: 60s
-      - name: claude-code-changes
+      - name: changes
         enabled: true
         source_root: /asz/data/_source/plugins/data
         exclude:
@@ -47,8 +44,10 @@ data:
         collector:
           mode: watch
           interval: 60s
-      - name: claude-code-otlp
-        enabled: false
+    # Derive the metrics from every landed file, whatever its age, so the AI_AGENT metric rules have data.
+    metrics:
+      enabled: true
+      lookback: none
     export:
       otlp:
         protocol: grpc
