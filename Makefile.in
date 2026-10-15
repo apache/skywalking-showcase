@@ -39,7 +39,7 @@ ES_IMAGE_TAG ?= 7.10.2
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965); otlp-trace needs the
 # Trace Analysis Language, which lands in 7f6a353a (#14129), for the OTLP layers.
-SW_OAP_IMAGE_TAG ?= cf1c2be22c6ac8c85910de5199f2ce655161c0ad
+SW_OAP_IMAGE_TAG ?= 8c9901c88064f5de45dae49faeb2eb4b032375a7
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 # otlp-trace needs the OpenTelemetry layer dashboards, which land in f3e3f193 (#193).
