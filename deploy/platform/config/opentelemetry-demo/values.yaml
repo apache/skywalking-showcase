@@ -79,6 +79,19 @@ opentelemetry-collector:
         check_interval: 5s
         limit_percentage: 80
         spike_limit_percentage: 25
+      # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL; every service of the demo
+      # opts in here, and one that set its own layer keeps it. The chart sets no service.namespace, by which the OAP
+      # groups the demo's services, as otel-demo::cart.
+      resource/layer:
+        attributes:
+          - key: service.layer
+            value: OTLP_GENERAL
+            action: insert
+          # Keep it equal to the Makefile's OTEL_DEMO_NAMESPACE: the OAP resolves a host qualified with a namespace,
+          # cart.otel-demo, to the service of that group.
+          - key: service.namespace
+            value: otel-demo
+            action: insert
     exporters:
       otlp_grpc/oap:
         # Set by the Makefile to the showcase OAP's gRPC port.
@@ -96,7 +109,7 @@ opentelemetry-collector:
       pipelines:
         traces:
           receivers: [ otlp ]
-          processors: [ memory_limiter ]
+          processors: [ memory_limiter, resource/layer ]
           exporters: [ otlp_grpc/oap ]
         metrics:
           receivers: [ otlp ]

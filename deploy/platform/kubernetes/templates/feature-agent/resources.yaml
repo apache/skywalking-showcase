@@ -82,6 +82,9 @@ spec:
         app: gateway
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        # The agent's reports to the OAP on 11800 bypass the sidecar, so the mesh traces hold the service's calls,
+        # not one span per agent report. Envoy's own ALS and metrics streams to the OAP are not affected.
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "gateway"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -142,6 +145,7 @@ spec:
         app: songs
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
         # @feature: java-agent-injector; set the java agent configuration
         strategy.skywalking.apache.org/inject.Container: "songs"
         strategy.skywalking.apache.org/agent.Overlay: "true"
@@ -211,6 +215,7 @@ spec:
         app: recommendation
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
     spec:
       containers:
         - name: recommendation
@@ -257,6 +262,7 @@ spec:
         app: app
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
     spec:
       containers:
         - name: app
@@ -291,6 +297,7 @@ spec:
         app: loadgen
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
     spec:
       containers:
         - name: app
@@ -479,6 +486,8 @@ spec:
         app: frontend
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        # APISIX reports to the OAP over HTTP, and proxies the browser agent's reports there too.
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800,12800"
     spec:
       containers:
         - name: frontend
@@ -630,6 +639,7 @@ spec:
         app: rating
       annotations:
         sidecar.istio.io/inject: "{{ or .Values.features.als.enabled .Values.features.istiodMonitor.enabled .Values.features.meshWithAgent.enabled }}"
+        traffic.sidecar.istio.io/excludeOutboundPorts: "11800"
     spec:
       containers:
         - name: rating

@@ -774,12 +774,17 @@ istiod:
     ingressService: istio-ingressgateway
     ingressSelector: istio-ingressgateway
     enableEnvoyAccessLogService: true
-    enableTracing: true
+    # Off unless feature-als turns it on: with no tracer configured here, istiod would hand the sidecars of
+    # istiod-monitor or mesh-with-agent its default one, a zipkin service nothing deploys.
+    enableTracing: false
+    # @feature: als; the sidecars trace over OTLP through the skywalking-mesh-otlp provider, which the Makefile adds
+    # since it names the collector's service, and the mesh-tracing Telemetry selects for the sample services. Its
+    # environment resource detector hands the sidecars' OTEL_RESOURCE_ATTRIBUTES below to Envoy: OTLP_MESH, a layer
+    # the OAP does not analyze, and the mesh-svr group, so their spans are stored as mesh-svr::<service>.<namespace>,
+    # the name the ALS analysis gives the same service in the MESH layer.
     defaultConfig:
-      tracing:
-        sampling: 100
-        zipkin:
-          address: ""
+      proxyMetadata:
+        OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_MESH,service.namespace=mesh-svr
       envoyMetricsService:
         address: ""
       envoyAccessLogService:
