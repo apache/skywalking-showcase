@@ -32,6 +32,18 @@ receivers:
 
 processors:
   batch:
+  # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL; every service of the demo opts
+  # in here, and one that set its own layer keeps it.
+  resource/layer:
+    attributes:
+      - key: service.layer
+        value: OTLP_GENERAL
+        action: insert
+      # The OAP groups the demo by service.namespace; the containers set it, and this covers the storefront's browser
+      # spans (frontend-web), which carry no container environment.
+      - key: service.namespace
+        value: otel-demo
+        action: insert
 
 exporters:
   otlp/oap:
@@ -44,7 +56,7 @@ service:
   pipelines:
     traces:
       receivers: [ otlp ]
-      processors: [ batch ]
+      processors: [ resource/layer, batch ]
       exporters: [ otlp/oap ]
     metrics:
       receivers: [ otlp ]

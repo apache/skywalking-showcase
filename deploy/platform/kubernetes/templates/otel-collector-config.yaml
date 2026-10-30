@@ -42,6 +42,14 @@ metadata:
 data:
   config.yaml: |
     receivers:
+      {{- if .Values.features.als.enabled }}
+      # @feature: als; the service mesh sidecars' traces, which Envoy sends over OTLP. Envoy reports to one tracer,
+      # so this pipeline hands each span to the OAP twice: over OTLP, and converted to Zipkin for the Zipkin store.
+      otlp/mesh-traces:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+      {{- end }}
       {{- $root := . -}}
       {{- range $idx, $config := $configs -}}
       {{- if not (include $config $root | trim | empty) }}
@@ -53,6 +61,14 @@ data:
       {{- end }}
 
     exporters:
+      {{- if .Values.features.als.enabled }}
+      otlp/mesh-traces:
+        endpoint: "{{ include "skywalking.oap.address.grpc" . }}"
+        tls:
+          insecure: true
+      zipkin/mesh-traces:
+        endpoint: "http://{{ include "skywalking.oap.address.host" . }}:9411/api/v2/spans"
+      {{- end }}
       {{- $root := . }}
       {{- range $idx, $config := $configs }}
       {{- if not (include $config $root | trim | empty) }}
@@ -73,6 +89,11 @@ data:
 
     service:
       pipelines:
+      {{- if .Values.features.als.enabled }}
+        traces/mesh:
+          receivers: [ otlp/mesh-traces ]
+          exporters: [ otlp/mesh-traces, zipkin/mesh-traces ]
+      {{- end }}
       {{- $root := . }}
       {{- range $idx, $config := $configs }}
       {{- if not (include $config $root | trim | empty) }}

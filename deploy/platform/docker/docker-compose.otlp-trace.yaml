@@ -39,9 +39,12 @@ x-otel-demo-http: &otel-demo-http
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
 
 services:
-  # The OAP joins the demo's network so its collector can reach it by name.
+  # The OAP joins the demo's network so its collector can reach it by name, and groups the demo's services by their
+  # service.namespace, as otel-demo::cart.
   oap:
     networks: [ sw, otel-demo ]
+    environment:
+      SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP: service.namespace
 
   otel-demo-collector:
     image: ${OTEL_COLLECTOR_IMAGE}:${OTEL_COLLECTOR_IMAGE_TAG}
@@ -71,7 +74,7 @@ services:
       <<: *otel-demo-http
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       GOMEMLIMIT: 60MiB
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: flagd
     volumes:
       - ./config/opentelemetry-demo/demo.flagd.json:/etc/flagd/demo.flagd.json
@@ -135,7 +138,7 @@ services:
       OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: cumulative
       OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: explicit_bucket_histogram
       OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION: latest
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: kafka
     healthcheck:
       test: nc -z kafka 9092
@@ -161,7 +164,7 @@ services:
       <<: [ *otel-demo-env, *otel-demo-http ]
       AD_PORT: 9555
       AD_PROMETHEUS_PORT: 9465
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
       OTEL_LOGS_EXPORTER: otlp
       OTEL_SERVICE_NAME: ad
       OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION: latest
@@ -191,7 +194,7 @@ services:
       <<: [ *otel-demo-env, *otel-demo-grpc ]
       CART_PORT: 7070
       VALKEY_ADDR: valkey-cart:6379
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
       OTEL_SERVICE_NAME: cart
       ASPNETCORE_URLS: http://*:7070
     deploy:
@@ -226,7 +229,7 @@ services:
       GOMEMLIMIT: 16MiB
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_GO_X_OBSERVABILITY: "true"
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
       OTEL_SERVICE_NAME: checkout
     healthcheck:
       test: [ "CMD", "/bin/grpc_health_probe", "-addr=:5050" ]
@@ -272,7 +275,7 @@ services:
       CURRENCY_PORT: 7001
       IPV6_ENABLED: "false"
       VERSION: ${OTEL_DEMO_IMAGE_TAG}
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
       OTEL_SERVICE_NAME: currency
     healthcheck:
       test: [ "CMD-SHELL", "nc -z localhost 7001" ]
@@ -298,7 +301,7 @@ services:
       <<: [ *otel-demo-env, *otel-demo-http ]
       APP_ENV: production
       EMAIL_PORT: 6060
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
       OTEL_SERVICE_NAME: email
     healthcheck:
       test: [ "CMD", "ruby", "-e", "require 'socket'; TCPSocket.new('localhost', 6060).close" ]
@@ -325,7 +328,7 @@ services:
       IPV6_ENABLED: "false"
       PAYMENT_PORT: 50051
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
       OTEL_SERVICE_NAME: payment
     healthcheck:
       test:
@@ -363,7 +366,7 @@ services:
       PRODUCT_CATALOG_PORT: 3550
       GOMEMLIMIT: 16MiB
       OTEL_GO_X_OBSERVABILITY: "true"
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
       OTEL_SERVICE_NAME: product-catalog
       # The Go SDK is built from this file (otelconf); without it the service sends no spans.
       OTEL_CONFIG_FILE: /otel-config.yml
@@ -404,7 +407,7 @@ services:
       OTEL_PHP_AUTOLOAD_ENABLED: "true"
       QUOTE_PORT: 8090
       OTEL_PHP_INTERNAL_METRICS_ENABLED: "true"
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: quote
     healthcheck:
       test: [ "CMD", "php", "-r", "fsockopen('localhost', 8090) or die('fail');" ]
@@ -431,7 +434,7 @@ services:
       RECOMMENDATION_PORT: 9001
       PRODUCT_CATALOG_ADDR: product-catalog:3550
       OTEL_PYTHON_LOG_CORRELATION: "true"
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=medium
       OTEL_SERVICE_NAME: recommendation
       OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
@@ -465,7 +468,7 @@ services:
       SHIPPING_PORT: 50050
       QUOTE_ADDR: http://quote:8090
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=high
       OTEL_SERVICE_NAME: shipping
     healthcheck:
       test: [ "CMD", "/app/healthcheck" ]
@@ -498,7 +501,7 @@ services:
       KAFKA_TOPIC: orders
       OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: cumulative
       OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: explicit_bucket_histogram
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: accounting
       DB_CONNECTION_STRING: Host=astronomy-db;Username=astronomy_user;Password=astronomy_password;Database=astronomy_db
       OTEL_DOTNET_AUTO_TRACES_ENTITYFRAMEWORKCORE_INSTRUMENTATION_ENABLED: "false"
@@ -526,7 +529,7 @@ services:
       KAFKA_TOPIC: orders
       OTEL_INSTRUMENTATION_KAFKA_EXPERIMENTAL_SPAN_ATTRIBUTES: "true"
       OTEL_INSTRUMENTATION_MESSAGING_EXPERIMENTAL_RECEIVE_TELEMETRY_ENABLED: "true"
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: fraud-detection
       OTEL_EXPERIMENTAL_SDK_TELEMETRY_VERSION: latest
     deploy:
@@ -549,7 +552,7 @@ services:
       IMAGE_PROVIDER_PORT: 8081
       OTEL_COLLECTOR_HOST: otel-collector
       OTEL_COLLECTOR_PORT_GRPC: 4317
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: image-provider
     healthcheck:
       test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/status" ]
@@ -582,7 +585,7 @@ services:
       PRODUCT_CATALOG_ADDR: product-catalog:3550
       RECOMMENDATION_ADDR: recommendation:9001
       SHIPPING_ADDR: http://shipping:50050
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
       ENV_PLATFORM: local
       OTEL_SERVICE_NAME: frontend
       # The page's own spans, which the browser sends to the storefront's /otlp-http route.
@@ -649,9 +652,9 @@ services:
       IMAGE_PROVIDER_PORT: 8081
       OTEL_COLLECTOR_PORT_GRPC: 4317
       OTEL_COLLECTOR_PORT_HTTP: 4318
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=critical
       OTEL_SERVICE_NAME: frontend-proxy
-      OTEL_SERVICE_NAMESPACE: opentelemetry-demo
+      OTEL_SERVICE_NAMESPACE: otel-demo
       ENVOY_PORT: 8080
       ENVOY_ADDR: 0.0.0.0
       ENVOY_ADMIN_PORT: 10000
@@ -696,7 +699,7 @@ services:
       LOCUST_BROWSER_TRAFFIC_ENABLED: "true"
       LOCUST_HTTP_USER_WEIGHT: 9
       LOCUST_BROWSER_USER_WEIGHT: 1
-      OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
+      OTEL_RESOURCE_ATTRIBUTES: service.namespace=otel-demo,service.version=${OTEL_DEMO_IMAGE_TAG},service.criticality=low
       OTEL_SERVICE_NAME: load-generator
       OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python

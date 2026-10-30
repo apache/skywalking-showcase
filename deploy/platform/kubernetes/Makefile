@@ -179,11 +179,22 @@ feature-istiod-monitor:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true --set istiod.global.istioNamespace=$(NAMESPACE) --set base.global.istioNamespace=$(NAMESPACE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
 
+# The sidecars' traces go over OTLP to the OpenTelemetry Collector, which forwards every span to the OAP twice:
+# as native OTLP, and converted to Zipkin, so the demo shows both trace views. Envoy reports to a single tracer,
+# hence the collector in between. Outside the demo, pick one and skip the collector:
+# - Zipkin only: drop opentelemetry.enabled, enableTracing and extensionProviders below, and send Zipkin to the OAP:
+#     $(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.tracing.zipkin.address=$(RELEASE)-oap.$(NAMESPACE).svc:9411)
+# - OTLP only: point the extensionProviders entry at the OAP's gRPC port, $(RELEASE)-oap.$(NAMESPACE).svc.cluster.local:11800.
+# The sidecars' service.namespace=mesh-svr (values.yaml) names their OTLP services mesh-svr::<service>.<namespace>,
+# with SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP below.
 .PHONY: feature-als
 feature-als:
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set features.als.enabled=true)
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istio.enabled=true --set istiod.global.istioNamespace=$(NAMESPACE) --set base.global.istioNamespace=$(NAMESPACE))
-	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.tracing.zipkin.address=$(RELEASE)-oap.$(NAMESPACE).svc:9411)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set opentelemetry.enabled=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.enableTracing=true)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP=service.namespace)
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set-json 'istiod.meshConfig.extensionProviders=[{"name":"skywalking-mesh-otlp","opentelemetry":{"service":"$(RELEASE)-opentelemetry-collector.$(NAMESPACE).svc.cluster.local","port":4317,"resourceDetectors":{"environment":{}}}}]')
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyMetricsService.address=$(BACKEND_SERVICE))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set istiod.meshConfig.defaultConfig.envoyAccessLogService.address=$(BACKEND_SERVICE))
 
@@ -272,6 +283,7 @@ feature-otlp-trace:
 	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) --set default.image.repository=$(OTEL_DEMO_IMAGE) --set default.image.tag=$(OTEL_DEMO_IMAGE_TAG))
 	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) --set opentelemetry-collector.alternateConfig.exporters.otlp_grpc/oap.endpoint=$(RELEASE)-oap.$(NAMESPACE).svc:11800)
 	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) $(if $(filter true,$(DEBUG)),--dry-run --debug))
+	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP=service.namespace)
 
 # @feature: asz; deploy the SkyWalking AI Sessionizer. No real Claude Code runs in the showcase, so
 # asz's scenario feed generates the conversations, and asz collects them and pushes them to the OAP
