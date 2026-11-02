@@ -114,10 +114,7 @@
   "templating": {
     "list": [
       {
-        "current": {
-          "text": "frontend",
-          "value": "frontend"
-        },
+        "current": {},
         "datasource": {
           "type": "tempo",
           "uid": "${DS_OTLP_Tempo}"
@@ -127,7 +124,7 @@
         "name": "service_name",
         "options": [],
         "query": {
-          "label": "resource.service.name",
+          "label": "service.name",
           "refId": "TempoDatasourceVariableQueryEditor-VariableQuery",
           "type": 1
         },
