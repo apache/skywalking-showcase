@@ -80,20 +80,18 @@
           },
           "filters": [
             {
-              "id": "9e1b9c94",
-              "operator": "=",
-              "scope": "span"
+              "id": "min-duration",
+              "operator": ">",
+              "tag": "duration",
+              "value": "$min_duration",
+              "valueType": "duration"
             },
             {
-              "id": "service-name",
-              "isCustomValue": false,
-              "operator": "=",
-              "scope": "resource",
-              "tag": "service.name",
-              "value": [
-                "$service_name"
-              ],
-              "valueType": "string"
+              "id": "max-duration",
+              "operator": "<",
+              "tag": "duration",
+              "value": "$max_duration",
+              "valueType": "duration"
             }
           ],
           "limit": 20,
@@ -114,24 +112,51 @@
   "templating": {
     "list": [
       {
-        "current": {},
         "datasource": {
           "type": "tempo",
           "uid": "${DS_OTLP_Tempo}"
         },
-        "definition": "",
-        "label": "Service Name",
-        "name": "service_name",
-        "options": [],
-        "query": {
-          "label": "service.name",
-          "refId": "TempoDatasourceVariableQueryEditor-VariableQuery",
-          "type": 1
+        "description": "Conditions on the stored spans, = only; add service.name first so name and the other values list that service's.",
+        "filters": [],
+        "label": "Filters",
+        "name": "filters",
+        "type": "adhoc"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
         },
-        "refresh": 1,
-        "regex": "",
-        "regexApplyTo": "value",
-        "type": "query"
+        "description": "For example 100ms",
+        "label": "Min Duration",
+        "name": "min_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "description": "For example 1s",
+        "label": "Max Duration",
+        "name": "max_duration",
+        "options": [
+          {
+            "selected": true,
+            "text": "",
+            "value": ""
+          }
+        ],
+        "query": "",
+        "type": "textbox"
       },
       {
         "current": {
