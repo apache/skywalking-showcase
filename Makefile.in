@@ -39,13 +39,15 @@ ES_IMAGE_TAG ?= 7.10.2
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
 # banyandb-tail-sampling needs the bydb.yml `pipeline` block, which lands in c66a476a (#13965); otlp-trace needs the
 # Trace Analysis Language, which lands in 7f6a353a (#14129), for the OTLP layers; the service.layer opt-in
-# (OTLP_GENERAL, OTLP_MESH) lands in cb38b30a (#14170).
-SW_OAP_IMAGE_TAG ?= 37b4630f33afcbdff6e258ffe1c30d1d6d920d77
+# (OTLP_GENERAL, OTLP_MESH) lands in cb38b30a (#14170); otlp-trace-practices needs the OTLP_VIRTUAL_GATEWAY layer,
+# which lands in bc4b92a6 (#14200).
+SW_OAP_IMAGE_TAG ?= bc4b92a647f925be178e01ca73a62ef4b2f399ef
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
 # otlp-trace needs the OpenTelemetry layer dashboards, which land in f3e3f193 (#193), and the OTLP_GENERAL
-# layer, renamed from OTLP_SERVICE in e5e3bbc5 (#207).
-SW_UI_IMAGE_TAG ?= e5e3bbc552ddcc65d15221621d94012f2eee19df
+# layer, renamed from OTLP_SERVICE in e5e3bbc5 (#207); otlp-trace-practices hides the OTLP_VIRTUAL_GATEWAY layer, which
+# has no dashboard, from b4bfc916 (#215).
+SW_UI_IMAGE_TAG ?= b4bfc91669b883a61ae24eaa5cfc2b74f9f5bd87
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
