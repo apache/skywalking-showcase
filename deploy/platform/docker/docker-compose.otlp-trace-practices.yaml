@@ -1,0 +1,283 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# @feature: otlp-trace-practices; six small cases whose topology needs more than a service calling a service, each on
+# its own network and under its own service.namespace, so the OAP names their services as <case>::<service>:
+#
+#   traced-envoy    frontend -> envoy -> cart              an Envoy that traces itself (spawn_upstream_span)
+#   traced-nginx    frontend -> nginx -> cart              nginx's OpenTelemetry module, and a TAL rule for its upstream
+#   untraced-nginx  frontend -> [nginx:80] -> cart, checkout
+#                                                          an nginx without tracing, listed in gateways.yml
+#   mq              billing -> invoices-kafka -> ledger    one Kafka broker reached at two addresses, named in
+#                   shipping -> rabbitmq:5672 -> mailer    server-clusters.yml; a RabbitMQ reached at one
+#   db              orders, reports -> orders-db           one PostgreSQL reached at two addresses, named in
+#                                                          server-clusters.yml
+#   canary          frontend -> b, b-canary                a canary chosen by a header, by a router that emits no
+#                                                          spans; a TAL rule puts the version into the peer
+#
+# The services are the otlp-trace-practices-python image (Flask, requests, psycopg2, confluent-kafka and pika under the
+# OpenTelemetry Python auto-instrumentation) and, behind the untraced nginx, otlp-trace-practices-go (otelhttp): the
+# Python server instrumentation reports the port it listens on as server.port, not the one in the Host header, so its
+# spans could not name the gateway. To see a case without its fix, remove the file it reads from the oap volumes below.
+
+x-practice-app: &practice-app
+  image: ${HUB}/otlp-trace-practices-python:${TAG}
+  restart: unless-stopped
+  depends_on:
+    oap:
+      condition: service_healthy
+
+x-loadgen: &loadgen
+  image: curlimages/curl:8.11.1
+  restart: unless-stopped
+
+services:
+  oap:
+    networks: [ sw, practice-envoy, practice-nginx, practice-gateway, practice-mq, practice-db, practice-canary ]
+    environment:
+      SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP: service.namespace
+      SW_TRACE_TAL_FILES: otlp-trace-practices
+    volumes:
+      - ./config/otlp-trace-practices/otlp-trace-practices.yaml:/skywalking/config/tal/otlp-trace-practices.yaml
+      - ./config/otlp-trace-practices/gateways.yml:/skywalking/config/gateways.yml
+      - ./config/otlp-trace-practices/server-clusters.yml:/skywalking/config/server-clusters.yml
+
+  # traced-envoy
+  practice-envoy-loadgen:
+    <<: *loadgen
+    networks: [ practice-envoy ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://frontend:8080/; sleep 0.5; done" ]
+  practice-envoy-frontend:
+    <<: *practice-app
+    networks: { practice-envoy: { aliases: [ frontend ] } }
+    environment:
+      OTEL_SERVICE_NAME: frontend
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-envoy
+      ACTIONS: http:http://envoy:10000/cart
+  practice-envoy:
+    image: envoyproxy/envoy:v1.36.13
+    restart: unless-stopped
+    networks: { practice-envoy: { aliases: [ envoy ] } }
+    command: [ "envoy", "-c", "/etc/envoy/envoy.yaml" ]
+    volumes:
+      - ./config/otlp-trace-practices/envoy.yaml:/etc/envoy/envoy.yaml
+    depends_on: [ practice-envoy-cart ]
+    environment:
+      # Read by the environment resource detector in envoy.yaml. Envoy names no instance of its own, so give it one.
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-envoy,service.instance.id=envoy-0
+  practice-envoy-cart:
+    <<: *practice-app
+    networks: { practice-envoy: { aliases: [ cart ] } }
+    environment:
+      OTEL_SERVICE_NAME: cart
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-envoy
+
+  # traced-nginx
+  practice-nginx-loadgen:
+    <<: *loadgen
+    networks: [ practice-nginx ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://frontend:8080/; sleep 0.5; done" ]
+  practice-nginx-frontend:
+    <<: *practice-app
+    networks: { practice-nginx: { aliases: [ frontend ] } }
+    environment:
+      OTEL_SERVICE_NAME: frontend
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-nginx
+      # Not "nginx", which gateways.yml lists for the untraced-nginx case.
+      ACTIONS: http:http://otel-nginx/cart
+  practice-nginx:
+    image: nginx:1.29.3-otel
+    restart: unless-stopped
+    networks: { practice-nginx: { aliases: [ otel-nginx ] } }
+    volumes:
+      - ./config/otlp-trace-practices/nginx-traced.conf:/etc/nginx/nginx.conf
+    depends_on: [ practice-nginx-cart-1, practice-nginx-cart-2 ]
+  practice-nginx-cart-1:
+    <<: *practice-app
+    networks: { practice-nginx: { aliases: [ cart-1 ] } }
+    environment:
+      OTEL_SERVICE_NAME: cart
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-nginx
+  practice-nginx-cart-2:
+    <<: *practice-app
+    networks: { practice-nginx: { aliases: [ cart-2 ] } }
+    environment:
+      OTEL_SERVICE_NAME: cart
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=traced-nginx
+
+  # untraced-nginx
+  practice-gateway-loadgen:
+    <<: *loadgen
+    networks: [ practice-gateway ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://frontend:8080/; sleep 0.5; done" ]
+  practice-gateway-frontend:
+    <<: *practice-app
+    networks: { practice-gateway: { aliases: [ frontend ] } }
+    environment:
+      OTEL_SERVICE_NAME: frontend
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=untraced-nginx
+      ACTIONS: http:http://nginx/cart;http:http://nginx/checkout
+  practice-gateway:
+    image: nginx:1.29.3
+    restart: unless-stopped
+    networks: { practice-gateway: { aliases: [ nginx ] } }
+    volumes:
+      - ./config/otlp-trace-practices/nginx-untraced.conf:/etc/nginx/nginx.conf
+    depends_on: [ practice-gateway-cart, practice-gateway-checkout ]
+  practice-gateway-cart:
+    image: ${HUB}/otlp-trace-practices-go:${TAG}
+    restart: unless-stopped
+    networks: { practice-gateway: { aliases: [ cart ] } }
+    environment:
+      OTEL_SERVICE_NAME: cart
+      # The Go SDK names no instance of its own, unlike the Python one.
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=untraced-nginx,service.instance.id=cart-0
+  practice-gateway-checkout:
+    image: ${HUB}/otlp-trace-practices-go:${TAG}
+    restart: unless-stopped
+    networks: { practice-gateway: { aliases: [ checkout ] } }
+    environment:
+      OTEL_SERVICE_NAME: checkout
+      # The Go SDK names no instance of its own, unlike the Python one.
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=untraced-nginx,service.instance.id=checkout-0
+
+  # mq
+  practice-mq-loadgen:
+    <<: *loadgen
+    networks: [ practice-mq ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://billing:8080/; curl -s -o /dev/null http://shipping:8080/; sleep 0.5; done" ]
+  practice-kafka:
+    image: apache/kafka:3.9.1
+    restart: unless-stopped
+    networks: { practice-mq: { aliases: [ kafka, kafka-0.kafka-headless ] } }
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 1
+  # confluent-kafka names the broker by the first bootstrap.servers entry, so the two clients name it two ways.
+  practice-mq-billing:
+    <<: *practice-app
+    networks: { practice-mq: { aliases: [ billing ] } }
+    environment:
+      OTEL_SERVICE_NAME: billing
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=mq
+      ACTIONS: kafka:kafka:9092,kafka-0.kafka-headless:9092|invoices
+  practice-mq-ledger:
+    <<: *practice-app
+    networks: { practice-mq: { aliases: [ ledger ] } }
+    command: [ "opentelemetry-instrument", "python", "consumer.py" ]
+    environment:
+      OTEL_SERVICE_NAME: ledger
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=mq
+      SOURCE: kafka:kafka-0.kafka-headless:9092,kafka:9092|invoices|ledger
+  practice-rabbitmq:
+    image: rabbitmq:4.1.8
+    restart: unless-stopped
+    networks: { practice-mq: { aliases: [ rabbitmq ] } }
+  practice-mq-shipping:
+    <<: *practice-app
+    networks: { practice-mq: { aliases: [ shipping ] } }
+    environment:
+      OTEL_SERVICE_NAME: shipping
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=mq
+      ACTIONS: amqp:rabbitmq:5672|order.shipped
+  practice-mq-mailer:
+    <<: *practice-app
+    networks: { practice-mq: { aliases: [ mailer ] } }
+    command: [ "opentelemetry-instrument", "python", "consumer.py" ]
+    environment:
+      OTEL_SERVICE_NAME: mailer
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=mq
+      SOURCE: amqp:rabbitmq:5672|order.shipped
+
+  # db
+  practice-db-loadgen:
+    <<: *loadgen
+    networks: [ practice-db ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://orders:8080/; curl -s -o /dev/null http://reports:8080/; sleep 0.5; done" ]
+  practice-postgres:
+    image: postgres:18.4
+    restart: unless-stopped
+    networks: { practice-db: { aliases: [ pg, pg-0.pg-headless ] } }
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+      POSTGRES_DB: orders
+  practice-db-orders:
+    <<: *practice-app
+    networks: { practice-db: { aliases: [ orders ] } }
+    environment:
+      OTEL_SERVICE_NAME: orders
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=db
+      ACTIONS: pg:pg:5432
+  practice-db-reports:
+    <<: *practice-app
+    networks: { practice-db: { aliases: [ reports ] } }
+    environment:
+      OTEL_SERVICE_NAME: reports
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=db
+      ACTIONS: pg:pg-0.pg-headless:5432
+
+  # canary
+  practice-canary-loadgen:
+    <<: *loadgen
+    networks: [ practice-canary ]
+    entrypoint: [ "sh", "-c", "while true; do curl -s -o /dev/null http://frontend:8080/; curl -s -o /dev/null -H 'x-canary: v2' http://frontend:8080/; sleep 0.5; done" ]
+  practice-canary-frontend:
+    <<: *practice-app
+    networks: { practice-canary: { aliases: [ frontend ] } }
+    environment:
+      OTEL_SERVICE_NAME: frontend
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=canary
+      ACTIONS: http:http://b:8080/
+      FORWARD_HEADERS: x-canary
+      # Records x-canary on the CLIENT span, as http.request.header.x_canary, which the canary rule reads.
+      OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_CLIENT_REQUEST: x-canary
+  practice-canary-router:
+    image: nginx:1.29.3
+    restart: unless-stopped
+    networks: { practice-canary: { aliases: [ b ] } }
+    volumes:
+      - ./config/otlp-trace-practices/nginx-canary.conf:/etc/nginx/nginx.conf
+    depends_on: [ practice-canary-b-v1, practice-canary-b-v2 ]
+  practice-canary-b-v1:
+    <<: *practice-app
+    networks: { practice-canary: { aliases: [ b-v1 ] } }
+    environment:
+      OTEL_SERVICE_NAME: b
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=canary
+  practice-canary-b-v2:
+    <<: *practice-app
+    networks: { practice-canary: { aliases: [ b-v2 ] } }
+    environment:
+      OTEL_SERVICE_NAME: b-canary
+      OTEL_RESOURCE_ATTRIBUTES: service.layer=OTLP_GENERAL,service.namespace=canary
+
+networks:
+  practice-envoy:
+  practice-nginx:
+  practice-gateway:
+  practice-mq:
+  practice-db:
+  practice-canary:
