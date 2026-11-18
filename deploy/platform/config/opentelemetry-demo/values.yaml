@@ -19,8 +19,8 @@
 # (oci://ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-demo), installed by the kubernetes Makefile as
 # its own release in its own namespace. The image and the OAP address the collector exports to are set there.
 #
-# The demo's own observability backends and its AI and docs components are off; its collector sends every span to the
-# OAP, and accepts and drops the metrics and logs the services also send.
+# The demo's own observability backends and its AI and docs components are off; its collector sends every span and log
+# to the OAP, and accepts and drops the metrics the services also send.
 
 components:
   agent:
@@ -31,6 +31,12 @@ components:
     enabled: false
   telemetry-docs:
     enabled: false
+  # Envoy's access logs carry service.namespace from this variable, empty by default, which the collector's insert
+  # keeps; set it so the logs land under otel-demo::frontend-proxy with the proxy's spans.
+  frontend-proxy:
+    envOverrides:
+      - name: OTEL_SERVICE_NAMESPACE
+        value: otel-demo
 
 jaeger:
   enabled: false
@@ -79,9 +85,9 @@ opentelemetry-collector:
         check_interval: 5s
         limit_percentage: 80
         spike_limit_percentage: 25
-      # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL; every service of the demo
-      # opts in here, and one that set its own layer keeps it. The chart sets no service.namespace, by which the OAP
-      # groups the demo's services, as otel-demo::cart.
+      # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL, and saves the logs carrying
+      # it by its otlp-general LAL rule; every service of the demo opts in here, and one that set its own layer keeps
+      # it. The chart sets no service.namespace, by which the OAP groups the demo's services, as otel-demo::cart.
       resource/layer:
         attributes:
           - key: service.layer
@@ -117,5 +123,5 @@ opentelemetry-collector:
           exporters: [ nop ]
         logs:
           receivers: [ otlp ]
-          processors: [ memory_limiter ]
-          exporters: [ nop ]
+          processors: [ memory_limiter, resource/layer ]
+          exporters: [ otlp_grpc/oap ]
