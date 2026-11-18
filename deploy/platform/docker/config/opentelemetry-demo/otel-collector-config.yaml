@@ -15,8 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# The Astronomy Shop's collector, in place of the demo's own: every span goes to the OAP over OTLP/gRPC. The demo's
-# services also export metrics and logs here; they are accepted and dropped, so no sender logs export errors.
+# The Astronomy Shop's collector, in place of the demo's own: every span and log goes to the OAP over OTLP/gRPC. The
+# demo's services also export metrics here; they are accepted and dropped, so no sender logs export errors.
 receivers:
   otlp:
     protocols:
@@ -32,8 +32,8 @@ receivers:
 
 processors:
   batch:
-  # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL; every service of the demo opts
-  # in here, and one that set its own layer keeps it.
+  # The OAP analyzes only the spans whose resource carries service.layer=OTLP_GENERAL, and saves the logs carrying it
+  # by its otlp-general LAL rule; every service of the demo opts in here, and one that set its own layer keeps it.
   resource/layer:
     attributes:
       - key: service.layer
@@ -63,4 +63,5 @@ service:
       exporters: [ nop ]
     logs:
       receivers: [ otlp ]
-      exporters: [ nop ]
+      processors: [ resource/layer, batch ]
+      exporters: [ otlp/oap ]
