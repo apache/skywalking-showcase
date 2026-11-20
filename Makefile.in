@@ -33,10 +33,10 @@ ES_IMAGE ?= docker.elastic.co/elasticsearch/elasticsearch-oss
 ES_IMAGE_TAG ?= 7.10.2
 
 SW_OAP_IMAGE ?= ghcr.io/apache/skywalking/oap
-SW_OAP_IMAGE_TAG ?= 28fee76efc4fca29e16c4fca291fd279137d33c2
+SW_OAP_IMAGE_TAG ?= cfb3d7e494ce3780c5d9a0590df079655c479ce1
 
 SW_UI_IMAGE ?= ghcr.io/apache/skywalking-horizon-ui
-SW_UI_IMAGE_TAG ?= 8569273b4a9735f9a395fdc335b6f801d6b0b2ab
+SW_UI_IMAGE_TAG ?= ea3f32d75a9cc14db8c9e7db3af0f2bffaf8f1af
 
 # The AI Sessionizer. No real Claude Code runs in the showcase, so its scenario feed is the
 # only traffic of the AI_AGENT layer.
