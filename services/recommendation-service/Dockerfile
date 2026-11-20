@@ -18,9 +18,11 @@
 FROM apache/skywalking-python:1.2.0-grpc-py3.10-slim
 
 WORKDIR /workspace
-# The base image's agent wheel lacks the generated skywalking.protocol package, so the agent fails to start
-# ("No module named 'skywalking.protocol'"); the same release from PyPI carries it.
-RUN pip install --no-deps --force-reinstall apache-skywalking==1.2.0
+# Agent 1.3.0 (with grpcio >= 1.83) no longer opens a gRPC channel in the gunicorn master before fork(); with 1.2.0
+# the forked workers deadlock and gunicorn aborts them every 30s (WORKER TIMEOUT), so the service never answers.
+# Built from the sdist: both the base image's wheel and the PyPI 1.3.0 wheel lack the generated skywalking.protocol
+# package ("No module named 'skywalking.protocol'"), and the 1.3.0 image still ships the 1.2.0 wheel.
+RUN pip install --force-reinstall --no-binary apache-skywalking apache-skywalking==1.3.0
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY src .
