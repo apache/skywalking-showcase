@@ -405,6 +405,8 @@ skywalking:
           env:
           - name: BYDB_LOGGING_LEVEL
             value: "error"
+          - name: BYDB_STREAM_MAX_FILE_SNAPSHOT_NUM
+            value: "5"
           backupSidecar:
             env:
             - name: BYDB_LOGGING_LEVEL
