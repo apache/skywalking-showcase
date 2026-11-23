@@ -1,0 +1,53 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Alertmanager configuration with the Slack receiver (chat.postMessage); the bot token is read from the file
+# /etc/alertmanager-secrets/slack-bot-token. The message comes from slack.tmpl; the platform defines slack.channel,
+# slack.prometheus_url and slack.footer in its own template file. Apart from the root receiver, templates and receivers
+# this file is identical to alertmanager.yml:
+#   diff alertmanager.yml alertmanager-slack.yml
+templates:
+  - /etc/alertmanager/*.tmpl
+route:
+  receiver: slack
+  group_by: [alertname, severity]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+inhibit_rules:
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal: [alertname, pod_name]
+  - source_matchers:
+      - alertname="BanyanDBWriteStalled"
+    target_matchers:
+      - alertname="BanyanDBWriteRateDrop"
+receivers:
+  - name: slack
+    slack_configs:
+      - api_url: https://slack.com/api/chat.postMessage
+        http_config:
+          authorization:
+            credentials_file: /etc/alertmanager-secrets/slack-bot-token
+        channel: '{{ template "slack.channel" . }}'
+        send_resolved: true
+        title: '{{ template "slack.title" . }}'
+        title_link: ''
+        fallback: '{{ template "slack.fallback" . }}'
+        text: '{{ template "slack.text" . }}'

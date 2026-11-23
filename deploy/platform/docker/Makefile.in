@@ -18,3 +18,11 @@
 
 .EXPORT_ALL_VARIABLES:
 FEATURE_FLAGS ?= agent,cluster,so11y,vm-monitor,event,mysql-monitor,nginx-monitor,apisix-monitor,grafana,elasticsearch-monitor,pulsar-monitor,activemq-monitor,banyandb-monitor,otlp-trace
+
+# @feature: prometheus-slack; add it to FEATURE_FLAGS after prometheus so that the Alertmanager posts to Slack. The bot
+# token is read only from the environment variable PROMETHEUS_SLACK_TOKEN (no default here):
+#   PROMETHEUS_SLACK_TOKEN=xoxb-... make deploy FEATURE_FLAGS=single-node,prometheus,prometheus-slack
+# `\#` is a literal `#` in make.
+PROMETHEUS_SLACK_CHANNEL ?= \#skywalking-demo-notifications
+# The content of the compose secret slack-channel, which the Alertmanager reads as the template slack.channel.
+PROMETHEUS_SLACK_CHANNEL_TMPL = {{ define "slack.channel" }}$(PROMETHEUS_SLACK_CHANNEL){{ end }}

@@ -23,3 +23,7 @@ tmpcharts*/
 # The asz scenarios come from the asz-scenarios image. Copies an earlier deploy left in generated/ would
 # otherwise still ride in the Helm release as chart files, and take half of its 1 MiB Secret.
 generated/asz-scenarios/
+
+# The prometheus feature renders its values, scrape and silence-id files into generated/ before the showcase release is
+# packaged. They would otherwise ride in that release as chart files.
+generated/prometheus-*

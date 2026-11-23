@@ -25,6 +25,26 @@ CILIUM_SERVICES_NAMESPACE ?= cilium-services
 OTEL_DEMO_NAMESPACE ?= otel-demo
 OTEL_DEMO_RELEASE ?= otel-demo
 OTEL_DEMO_CHART ?= oci://ghcr.io/open-telemetry/opentelemetry-helm-charts/opentelemetry-demo
+# @feature: prometheus; the existing Prometheus release that the feature upgrades in place
+PROMETHEUS_NAMESPACE ?= monitoring
+PROMETHEUS_RELEASE ?= prometheus
+PROMETHEUS_CHART_REPO ?= https://prometheus-community.github.io/helm-charts
+# Add prometheus-slack to FEATURE_FLAGS (together with prometheus, in any order) to send the alerts to Slack;
+# otherwise they are only visible in the Alertmanager UI. The Alertmanager posts to this channel with the bot token in the Secret PROMETHEUS_SLACK_SECRET (key
+# `slack-bot-token`) in PROMETHEUS_NAMESPACE. The showcase only checks the Secret; create it beforehand:
+#   kubectl create secret generic alertmanager-slack -n monitoring --from-literal=slack-bot-token="$SLACK_BOT_TOKEN"
+# `\#` is a literal `#` in make.
+PROMETHEUS_SLACK_CHANNEL ?= \#skywalking-demo-notifications
+PROMETHEUS_SLACK_SECRET ?= alertmanager-slack
+# `deploy` silences BanyanDBNodeRestarted and BanyanDBNodeMissing in the Alertmanager while the BanyanDB StatefulSets roll
+# out: for at most PROMETHEUS_DEPLOY_SILENCE_MAX from the start, then for PROMETHEUS_DEPLOY_SILENCE after the Prometheus
+# upgrade. PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT is one deadline for the wait for all BanyanDB StatefulSets and must be
+# at least 15m shorter than PROMETHEUS_DEPLOY_SILENCE_MAX, which also covers the steps before the wait and the
+# Prometheus upgrade; PROMETHEUS_DEPLOY_SILENCE is at least 16m: BanyanDBNodeRestarted looks at resets over 15m, so the
+# restarts of the rollout keep firing it for 15m after the upgrade. Format: a number and s, m or h.
+PROMETHEUS_DEPLOY_SILENCE_MAX ?= 45m
+PROMETHEUS_DEPLOY_SILENCE ?= 17m
+PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT ?= 30m
 RELEASE ?= demo
 AGENTLESS ?= false
 SCALLER_ENABLE ?= false

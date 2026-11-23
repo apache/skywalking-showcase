@@ -1,0 +1,50 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+
+rule_files:
+  - /etc/prometheus/rules/banyandb.yaml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]
+  # The metrics of the BanyanDB nodes, as the FODC proxy aggregates them. The rules select the nodes by container_name
+  # and pod_name (the labels of the Kubernetes pods); the standalone BanyanDB is the only node and has neither, so they
+  # are added here, with container_name liaison so that the CPU, GC and restart rules cover it.
+  - job_name: fodc-proxy
+    static_configs:
+      - targets: [banyandb:2121]
+        labels:
+          container_name: liaison
+          pod_name: banyandb
+  # The self observability of the OAP; the names cover both single-node (oap) and cluster (oap, oap1);
+  # single-node has no oap1, so Prometheus logs a DNS lookup failure for it, which can be ignored.
+  - job_name: skywalking-so11y
+    dns_sd_configs:
+      - names: [oap, oap1]
+        type: A
+        port: 1234
