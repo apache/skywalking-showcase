@@ -67,6 +67,10 @@ SWCK_OPERATOR_IMAGE_TAG ?= 7ce378f6c01a62fd42ff47f4c98e1e95b54a40ca
 SW_GRAFANA_PLUGIN_VERSION ?= 0.1.0
 GRAFANA_IMAGE ?= grafana/grafana:12.4.2
 
+# The versions match the prometheus chart used on Kubernetes (deploy/platform/kubernetes).
+PROMETHEUS_IMAGE ?= quay.io/prometheus/prometheus:v2.55.1
+ALERTMANAGER_IMAGE ?= quay.io/prometheus/alertmanager:v0.27.0
+
 OTEL_COLLECTOR_IMAGE ?= otel/opentelemetry-collector
 OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
 # @feature: otlp-trace; the OpenTelemetry Astronomy Shop. Its images are tagged <version>-<service>; the chart's version
@@ -74,6 +78,10 @@ OTEL_COLLECTOR_IMAGE_TAG ?= 0.102.1
 OTEL_DEMO_IMAGE ?= ghcr.io/open-telemetry/demo
 OTEL_DEMO_IMAGE_TAG ?= 3.1.0
 OTEL_DEMO_CHART_VERSION ?= 0.42.4
+
+# @feature: prometheus; the version of the prometheus-community/prometheus chart that the existing `prometheus` release is
+# upgraded with.
+PROMETHEUS_CHART_VERSION ?= 25.30.1
 
 SW_R3_IMAGE ?= ghcr.io/skyapm/r3
 SW_R3_IMAGE_TAG ?= 0.1.0

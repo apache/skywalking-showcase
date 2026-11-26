@@ -285,6 +285,159 @@ feature-otlp-trace:
 	$(eval OTEL_DEMO_HELM_OPTIONS := $(OTEL_DEMO_HELM_OPTIONS) $(if $(filter true,$(DEBUG)),--dry-run --debug))
 	$(eval HELM_OPTIONS := $(HELM_OPTIONS) --set skywalking.oap.env.SW_OTEL_RECEIVER_OTLP_SERVICE_GROUP=service.namespace)
 
+# @feature: prometheus; upgrade the existing `prometheus` release in PROMETHEUS_NAMESPACE in place (`helm upgrade`, no
+# --install). The scrape jobs come from deploy/platform/config/prometheus/scrape/ according to FEATURE_FLAGS and go to the chart's
+# extraScrapeConfigs; the generated files go to generated/, which every `deploy` empties first.
+# With the prometheus-slack feature the Secret PROMETHEUS_SLACK_SECRET must hold a non-empty `slack-bot-token`; it is
+# checked here, before `deploy` upgrades the main release, and the Alertmanager gets the Slack receiver and message
+# template; otherwise its root receiver sends nowhere. The Prometheus release itself is upgraded at the end of `deploy`.
+# The variables that end up in sed, a values file or a kubectl/amtool command (Slack, namespace, release and
+# duration settings) are validated against a whitelist first.
+# The StatefulSet name follows the alertmanager subchart's `alertmanager.fullname`.
+PROMETHEUS_ALERTMANAGER_STS = $(if $(findstring alertmanager,$(PROMETHEUS_RELEASE)),$(PROMETHEUS_RELEASE),$(PROMETHEUS_RELEASE)-alertmanager)
+# Service names follow the chart's `prometheus.server.fullname` and the subchart's `alertmanager.fullname`.
+PROMETHEUS_SERVER_SVC = $(if $(findstring prometheus,$(PROMETHEUS_RELEASE)),$(PROMETHEUS_RELEASE)-server,$(PROMETHEUS_RELEASE)-prometheus-server)
+# Shell function: a duration such as 30m in seconds.
+PROMETHEUS_SECONDS = to_seconds() { n=$${1%[smh]}; case "$$1" in *h) echo $$((n * 3600));; *m) echo $$((n * 60));; *) echo $$n;; esac; };
+
+# Names that YAML reads as a number, boolean or null. The chart writes the Secret name unquoted into the
+# manifest, so such a name would not reach Kubernetes as a string.
+PROMETHEUS_YAML_NON_STRING = ^([0-9][0-9.e+_]*|0[xob][0-9a-f_]+|true|false|yes|no|on|off|y|n|null)$$
+
+# check: fails unless the variable named by the first argument matches the extended regex of the second. reject: fails when
+# it matches. Values are read from the environment, not the command line.
+define PROMETHEUS_VALIDATE
+check() { v=$$(printenv "$$1"); [ "$$v" = "$$(printf '%s' "$$v" | tr -d '\n')" ] && printf '%s\n' "$$v" | grep -Eq "$$2" || { printf '%s\n' "$$1='$$v' is invalid: $$3" >&2; exit 1; }; }; \
+reject() { v=$$(printenv "$$1"); if printf '%s\n' "$$v" | grep -Eq "$$2"; then printf '%s\n' "$$1='$$v' is invalid: $$3" >&2; exit 1; fi; }; \
+$(if $(filter feature-prometheus-slack,$(features)),check PROMETHEUS_SLACK_CHANNEL '^([#][a-z0-9_-]+|[CGD][A-Z0-9]+)$$' 'a channel name (# and lowercase letters, digits, - and _) or a channel ID'; \
+check PROMETHEUS_SLACK_SECRET '^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$$' 'not a DNS-1123 name'; \
+reject PROMETHEUS_SLACK_SECRET '$(PROMETHEUS_YAML_NON_STRING)' 'YAML would read it as a number or boolean instead of a string'; \
+)check NAMESPACE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$$' 'not a DNS-1123 label'; \
+check RELEASE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$$' 'not a DNS-1123 label'; \
+check PROMETHEUS_NAMESPACE '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$$' 'not a DNS-1123 label'; \
+check PROMETHEUS_RELEASE '^[a-z0-9]([-a-z0-9]{0,38}[a-z0-9])?$$' 'letters, digits and - only, at most 40 characters'; \
+check PROMETHEUS_DEPLOY_SILENCE_MAX '^[1-9][0-9]*[smh]$$' 'not a duration such as 40m'; \
+check PROMETHEUS_DEPLOY_SILENCE '^[1-9][0-9]*[smh]$$' 'not a duration such as 17m'; \
+check PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT '^[1-9][0-9]*[smh]$$' 'not a duration such as 30m'; \
+$(PROMETHEUS_SECONDS) \
+[ "$$(to_seconds "$$PROMETHEUS_DEPLOY_SILENCE")" -ge 960 ] || { echo "PROMETHEUS_DEPLOY_SILENCE=$$PROMETHEUS_DEPLOY_SILENCE is too short: at least 16m, because BanyanDBNodeRestarted looks at resets over 15m and the silence must outlast them" >&2; exit 1; }; \
+[ "$$(to_seconds "$$PROMETHEUS_DEPLOY_SILENCE_MAX")" -ge $$(( $$(to_seconds "$$PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT") + 900 )) ] || { echo "PROMETHEUS_DEPLOY_SILENCE_MAX=$$PROMETHEUS_DEPLOY_SILENCE_MAX must be at least PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT=$$PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT plus 15m for the steps before the rollout wait and the Prometheus upgrade" >&2; exit 1; }
+endef
+
+# The deploy silence on BanyanDBNodeRestarted and BanyanDBNodeMissing: S1 is added before the main release is upgraded and its
+# id kept in generated/; after the Prometheus upgrade S2 is added first and S1 is expired only if that worked (expiring
+# fails when the Alertmanager was recreated, as its silences are gone). A failed silence command only prints a warning.
+PROMETHEUS_AMTOOL = kubectl -n $(PROMETHEUS_NAMESPACE) exec sts/$(PROMETHEUS_ALERTMANAGER_STS) -c alertmanager -- amtool --alertmanager.url=http://localhost:9093
+PROMETHEUS_SILENCE_ADD = silence add 'alertname=~"BanyanDBNode(Restarted|Missing)"' --comment='showcase deploy' --author=showcase
+PROMETHEUS_SILENCE_ID = ./generated/prometheus-deploy-silence-id
+
+define PROMETHEUS_DEPLOY_SILENCE_START
+out=$$(kubectl -n $(PROMETHEUS_NAMESPACE) get sts '$(PROMETHEUS_ALERTMANAGER_STS)' -o name 2>&1); rc=$$?; \
+if [ $$rc -eq 0 ]; then \
+	id=$$(kubectl -n $(PROMETHEUS_NAMESPACE) wait --for=condition=Ready pod -l 'app.kubernetes.io/name=alertmanager,app.kubernetes.io/instance=$(PROMETHEUS_RELEASE)' --timeout=60s >/dev/null && $(PROMETHEUS_AMTOOL) $(PROMETHEUS_SILENCE_ADD) --duration=$(PROMETHEUS_DEPLOY_SILENCE_MAX)) && [ -n "$$id" ] \
+		&& echo "$$id" > $(PROMETHEUS_SILENCE_ID) && echo "silenced BanyanDBNodeRestarted and BanyanDBNodeMissing for up to $(PROMETHEUS_DEPLOY_SILENCE_MAX): $$id" \
+		|| echo "warning: could not add the deploy silence; the rollout may send BanyanDBNodeRestarted and BanyanDBNodeMissing" >&2; \
+else \
+	case "$$out" in \
+		*'(NotFound)'*) echo "Alertmanager StatefulSet '$(PROMETHEUS_ALERTMANAGER_STS)' not found (first deploy): skipping the deploy silence before the rollout";; \
+		*) echo "warning: cannot read StatefulSet '$(PROMETHEUS_ALERTMANAGER_STS)': $$out; skipping the deploy silence, the rollout may send BanyanDBNodeRestarted and BanyanDBNodeMissing" >&2;; \
+	esac; \
+fi
+endef
+
+define PROMETHEUS_DEPLOY_SILENCE_END
+if $(PROMETHEUS_AMTOOL) $(PROMETHEUS_SILENCE_ADD) --duration=$(PROMETHEUS_DEPLOY_SILENCE) >/dev/null; then \
+	echo "silenced BanyanDBNodeRestarted and BanyanDBNodeMissing for $(PROMETHEUS_DEPLOY_SILENCE)"; \
+	if [ -f $(PROMETHEUS_SILENCE_ID) ]; then \
+		$(PROMETHEUS_AMTOOL) silence expire "$$(cat $(PROMETHEUS_SILENCE_ID))" >/dev/null || echo "warning: could not expire the deploy silence $$(cat $(PROMETHEUS_SILENCE_ID)); it ends by itself" >&2; \
+	fi; \
+else \
+	echo "warning: could not add the deploy silence; BanyanDBNodeRestarted and BanyanDBNodeMissing may be sent, and the earlier silence is left to end by itself" >&2; \
+fi
+endef
+
+# Waits for every BanyanDB StatefulSet in turn; PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT is one deadline for all of them, each
+# `rollout status` gets the seconds left. Running out of time only prints a warning.
+define PROMETHEUS_ROLLOUT_WAIT
+$(PROMETHEUS_SECONDS) \
+deadline=$$(( $$(date +%s) + $$(to_seconds '$(PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT)') )); \
+names=$$(kubectl -n $(NAMESPACE) get sts -l app.kubernetes.io/name=banyandb -o name) || { echo "warning: cannot list the BanyanDB StatefulSets, not waiting for the rollout" >&2; exit 0; }; \
+for name in $$names; do \
+	left=$$(( deadline - $$(date +%s) )); \
+	if [ $$left -le 0 ]; then echo "warning: $(PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT) are used up, not waiting for $$name and the StatefulSets after it" >&2; break; fi; \
+	kubectl -n $(NAMESPACE) rollout status $$name --timeout=$${left}s || echo "warning: $$name did not finish rolling out within the $(PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT) deadline" >&2; \
+done
+endef
+
+.PHONY: feature-prometheus
+feature-prometheus: clean-generated
+	@$(PROMETHEUS_VALIDATE)
+	@errf=$$(mktemp) || exit 1; trap 'rm -f "$$errf"' EXIT; \
+	if ! out=$$(helm -n $(PROMETHEUS_NAMESPACE) list --all --filter '^$(PROMETHEUS_RELEASE)$$' -o json 2>"$$errf"); then \
+		echo "cannot read helm release '$(PROMETHEUS_RELEASE)' in namespace '$(PROMETHEUS_NAMESPACE)': $$(cat "$$errf")" >&2; exit 1; \
+	fi; \
+	chart=$$(printf '%s' "$$out" | sed -n 's/.*"chart":"\([^"]*\)".*/\1/p'); \
+	if [ -z "$$chart" ]; then \
+		echo "helm release '$(PROMETHEUS_RELEASE)' not found in namespace '$(PROMETHEUS_NAMESPACE)'; the feature upgrades an existing release. Install it first:" >&2; \
+		echo "  helm -n $(PROMETHEUS_NAMESPACE) install $(PROMETHEUS_RELEASE) prometheus --repo $(PROMETHEUS_CHART_REPO) --version $(PROMETHEUS_CHART_VERSION) --create-namespace" >&2; exit 1; \
+	fi; \
+	case "$$chart" in prometheus-[0-9]*) ;; *) echo "helm release '$(PROMETHEUS_RELEASE)' in namespace '$(PROMETHEUS_NAMESPACE)' is chart '$$chart', not the prometheus chart; the feature only upgrades a prometheus release" >&2; exit 1;; esac
+ifneq ($(filter feature-prometheus-slack,$(features)),)
+ifeq ($(DEBUG),true)
+	@echo "DEBUG=true: skipping the check for the slack-bot-token key of secret '$(PROMETHEUS_SLACK_SECRET)' in namespace '$(PROMETHEUS_NAMESPACE)'"
+else
+	@errf=$$(mktemp) || exit 1; trap 'rm -f "$$errf"' EXIT; \
+	if tok=$$(kubectl -n $(PROMETHEUS_NAMESPACE) get secret $(PROMETHEUS_SLACK_SECRET) -o jsonpath='{.data.slack-bot-token}' 2>"$$errf"); then \
+		[ -n "$$tok" ] && exit 0; \
+		echo "secret '$(PROMETHEUS_SLACK_SECRET)' in namespace '$(PROMETHEUS_NAMESPACE)' has no non-empty key 'slack-bot-token'; the Alertmanager reads the Slack bot token from it." >&2; \
+	else \
+		case "$$(cat "$$errf")" in \
+			*'(NotFound)'*) echo "secret '$(PROMETHEUS_SLACK_SECRET)' not found in namespace '$(PROMETHEUS_NAMESPACE)'; the Alertmanager reads the Slack bot token from its key 'slack-bot-token'." >&2;; \
+			*) echo "cannot read secret '$(PROMETHEUS_SLACK_SECRET)' in namespace '$(PROMETHEUS_NAMESPACE)': $$(cat "$$errf")" >&2; exit 1;; \
+		esac; \
+	fi; \
+	echo "Create it first:" >&2; \
+	echo "  kubectl create secret generic $(PROMETHEUS_SLACK_SECRET) -n $(PROMETHEUS_NAMESPACE) --from-literal=slack-bot-token=\"\$$SLACK_BOT_TOKEN\"" >&2; \
+	exit 1
+endif
+endif
+	@mkdir -p ./generated/
+	$(eval PROMETHEUS_SCRAPE_FILES := ../config/prometheus/scrape/base.yaml $(if $(filter feature-banyandb,$(features)),../config/prometheus/scrape/banyandb.yaml) $(if $(filter feature-so11y,$(features)),../config/prometheus/scrape/so11y.yaml))
+	@raw=$$(for f in $(PROMETHEUS_SCRAPE_FILES); do cat "$$f" || exit 1; done) || { echo "cannot read the scrape fragments" >&2; exit 1; }; \
+	printf '%s\n' "$$raw" | grep -v -e '^[#]' -e '^$$' | sed -e "s|__NAMESPACE__|$$NAMESPACE|g" -e "s|__RELEASE__|$$RELEASE|g" > ./generated/prometheus-scrape.yaml
+ifneq ($(filter feature-prometheus-slack,$(features)),)
+	@{ echo 'alertmanager:'; echo '  config:'; sed 's/^/    /' ../config/prometheus/alertmanager/alertmanager-slack.yml; } > ./generated/prometheus-alertmanager-config.yaml
+	@sed -e "s|__SLACK_CHANNEL__|$$PROMETHEUS_SLACK_CHANNEL|" -e "s|__SLACK_SECRET__|$$PROMETHEUS_SLACK_SECRET|" \
+		-e "s|__PROMETHEUS_NAMESPACE__|$$PROMETHEUS_NAMESPACE|g" -e "s|__PROMETHEUS_SERVER_SVC__|$(PROMETHEUS_SERVER_SVC)|g" -e "s|__PROMETHEUS_ALERTMANAGER_SVC__|$(PROMETHEUS_ALERTMANAGER_STS)|g" \
+		../config/prometheus/alertmanager/kubernetes-slack.yaml > ./generated/prometheus-alertmanager-slack.yaml
+else
+	@{ echo 'alertmanager:'; echo '  config:'; sed 's/^/    /' ../config/prometheus/alertmanager/alertmanager.yml; } > ./generated/prometheus-alertmanager-config.yaml
+endif
+	$(eval PROMETHEUS_HELM_OPTIONS := --repo $(PROMETHEUS_CHART_REPO) --version $(PROMETHEUS_CHART_VERSION) -f ../config/prometheus/values.yaml)
+ifneq ($(filter feature-banyandb,$(features)),)
+	@{ echo 'serverFiles:'; echo '  alerting_rules.yml:'; sed 's/^/    /' ../config/prometheus/rules/banyandb.yaml; } > ./generated/prometheus-banyandb-rules.yaml
+	$(eval PROMETHEUS_HELM_OPTIONS := $(PROMETHEUS_HELM_OPTIONS) -f ./generated/prometheus-banyandb-rules.yaml)
+endif
+	$(eval PROMETHEUS_HELM_OPTIONS := $(PROMETHEUS_HELM_OPTIONS) -f ./generated/prometheus-alertmanager-config.yaml)
+ifneq ($(filter feature-prometheus-slack,$(features)),)
+	$(eval PROMETHEUS_HELM_OPTIONS := $(PROMETHEUS_HELM_OPTIONS) -f ./generated/prometheus-alertmanager-slack.yaml --set-file 'alertmanager.templates.slack\.tmpl=../config/prometheus/alertmanager/slack.tmpl')
+endif
+	$(eval PROMETHEUS_HELM_OPTIONS := $(PROMETHEUS_HELM_OPTIONS) --set-file extraScrapeConfigs=./generated/prometheus-scrape.yaml)
+# Network and template failures happen here, before S1 is added.
+	helm -n $(PROMETHEUS_NAMESPACE) template $(PROMETHEUS_RELEASE) prometheus $(PROMETHEUS_HELM_OPTIONS) > /dev/null
+ifneq ($(DEBUG),true)
+	@$(PROMETHEUS_DEPLOY_SILENCE_START)
+endif
+
+# @feature: prometheus-slack; make the Alertmanager of the `prometheus` feature post the alerts to Slack. It only switches
+# the Slack parts of `feature-prometheus` on and needs `prometheus` in FEATURE_FLAGS (in any order).
+.PHONY: feature-prometheus-slack
+feature-prometheus-slack:
+ifeq ($(filter feature-prometheus,$(features)),)
+	@echo "the prometheus-slack feature needs the prometheus feature; add prometheus to FEATURE_FLAGS" >&2; exit 1
+endif
+	@:
+
 # @feature: asz; deploy the SkyWalking AI Sessionizer. No real Claude Code runs in the showcase, so
 # asz's scenario feed generates the conversations, and asz collects them and pushes them to the OAP
 # under the AI_AGENT layer.
@@ -368,10 +521,22 @@ ifneq ($(DEBUG),true)
 	$(info rollout restart to allow the new sidecar to be injected.)
 	kubectl -n $(SAMPLE_SERVICES_NAMESPACE) get deployments -o name | xargs kubectl -n $(SAMPLE_SERVICES_NAMESPACE) rollout restart
 endif
+ifneq ($(filter feature-prometheus,$(features)),)
+ifneq ($(DEBUG),true)
+ifneq ($(filter feature-banyandb,$(features)),)
+	@$(PROMETHEUS_ROLLOUT_WAIT)
+endif
+endif
+	helm -n $(PROMETHEUS_NAMESPACE) upgrade $(PROMETHEUS_RELEASE) prometheus --wait --timeout=5m $(PROMETHEUS_HELM_OPTIONS) $(if $(filter true,$(DEBUG)),--dry-run --debug)
+ifneq ($(DEBUG),true)
+	@$(PROMETHEUS_DEPLOY_SILENCE_END)
+endif
+endif
 
 .PHONY: undeploy
 undeploy:
 	helm -n $(NAMESPACE) delete $(RELEASE) --wait || true
+# The `prometheus` release is kept: deleting it would delete its PVC and the metrics.
 ifneq ($(findstring otlp-trace,$(FEATURE_FLAGS)),)
 	helm -n $(OTEL_DEMO_NAMESPACE) delete $(OTEL_DEMO_RELEASE) --wait || true
 endif

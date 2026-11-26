@@ -1,0 +1,36 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+  - job_name: 'fodc-proxy'
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - __NAMESPACE__
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_component]
+        action: keep
+        regex: fodc-proxy
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+        action: replace
+      - source_labels: [__address__]
+        target_label: __address__
+        regex: (.*):\d+
+        replacement: $1:17913
+    metrics_path: /metrics
+    scheme: http

@@ -1,0 +1,845 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# BanyanDB alerting rules, a plain Prometheus rule file shared by both deployments. Kubernetes: the Makefile wraps it
+# into serverFiles.alerting_rules.yml of the chart's values, only with the `banyandb` feature. Docker: it is always
+# mounted into Prometheus as it is. {{ $value }} is written as Prometheus reads it.
+#
+# - All expressions read job="fodc-proxy". The BanyanDB pod is `pod_name`; `pod` is the fodc-proxy pod.
+# - disk `used_percent` is a 0-1 ratio, hence `100 *`; banyandb_system_up_time is in seconds.
+# - increase() drops the metric name, so per-pod sums take one term per metric, each tagged with a constant `metric`
+#   label so that `or` keeps all of them.
+# - `graph` is the query the Slack link plots: the raw metric or ratio without the threshold, filtered to the alerting
+#   pod (and path, container or plugin where the alert has one). Cluster-level alerts are not filtered. The event rules
+#   (panic, forced retention, trace plugin failures, queue retry exhausted) plot the raw counters, so the event that
+#   creates a series (value 1) shows as well.
+# - BanyanDBDiskUsageHigh takes the fullest storage path of the pod (`max by (pod_name)`), so several paths on one
+#   filesystem give one alert per pod and severity, not one per path. The description therefore names no path; the graph
+#   plots every path of the pod.
+#
+# BanyanDBErrorRateHigh: the seven error counters as errors per minute, summed over the cluster (BanyanDB
+# observability docs, "Error Rate" panel); any sustained non-zero value is worth a look, so no denominator or threshold.
+# The 2m window is 4 scrape intervals. A failed BydbQL request is counted by the bydbql service and by the service it
+# is dispatched to, so the rate can read up to twice the failing requests.
+# Only the queue publisher's counter is read without error_type canceled and stream_canceled; the other six
+# counters have no such label and are summed as they are. The liaison gRPC total_err does not tell a client
+# cancellation or timeout (Canceled, DeadlineExceeded) from a failure, so a client that cancels or times out requests
+# also raises BanyanDBErrorRateHigh. The liaison registry_err counter does not count NotFound, so the schema lookups for
+# objects that do not exist (for example after an OAP restart) are not errors. The liaison write-queue sync-loop counters
+# count retries (about one per table every 2s while no data node is reachable), not failed requests, so their rate
+# depends on the number of tables.
+#
+# Rates against one hour ago (BanyanDBWriteRateDrop, BanyanDBQueryRateSpike): the baseline is the median of the 5m
+# rate over the hour that ended one hour ago, not the single value at t - 1h, so a short dip or burst back then does not
+# skew the comparison. Both rules also have an absolute margin (query rate > 3 * baseline + 5 group queries/s; write drop needs a
+# baseline above 100 points/s). Without a baseline series they stay quiet; a baseline of 0 makes the query threshold
+# 5 group queries/s. The query counter total_started counts once for every group in a request, so a request over
+# several groups counts several times and the rate is in group queries/s; a property query has no group and counts
+# once. BanyanDBQueryRateSpike leaves out service="bydbql": a BydbQL request is dispatched to the measure, stream,
+# trace or property handler, which count it again.
+#
+# BanyanDBNodeMissing has no node count in it; two terms joined by `or`. Both only look at the liaison and data
+# processes (container_name liaison|data): the lifecycle sidecar is not a node that BanyanDB discovers, so its
+# up_time neither counts as an advancing node nor is reported as a missing one.
+#   A. nodes seen in the last hour (max_over_time of banyandb_system_up_time) whose up_time did not change within 3m,
+#      per pod_name and container_name. A frozen node (the FODC agent keeps its last value and fodc-proxy keeps
+#      exporting it; a live node changes up_time every 15s, so 6 samples in 3m) and a node whose series is gone both
+#      match; a scaled-down node keeps firing until it leaves the 1h window.
+#   B. the node count BanyanDB itself reports (banyandb_metadata_dns_discovery_total_nodes_count, the highest value
+#      among the advancing nodes) minus the number of advancing nodes minus the number of nodes A reports; it covers a
+#      node that BanyanDB still counts but whose up time Prometheus never saw advance (it was already lost when
+#      Prometheus started, so A has no history for it). BanyanDB drops a node from its count once DNS no longer lists
+#      it, so B does not report a node that left DNS. Its value is the number of missing nodes that A does not explain:
+#      a node A reports is not reported a second time, and the others still are. It has no pod_name and container_name,
+#      so it fires per cluster.
+#      banyandb_metadata_dns_discovery_total_nodes_count is the number of nodes that the process found through DNS SRV
+#      and whose metadata it fetched; its scope follows --node-discovery-dns-srv-addresses. The chart used by the
+#      showcase configures an SRV address for the liaison and for every data role, so the count equals the liaison plus
+#      data nodes. In a deployment with only the data SRV configured the count is smaller, so B misses nodes but never
+#      reports one that is not missing. With file discovery and standalone (docker) the metric does not exist, B does
+#      not apply and only A remains.
+# Both are guarded by `and on () count(banyandb_system_up_time) > 0`: when no node reports at all, BanyanDBMetricsAbsent
+# covers the outage and this rule stays quiet.
+#
+# Metrics: BanyanDBWriteQueueStuck and BanyanDBSyncPartsFailed read the liaison write queue, which exists only on the
+# liaison of a cluster (a standalone node has none).
+#
+# Counters created at start-up with value 0: sync_failed_parts (per group), liaison_grpc_total_stream_err, the liaison
+# gRPC total_panic, the metadata total_panics of the three engines, the trace merge_panic_recovered and the forced
+# retention segments_deleted_total. Their first event is already an increase once the counter has been scraped at 0, so
+# BanyanDBSyncPartsFailed, BanyanDBStreamWriteErrors, BanyanDBForcedRetentionDeletion and these counters in
+# BanyanDBPanic use increase() only. An event after the process (or the group) started and before the first scrape of
+# the counter is not counted: its first sample is already above 0, and increase() of one sample is 0.
+#
+# Lazily registered counters: a counter that has labels and is not created at start-up has no series until its first
+# event, and its first sample is already >= 1, so increase() reads 0 for the event that creates the series. These are
+# the queue publisher's total_err (error_type), banyandb_panic_total (component), the trace plugin executions and
+# batches, sampler_load_failed and plugin_telemetry_panic_total. Cluster-wide sums keep `or vector(0)`. The counters
+# that BanyanDBErrorRateHigh and the write rules read with rate() are created at their first event too (the liaison
+# gRPC total_err, total_registry_err and total_stream_msg_received_err, the sync-loop err counters, total_written); the
+# rate() of such a counter starts one sample late, which only delays a condition that has to last 10m or more. The per-pod
+# event rules that read such counters (BanyanDBPanic, BanyanDBTracePluginFailures, BanyanDBQueueRetryExhausted) add a
+# "new series" term for every one of them, for counter X and window w:
+#   (min_over_time(X[w]) unless X offset w)
+#   and (count_over_time(X[w]) < on (instance, pod_name) group_left()
+#          (max by (instance, pod_name) (count_over_time(banyandb_system_up_time[w])) - M))
+# The first part is the lowest in-window value of every series that did not exist w ago; the second keeps only series
+# that appeared after their pod did, since a series that appears with its pod (an agent reconnecting with its history)
+# is old history, not a new event. The two terms carry different `metric` labels so `or` keeps both. The scheduler
+# panic metrics are gauges that exist from process start and have no new-series term. M = 2 samples (1m at 30s) absorbs scrape skew, so a series counts as new when it first appeared 90s
+# or more after its pod was first scraped.
+# Blind spots:
+#   - a first event within 90s after the pod was first scraped;
+#   - the second first-event of a counter after a process restart in the same pod is reported late: the counter's
+#     earlier series still exists w ago, so the new-series term applies only once w ago falls into the gap between the
+#     two series, and increase() reads 0 when the counter restarts at its earlier value.
+# Without banyandb_system_up_time the new-series term is empty and cannot fire; BanyanDBMetricsAbsent covers the outage.
+#
+# Deployments: `make deploy` silences BanyanDBNodeRestarted and BanyanDBNodeMissing in the Alertmanager so that the
+# restarts and the missing nodes of a rollout are not reported: from before the main release is upgraded (at most
+# PROMETHEUS_DEPLOY_SILENCE_MAX; not on the first deploy, when there is no Alertmanager yet) until the BanyanDB
+# StatefulSets have rolled out (at most PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT in total) and the Prometheus upgrade is done,
+# and for PROMETHEUS_DEPLOY_SILENCE after that. The rules themselves have no start-up grace: an up time that became smaller is a
+# restart, and a node whose up time stops advancing or whose series is gone is a missing node after 8m (the 3m window
+# of changes() and the 5m `for`); a node that BanyanDB counts and Prometheus never saw advance is reported after 5m.
+groups:
+  - name: banyandb
+    rules:
+      # The status label of the latency histogram is ok, err, canceled or deadline_exceeded (BanyanDB 6b69e149). A
+      # client cancellation and a request whose deadline expired are not in the p99. When the server is so slow that
+      # clients run into their deadlines, BanyanDBErrorRateHigh reports it (the liaison gRPC total_err counts those
+      # requests). A request that fails fast (status="err") lowers the p99.
+      - alert: BanyanDBQueryLatencyHigh
+        expr: |
+          histogram_quantile(0.99, sum by (pod_name, le) (rate(banyandb_liaison_grpc_query_latency_seconds_bucket{job="fodc-proxy",status!~"canceled|deadline_exceeded"}[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} p99 query latency is high"
+          description: "p99 gRPC query latency on {{ $labels.pod_name }} is {{ $value | printf \"%.2f\" }} s, above 1 s for 10m."
+          graph: 'histogram_quantile(0.99, sum by (le) (rate(banyandb_liaison_grpc_query_latency_seconds_bucket{job="fodc-proxy",status!~"canceled|deadline_exceeded",pod_name="{{ $labels.pod_name }}"}[5m])))'
+
+      - alert: BanyanDBQueryLatencyHigh
+        expr: |
+          histogram_quantile(0.99, sum by (pod_name, le) (rate(banyandb_liaison_grpc_query_latency_seconds_bucket{job="fodc-proxy",status!~"canceled|deadline_exceeded"}[5m]))) > 5
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} p99 query latency is high"
+          description: "p99 gRPC query latency on {{ $labels.pod_name }} is {{ $value | printf \"%.2f\" }} s, above 5 s for 10m."
+          graph: 'histogram_quantile(0.99, sum by (le) (rate(banyandb_liaison_grpc_query_latency_seconds_bucket{job="fodc-proxy",status!~"canceled|deadline_exceeded",pod_name="{{ $labels.pod_name }}"}[5m])))'
+
+      # The write rules leave out the groups `_monitoring_log` and `_monitoring`, which BanyanDB writes itself:
+      # `_monitoring_log` is the stream of the nodes' own logs, written by BanyanDB's native logger (about 2 points/s on
+      # the liaison and 4 points/s on the data nodes); `_monitoring` is the system group of the native self-monitoring
+      # mode (it does not exist in the default prometheus mode). Both are system writes, not business traffic, and
+      # with them the total never reaches 0. WriteStalled compares against a small threshold, not 0: after the real writes stop, OAP still
+      # writes a few rows now and then (sw_records: 5 rows in 10 minutes, which reads 0.0035-0.014 points/s in a 5m
+      # rate), and with `== 0` every such write would reset the pending state. 0.1 points/s is about 7x the largest
+      # idle value seen (0.014) and 1/50 of the lowest rate of a cluster with traffic in the verification
+      # environment (5.1 points/s).
+      # banyandb:write_rate:sum is the cluster write rate; it exists only while some node reports banyandb_system_up_time,
+      # so without BanyanDB it records nothing instead of a 0. It sits in the same group, before WriteStalled, so the
+      # alert reads the sample recorded in the same evaluation cycle.
+      # WriteStalled only reports a stop: the write rate must have been above 0.1 points/s at some point in the 10 days
+      # that ended 10m ago. A cluster that never had traffic (an idle docker single-node, a fresh cluster) stays quiet.
+      # The look-back is limited by what Prometheus has kept (the Kubernetes chart's default retention is 15d; docker does
+      # not persist Prometheus data, so the history is empty after the container is recreated). A stop is reported until
+      # the writes resume or the last write is more than 10 days old.
+      - record: banyandb:write_rate:sum
+        expr: |
+          (
+            (sum(rate(banyandb_measure_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+            +
+            (sum(rate(banyandb_stream_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+            +
+            (sum(rate(banyandb_trace_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+          )
+          and on() (count(banyandb_system_up_time{job="fodc-proxy"}) > 0)
+
+      - alert: BanyanDBWriteStalled
+        expr: |
+          banyandb:write_rate:sum < 0.1
+          and on() (max_over_time(banyandb:write_rate:sum[10d] offset 10m) > 0.1)
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB has stopped receiving writes"
+          description: "The cluster write rate (measure + stream + trace, without the BanyanDB self-monitoring groups _monitoring and _monitoring_log) is {{ $value | printf \"%.2f\" }} points/s, below 0.1 points/s for the last 10m, after writes above 0.1 points/s within the 10 days before."
+          graph: 'sum(rate({__name__=~"banyandb_(measure|stream_tst|trace_tst)_total_written",job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m]))'
+
+      - alert: BanyanDBWriteRateDrop
+        expr: |
+          (
+            (sum(rate(banyandb_measure_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+            +
+            (sum(rate(banyandb_stream_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+            +
+            (sum(rate(banyandb_trace_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+          ) < 0.5 * (
+            quantile_over_time(0.5, (
+              (sum(rate(banyandb_measure_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+              +
+              (sum(rate(banyandb_stream_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+              +
+              (sum(rate(banyandb_trace_tst_total_written{job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m])) or vector(0))
+            )[1h:5m] offset 1h) > 100
+          )
+          and on() (count(banyandb_system_up_time{job="fodc-proxy"}) > 0)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB write rate dropped by more than half"
+          description: "The cluster write rate (without the BanyanDB self-monitoring groups _monitoring and _monitoring_log) is {{ $value | printf \"%.2f\" }} points/s, below 50% of the median rate of the hour that ended one hour ago, for 15m."
+          graph: 'sum(rate({__name__=~"banyandb_(measure|stream_tst|trace_tst)_total_written",job="fodc-proxy",group!~"_monitoring|_monitoring_log"}[5m]))'
+
+      - alert: BanyanDBQueryRateSpike
+        expr: |
+          sum(rate(banyandb_liaison_grpc_total_started{job="fodc-proxy",service!="bydbql",method="query"}[5m]))
+          > 3 * (
+            quantile_over_time(0.5, (sum(rate(banyandb_liaison_grpc_total_started{job="fodc-proxy",service!="bydbql",method="query"}[5m])))[1h:5m] offset 1h)
+          ) + 5
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB query rate spiked"
+          description: "The query rate is {{ $value | printf \"%.2f\" }} group queries/s (a request is counted once per group), above 3x the median rate of the hour that ended one hour ago plus 5 group queries/s, for 15m."
+          graph: 'sum(rate(banyandb_liaison_grpc_total_started{job="fodc-proxy",service!="bydbql",method="query"}[5m]))'
+
+      - alert: BanyanDBErrorRateHigh
+        expr: |
+          (
+            (sum(rate(banyandb_liaison_grpc_total_err{job="fodc-proxy"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_liaison_grpc_total_registry_err{job="fodc-proxy"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_liaison_grpc_total_stream_msg_received_err{job="fodc-proxy"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_queue_pub_total_err{job="fodc-proxy",error_type!~"canceled|stream_canceled"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_measure_total_sync_loop_err{job="fodc-proxy",container_name="liaison"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_stream_tst_total_sync_loop_err{job="fodc-proxy",container_name="liaison"}[2m]) * 60) or vector(0))
+            +
+            (sum(rate(banyandb_trace_tst_total_sync_loop_err{job="fodc-proxy",container_name="liaison"}[2m]) * 60) or vector(0))
+          ) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB is returning errors"
+          description: "The cluster error rate is {{ $value | printf \"%.1f\" }} errors/min, above 0 for 10m. The sum of the liaison gRPC, registry, stream-receive, queue-publisher and liaison write-queue sync-loop error counters; one failed request can be counted by more than one of them. Client cancellations of the queue publisher (error_type canceled, stream_canceled) are excluded, but the liaison gRPC counter also counts requests that the client cancelled or that timed out."
+          graph: '60 * ((sum(rate({__name__=~"banyandb_liaison_grpc_total_(registry_|stream_msg_received_)?err|banyandb_queue_pub_total_err",job="fodc-proxy",error_type!~"canceled|stream_canceled"}[2m])) or vector(0)) + (sum(rate({__name__=~"banyandb_(measure|stream_tst|trace_tst)_total_sync_loop_err",job="fodc-proxy",container_name="liaison"}[2m])) or vector(0)))'
+
+      - alert: BanyanDBQueueRetryExhausted
+        expr: |
+          sum by (pod_name) (
+            label_replace(increase(banyandb_queue_pub_total_err{job="fodc-proxy",error_type="retry_exhausted"}[15m]), "metric", "banyandb_queue_pub_total_err", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_queue_pub_total_err{job="fodc-proxy",error_type="retry_exhausted"}[15m]) unless banyandb_queue_pub_total_err{job="fodc-proxy",error_type="retry_exhausted"} offset 15m)
+              and
+              (count_over_time(banyandb_queue_pub_total_err{job="fodc-proxy",error_type="retry_exhausted"}[15m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[15m])) - 2)),
+              "metric", "banyandb_queue_pub_total_err:new", "", "")
+          ) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} exhausted its queue publish retries"
+          description: "{{ $labels.pod_name }} gave up {{ $value | printf \"%.0f\" }} queue publishes after exhausting retries in the last 15m (threshold: > 0)."
+          graph: 'banyandb_queue_pub_total_err{job="fodc-proxy",error_type="retry_exhausted",pod_name="{{ $labels.pod_name }}"}'
+
+      # banyandb:queue_pub_inflight is the number of queue publishes in flight (total_started minus total_finished) per
+      # pod, operation and remote_role. It leaves out remote_role="liaison" (the liaison-to-liaison batch-write), where
+      # the difference means nothing (observability docs, "Key Signals to Watch"). Both counters have labels and no series
+      # before the first publish, so a started series without a finished one counts as all in flight. A healthy series
+      # sits on a flat baseline with excursions of a few units that return to it; the baseline itself differs per series
+      # and is never 0 (the showcase has 7, 39, 195 and 1998 on four of them), because a publish that was started and
+      # never finished, for example one cut off by a data node restart, stays in the difference until the pod restarts.
+      # The alert therefore does not read the level: it fires when the lowest value of the last 30m is above the
+      # highest value of the 30m before, that is, the in-flight count rose and did not come back down, for 15m. A pod
+      # restart resets both counters, so the difference falls and the condition ends. The rule exists only while Prometheus
+      # has recorded 1h of the series. The standalone node has no queue publisher, so there is no series on Docker Compose.
+      - record: banyandb:queue_pub_inflight
+        expr: |
+          sum by (pod_name, operation, remote_role) (banyandb_queue_pub_total_started{job="fodc-proxy",remote_role!="liaison"})
+          -
+          (
+            sum by (pod_name, operation, remote_role) (banyandb_queue_pub_total_finished{job="fodc-proxy",remote_role!="liaison"})
+            or
+            sum by (pod_name, operation, remote_role) (banyandb_queue_pub_total_started{job="fodc-proxy",remote_role!="liaison"}) * 0
+          )
+
+      - alert: BanyanDBQueuePubBacklogGrowing
+        expr: |
+          min_over_time(banyandb:queue_pub_inflight[30m]) > max_over_time(banyandb:queue_pub_inflight[30m] offset 31m)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} {{ $labels.operation }} publishes to {{ $labels.remote_role }} nodes are piling up"
+          description: "The {{ $labels.operation }} publishes of {{ $labels.pod_name }} to {{ $labels.remote_role }} nodes that are started and not finished never fell below {{ $value | printf \"%.0f\" }} in the last 30m, above their highest value in the 30m before, for 15m. A data node may be slow or unavailable."
+          graph: 'banyandb:queue_pub_inflight{pod_name="{{ $labels.pod_name }}",operation="{{ $labels.operation }}",remote_role="{{ $labels.remote_role }}"}'
+
+      - alert: BanyanDBDiskUsageHigh
+        expr: |
+          100 * max by (pod_name) (banyandb_system_disk{job="fodc-proxy",kind="used_percent"}) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} disk usage is high"
+          description: "The fullest storage path on {{ $labels.pod_name }} is {{ $value | printf \"%.1f\" }}% full, above 80% for 10m (writes are rejected at 95% by default; liaison: *-max-disk-usage-percent, data: *-retention-high-watermark)."
+          graph: '100 * banyandb_system_disk{job="fodc-proxy",kind="used_percent",pod_name="{{ $labels.pod_name }}"}'
+
+      - alert: BanyanDBDiskUsageHigh
+        expr: |
+          100 * max by (pod_name) (banyandb_system_disk{job="fodc-proxy",kind="used_percent"}) > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} disk usage is high"
+          description: "The fullest storage path on {{ $labels.pod_name }} is {{ $value | printf \"%.1f\" }}% full, above 90% for 5m (writes are rejected at 95% by default; liaison: *-max-disk-usage-percent, data: *-retention-high-watermark)."
+          graph: '100 * banyandb_system_disk{job="fodc-proxy",kind="used_percent",pod_name="{{ $labels.pod_name }}"}'
+
+      - alert: BanyanDBMemoryProtectorHigh
+        expr: |
+          100 * max by (pod_name) (banyandb_memory_protector_usage{job="fodc-proxy"} / (banyandb_memory_protector_limit{job="fodc-proxy"} > 0)) > 65
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} memory protector usage is high"
+          description: "The memory protector on {{ $labels.pod_name }} is at {{ $value | printf \"%.1f\" }}% of its limit, above 65% for 10m."
+          graph: '100 * banyandb_memory_protector_usage{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"} / banyandb_memory_protector_limit{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'
+
+      - alert: BanyanDBMemoryProtectorHigh
+        expr: |
+          100 * max by (pod_name) (banyandb_memory_protector_usage{job="fodc-proxy"} / (banyandb_memory_protector_limit{job="fodc-proxy"} > 0)) > 80
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} memory protector usage is high"
+          description: "The memory protector on {{ $labels.pod_name }} is at {{ $value | printf \"%.1f\" }}% of its limit, above 80% for 5m."
+          graph: '100 * banyandb_memory_protector_usage{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"} / banyandb_memory_protector_limit{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'
+
+      # banyandb_system_memory_state{kind="used_percent"} is the used share (a 0-1 ratio) of the host's memory (gopsutil
+      # VirtualMemory, total = the node's RAM, 67 GB on the showcase nodes), not of the container's cgroup limit, and
+      # all pods on a node report the same value. The memory protector compares its own Go runtime bytes
+      # (banyandb_memory_protector_usage) with the cgroup limit times --allowed-percent (default 75), so
+      # BanyanDBMemoryProtectorHigh and BanyanDBHostMemoryHigh read different quantities and a host at 80% says nothing
+      # about the protector. BanyanDBMemoryProtectorHigh is the signal for the protector limit; BanyanDBHostMemoryHigh covers the node
+      # running out of memory, also where the protector is off (no cgroup limit, Docker Compose). Both can fire at the same time.
+      # A healthy showcase reads 0.41-0.65 for long, with one-sample (1m) peaks up to 0.88 that the 10m `for` ignores.
+      - alert: BanyanDBHostMemoryHigh
+        expr: |
+          100 * max by (pod_name, container_name) (banyandb_system_memory_state{job="fodc-proxy",kind="used_percent"}) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} host memory usage is high"
+          description: "The host memory seen by {{ $labels.container_name }} on {{ $labels.pod_name }} is {{ $value | printf \"%.1f\" }}% used, above 80% for 10m."
+          graph: '100 * banyandb_system_memory_state{job="fodc-proxy",kind="used_percent",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}'
+
+      - alert: BanyanDBHostMemoryHigh
+        expr: |
+          100 * max by (pod_name, container_name) (banyandb_system_memory_state{job="fodc-proxy",kind="used_percent"}) > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} host memory usage is high"
+          description: "The host memory seen by {{ $labels.container_name }} on {{ $labels.pod_name }} is {{ $value | printf \"%.1f\" }}% used, above 90% for 5m."
+          graph: '100 * banyandb_system_memory_state{job="fodc-proxy",kind="used_percent",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}'
+
+      - alert: BanyanDBGCPauseHigh
+        expr: |
+          max by (pod_name, container_name) (rate(go_gc_duration_seconds_sum{job="fodc-proxy",container_name=~"liaison|data"}[5m]) / rate(go_gc_duration_seconds_count{job="fodc-proxy",container_name=~"liaison|data"}[5m])) > 0.1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} GC pauses are long"
+          description: "Average GC pause of {{ $labels.container_name }} on {{ $labels.pod_name }} is {{ $value | printf \"%.3f\" }}s per GC cycle (5m average), above the 0.1s threshold for 15m."
+          graph: 'rate(go_gc_duration_seconds_sum{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}[5m]) / rate(go_gc_duration_seconds_count{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}[5m])'
+
+      # The denominator is GOMAXPROCS (go_sched_gomaxprocs_threads): the container CPU quota rounded down to a whole number
+      # (at least 1) by automaxprocs, or the value of the GOMAXPROCS environment variable. With a fractional quota or a
+      # manually set GOMAXPROCS it differs from the container's CPU limit. 6b69e149 also exports
+      # banyandb_system_cpu_limit_cores (the same GOMAXPROCS value); the rule does not read it, so it also works with
+      # images that do not export it.
+      - alert: BanyanDBCPUHigh
+        expr: |
+          (max by (pod_name, container_name) (rate(process_cpu_seconds_total{job="fodc-proxy",container_name=~"liaison|data"}[5m]))
+          / on (pod_name, container_name)
+          max by (pod_name, container_name) (go_sched_gomaxprocs_threads{job="fodc-proxy",container_name=~"liaison|data"})) > 0.8
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} CPU usage is high"
+          description: "CPU usage of the {{ $labels.container_name }} container on {{ $labels.pod_name }} is {{ $value | humanizePercentage }} of its GOMAXPROCS (go_sched_gomaxprocs_threads), above 80% for 15m. GOMAXPROCS is the CPU quota rounded down (at least 1) or the GOMAXPROCS setting, so it can differ from the container CPU limit."
+          graph: 'max(rate(process_cpu_seconds_total{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}[5m])) / max(go_sched_gomaxprocs_threads{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"})'
+
+      - alert: BanyanDBCPUHigh
+        expr: |
+          (max by (pod_name, container_name) (rate(process_cpu_seconds_total{job="fodc-proxy",container_name=~"liaison|data"}[5m]))
+          / on (pod_name, container_name)
+          max by (pod_name, container_name) (go_sched_gomaxprocs_threads{job="fodc-proxy",container_name=~"liaison|data"})) > 0.9
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} CPU usage is high"
+          description: "CPU usage of the {{ $labels.container_name }} container on {{ $labels.pod_name }} is {{ $value | humanizePercentage }} of its GOMAXPROCS (go_sched_gomaxprocs_threads), above 90% for 15m. GOMAXPROCS is the CPU quota rounded down (at least 1) or the GOMAXPROCS setting, so it can differ from the container CPU limit."
+          graph: 'max(rate(process_cpu_seconds_total{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}[5m])) / max(go_sched_gomaxprocs_threads{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"})'
+
+      # Liaison write queue: the three engines each keep one oldest_unsynced_part_age_seconds gauge per (group, shard)
+      # on the liaison only. A shard whose syncer is stuck keeps growing while the other shards stay near zero, so the
+      # max over all series of the pod is used. The series of a (group, shard) appears with the first write of that shard
+      # and goes back to 0 when the queue is empty.
+      # The age has to be above 300s AND still growing (delta over 5m above 60s; a stuck queue grows by about 1s per
+      # second, 300s in 5m). A series that FODC keeps exporting after the liaison dropped it (the group was deleted or
+      # its table closed; the agent keeps the last value) stays frozen, and a frozen age above 300 would alert forever.
+      # delta() drops the metric name, so the three engines of one pod must not carry the same group and shard
+      # (a group belongs to one catalog, so they do not); the inner max by makes the match one-to-one anyway. The two
+      # sides match on (pod_name, group, shard); the gauges carry no segment label on the liaison.
+      # Cost: if the liaison process itself hangs, its age gauges freeze as well and this rule stays quiet; the
+      # liaison's BanyanDBNodeMissing covers that case.
+      - alert: BanyanDBWriteQueueStuck
+        expr: |
+          max by (pod_name) (
+            ({__name__=~"banyandb_(measure|stream_tst|trace_tst)_oldest_unsynced_part_age_seconds",job="fodc-proxy",container_name="liaison"} > 300)
+            and on (pod_name, group, shard)
+            (max by (pod_name, group, shard) (delta({__name__=~"banyandb_(measure|stream_tst|trace_tst)_oldest_unsynced_part_age_seconds",job="fodc-proxy",container_name="liaison"}[5m])) > 60)
+          )
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} write queue is stuck"
+          description: "The oldest part in the liaison write queue of {{ $labels.pod_name }} has waited {{ $value | printf \"%.0f\" }}s to be synced to the data nodes, above 300s and still growing for 5m; a data node may be frozen or unreachable."
+          graph: 'max by (group, shard) ({__name__=~"banyandb_(measure|stream_tst|trace_tst)_oldest_unsynced_part_age_seconds",job="fodc-proxy",container_name="liaison",pod_name="{{ $labels.pod_name }}"})'
+
+      # total_sync_failed_parts counts parts dropped from the write queue after the sync retries ran out (BanyanDB then
+      # tries to copy the part to the failed-parts directory; a failed copy is counted as well). It exists from the
+      # moment the group is open (value 0), so the first failure is already an increase and needs no new-series term; a
+      # failure before the first scrape of the group's counter (first sample already above 0) is not counted. increase() drops
+      # the metric name, so the three engines of one pod have the same labels after it: the sum has to wrap increase()
+      # directly (a bare increase() over the __name__ regex fails with "same labelset").
+      - alert: BanyanDBSyncPartsFailed
+        expr: |
+          sum by (pod_name) (increase({__name__=~"banyandb_(measure|stream_tst|trace_tst)_total_sync_failed_parts",job="fodc-proxy",container_name="liaison"}[15m])) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} dropped parts it could not sync"
+          description: "{{ $labels.pod_name }} gave up syncing {{ $value | printf \"%.0f\" }} parts to the data nodes in the last 15m (threshold: > 0): the sync retries ran out and the parts left the write queue. BanyanDB tries to copy them to the failed-parts directory and the copy can fail, check the liaison log."
+          graph: 'sum({__name__=~"banyandb_(measure|stream_tst|trace_tst)_total_sync_failed_parts",job="fodc-proxy",container_name="liaison",pod_name="{{ $labels.pod_name }}"})'
+
+      # banyandb_liaison_grpc_total_stream_err{service, method="write"} counts whole write streams that end with an
+      # error (service tells measure, stream and trace apart); it is registered at start-up with value 0, so the first
+      # failure is already an increase and needs no new-series term; a failure before the first scrape of the counter
+      # (first sample already above 0) is not counted.
+      # Counted: session-level errors, such as a first message without metadata, or a data node that stays busy until
+      # the client deadline (the liaison then ends the stream with ResourceExhausted). Not counted: client cancellation,
+      # an expired deadline, a single failed message (a write to a missing group or stream: the stream continues and
+      # banyandb_liaison_grpc_total_stream_msg_received_err, read by BanyanDBErrorRateHigh, counts it) and an unreachable
+      # data node that is still listed (the sync retries run out and the part is dropped from the write queue:
+      # BanyanDBSyncPartsFailed) or no listed data node at all (the parts stay in the write queue: BanyanDBWriteQueueStuck).
+      # In a real failure this rule rarely fires.
+      - alert: BanyanDBStreamWriteErrors
+        expr: |
+          sum by (pod_name) (increase(banyandb_liaison_grpc_total_stream_err{job="fodc-proxy"}[15m])) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} write streams ended with an error"
+          description: "{{ $value | printf \"%.0f\" }} write streams of {{ $labels.pod_name }} ended with an error in the last 15m (threshold: > 0); client cancellations and expired deadlines are not counted. Common causes: a client sent an invalid stream, or a data node stayed busy until the client deadline."
+          graph: 'banyandb_liaison_grpc_total_stream_err{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'
+
+      # Average duration of one file merge over 30m. The denominator is total_merged, not total_merge_loop_started:
+      # loop_started also counts snapshot changes that merge nothing, which would dilute the average. Hot or untiered
+      # nodes (any node_type but warm/cold, or none) and warm/cold nodes have separate thresholds, since warm/cold
+      # merge large historical parts (normally 3-25s each).
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_measure_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_measure_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m])) > 2
+        for: 15m
+        labels:
+          severity: warning
+          engine: measure
+          tier: hot_or_untiered
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} measure merge latency is high"
+          description: "Average duration of one measure file merge on {{ $labels.pod_name }} (hot or untiered node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 2s for 15m."
+          graph: 'sum(rate(banyandb_measure_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_measure_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_stream_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_stream_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m])) > 1
+        for: 15m
+        labels:
+          severity: warning
+          engine: stream
+          tier: hot_or_untiered
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} stream merge latency is high"
+          description: "Average duration of one stream file merge on {{ $labels.pod_name }} (hot or untiered node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 1s for 15m."
+          graph: 'sum(rate(banyandb_stream_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_stream_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      # Trace: type="file" is the merge of the main trace parts only; the merges of a sidx are counted under
+      # type="file_<sidx name>" and are not covered by this rule.
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_trace_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_trace_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type!~"warm|cold"}[30m])) > 5
+        for: 15m
+        labels:
+          severity: warning
+          engine: trace
+          tier: hot_or_untiered
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} trace merge latency is high"
+          description: "Average duration of one trace file merge on {{ $labels.pod_name }} (hot or untiered node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 5s for 15m."
+          graph: 'sum(rate(banyandb_trace_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_trace_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_measure_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_measure_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m])) > 60
+        for: 15m
+        labels:
+          severity: warning
+          engine: measure
+          tier: warm_cold
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} measure merge latency is high"
+          description: "Average duration of one measure file merge on {{ $labels.pod_name }} (warm/cold node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 60s for 15m."
+          graph: 'sum(rate(banyandb_measure_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_measure_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_stream_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_stream_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m])) > 60
+        for: 15m
+        labels:
+          severity: warning
+          engine: stream
+          tier: warm_cold
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} stream merge latency is high"
+          description: "Average duration of one stream file merge on {{ $labels.pod_name }} (warm/cold node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 60s for 15m."
+          graph: 'sum(rate(banyandb_stream_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_stream_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      - alert: BanyanDBMergeLatencyHigh
+        expr: |
+          sum by (pod_name, node_type) (rate(banyandb_trace_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m]))
+          /
+          sum by (pod_name, node_type) (rate(banyandb_trace_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",node_type=~"warm|cold"}[30m])) > 60
+        for: 15m
+        labels:
+          severity: warning
+          engine: trace
+          tier: warm_cold
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} trace merge latency is high"
+          description: "Average duration of one trace file merge on {{ $labels.pod_name }} (warm/cold node) over the last 30m is {{ $value | printf \"%.2f\" }}s, above 60s for 15m."
+          graph: 'sum(rate(banyandb_trace_tst_total_merge_latency{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m])) / sum(rate(banyandb_trace_tst_total_merged{job="fodc-proxy",type="file",container_name=~"data|liaison",pod_name="{{ $labels.pod_name }}"}[30m]))'
+
+      # BanyanDBSeriesGrowthHigh is paused. series_count and series_count_previous are counted per node: when a data
+      # node goes away, the liaison hands its shards to the other nodes and the same series are counted once on each of
+      # two nodes (on the day of a production rollout the sum was 1.5-2.2x too high). Neither a sum per node nor a sum
+      # per group can remove the duplicates. For a group whose TTL is shorter than its segment interval (for example
+      # sw_metricsHour and sw_metricsDay) series_count_previous stays 0.
+      # Resume it when BanyanDB exports series_count and series_count_previous per shard (with a shard label) and keeps
+      # series_count_previous after a segment is deleted or moved; the expression then becomes
+      # `sum by (group) (max by (group, shard) (...))`.
+      # Series growth per group, for the measure, stream and trace series separately (the `metric` label is measure,
+      # stream_storage or trace_storage). series_count is the number of series of the current segment (the one that
+      # holds the newest write timestamp); it only grows inside a segment and starts again from 0 after the segment
+      # rotates. series_count_previous is the final count of the previous segment and stays the same during the current
+      # one; both are 0 until the first write after a restart. The alert fires when the current segment holds more than
+      # 1.2x the series of the whole previous segment, so it does not depend on the segment interval; with a DAY
+      # interval it can be late until close to the end of the day. `previous > 1000` leaves out small groups and a
+      # previous segment of 0 (first deployment, or all data expired by TTL). Warm and cold nodes are left out; a node
+      # without a node_type label (untiered) is included. The liaison has no such metrics.
+      # The counts are summed over the data nodes of a group (the inner max by (pod_name, group) leaves one series per
+      # node when two fodc-proxy instances export the same node). During a rollout or restart a node's series are
+      # written to another node and the new segment of the other node keeps them, so one node's count grows while the
+      # node that took over the writes is away, and the same series is counted on two nodes; the sum over the group
+      # does not depend on which node holds a series. The remaining limits: a group that really grows on one node only
+      # is judged by the group total; at a segment rotation the nodes switch up to 10m apart, and in that window the
+      # sum mixes a node's old segment with another node's new one, which only lowers the ratio; when the rule was
+      # deployed in the middle of a segment, or segment_interval was changed, the previous segment is incomplete and
+      # the ratio can be high once.
+      # - alert: BanyanDBSeriesGrowthHigh
+      #   expr: |
+      #     (
+      #       label_replace(
+      #         (
+      #           sum by (group) (max by (pod_name, group) (banyandb_measure_series_count{job="fodc-proxy",node_type!~"warm|cold"}))
+      #           /
+      #           (sum by (group) (max by (pod_name, group) (banyandb_measure_series_count_previous{job="fodc-proxy",node_type!~"warm|cold"})) > 1000)
+      #         ) > 1.2,
+      #         "metric", "measure", "", "")
+      #       or
+      #       label_replace(
+      #         (
+      #           sum by (group) (max by (pod_name, group) (banyandb_stream_storage_series_count{job="fodc-proxy",node_type!~"warm|cold"}))
+      #           /
+      #           (sum by (group) (max by (pod_name, group) (banyandb_stream_storage_series_count_previous{job="fodc-proxy",node_type!~"warm|cold"})) > 1000)
+      #         ) > 1.2,
+      #         "metric", "stream_storage", "", "")
+      #       or
+      #       label_replace(
+      #         (
+      #           sum by (group) (max by (pod_name, group) (banyandb_trace_storage_series_count{job="fodc-proxy",node_type!~"warm|cold"}))
+      #           /
+      #           (sum by (group) (max by (pod_name, group) (banyandb_trace_storage_series_count_previous{job="fodc-proxy",node_type!~"warm|cold"})) > 1000)
+      #         ) > 1.2,
+      #         "metric", "trace_storage", "", "")
+      #     )
+      #   for: 15m
+      #   labels:
+      #     severity: warning
+      #   annotations:
+      #     summary: "BanyanDB group {{ $labels.group }} series count grew quickly"
+      #     description: "The current {{ $labels.metric }} segment of group {{ $labels.group }} has {{ $value | printf \"%.2f\" }}x the series of the previous segment, summed over the data nodes (threshold: > 1.2x, previous segment > 1000 series) for 15m."
+      #     graph: '{__name__=~"banyandb_{{ $labels.metric }}_series_count(_previous)?",job="fodc-proxy",group="{{ $labels.group }}"}'
+
+      - alert: BanyanDBNodeMissing
+        expr: |
+          (
+            (
+              max by (pod_name, container_name) (max_over_time(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[1h]))
+              unless on (pod_name, container_name)
+              (changes(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[3m]) > 0)
+            )
+            or
+            (
+              (
+                max(banyandb_metadata_dns_discovery_total_nodes_count{job="fodc-proxy"}
+                  and on (pod_name, container_name) (changes(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[3m]) > 0))
+                - count(max by (pod_name, container_name) (changes(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[3m]) > 0))
+                - (
+                  count(
+                    max by (pod_name, container_name) (max_over_time(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[1h]))
+                    unless on (pod_name, container_name)
+                    (changes(banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}[3m]) > 0)
+                  ) or vector(0)
+                )
+              ) > 0
+            )
+          )
+          and on () (count(banyandb_system_up_time{job="fodc-proxy"}) > 0)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ if $labels.pod_name }}BanyanDB {{ $labels.container_name }} node {{ $labels.pod_name }} is missing{{ else }}BanyanDB nodes are missing{{ end }}"
+          description: "{{ if $labels.pod_name }}The up time of BanyanDB {{ $labels.container_name }} node {{ $labels.pod_name }} stopped advancing or its series is gone, although it reported within the last hour, for at least 8m.{{ else }}{{ $value | printf \"%.0f\" }} of the nodes BanyanDB itself counts (DNS discovery) neither advance nor have an alert of their own, for 5m.{{ end }}"
+          graph: '{{ if $labels.pod_name }}banyandb_system_up_time{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}{{ else }}banyandb_metadata_dns_discovery_total_nodes_count{job="fodc-proxy"}{{ end }}'
+
+      - alert: BanyanDBMetricsAbsent
+        expr: |
+          absent(banyandb_system_up_time{job="fodc-proxy"})
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB metrics are absent"
+          description: "No banyandb_system_up_time series from job fodc-proxy for 10m; BanyanDB or FODC is down, or the scrape is failing."
+          graph: 'count(banyandb_system_up_time{job="fodc-proxy"})'
+
+      # A restart is an up time that became smaller within 15m (resets() counts the drops). The up time is first taken
+      # as the maximum per (pod_name, container_name), so a fodc-proxy that is replaced (other instance and pod labels) does
+      # not hide a restart; the maximum is evaluated every 30s over the 15m, and the old proxy's last value is held for the
+      # 5m staleness lookback unless Prometheus writes a stale marker. While two proxies export the same node, the maximum
+      # is the larger up time; when the old proxy ends, a new proxy whose reading of the up time is behind by more than
+      # the time since the old proxy's last sample makes the maximum fall, and that reads as a restart. A new pod (a scaled-out node,
+      # Prometheus's first scrape) has no earlier sample and is not a restart; a node that was away for more than 15m
+      # (BanyanDBNodeMissing reports that) is not reported when it comes back; a pod that is re-created under another
+      # name is a new pod. The lifecycle sidecar is not a BanyanDB node.
+      - alert: BanyanDBNodeRestarted
+        expr: |
+          resets((max by (pod_name, container_name) (banyandb_system_up_time{job="fodc-proxy",container_name=~"liaison|data"}))[15m:30s]) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} restarted"
+          description: "The up time of {{ $labels.container_name }} on {{ $labels.pod_name }} became smaller within the last 15m: the process restarted."
+          graph: 'banyandb_system_up_time{job="fodc-proxy",pod_name="{{ $labels.pod_name }}",container_name="{{ $labels.container_name }}"}'
+
+      # One threshold for all plugins: the showcase only has sampling plugins, whose p99 is far below 1s. Failed
+      # executions are BanyanDBTracePluginFailures. A plugin runs about every 10 minutes, hence the 30m window.
+      - alert: BanyanDBTracePluginLatencyHigh
+        expr: |
+          histogram_quantile(0.99, sum by (le, group, plugin_name) (rate(banyandb_trace_tst_pipeline_plugin_execution_duration_seconds_bucket{job="fodc-proxy",result="success"}[30m]))) > 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB trace plugin {{ $labels.plugin_name }} is slow"
+          description: "p99 execution time of plugin {{ $labels.plugin_name }} in group {{ $labels.group }} is {{ $value | printf \"%.2f\" }}s, above 1s for 15m."
+          graph: 'histogram_quantile(0.99, sum by (le) (rate(banyandb_trace_tst_pipeline_plugin_execution_duration_seconds_bucket{job="fodc-proxy",result="success",group="{{ $labels.group }}",plugin_name="{{ $labels.plugin_name }}"}[30m])))'
+
+      - alert: BanyanDBTracePluginFailures
+        expr: |
+          sum by (pod_name) (
+            label_replace(increase(banyandb_trace_tst_pipeline_plugin_executions{job="fodc-proxy",result=~"panic|length_mismatch|late"}[30m]), "metric", "banyandb_trace_tst_pipeline_plugin_executions", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_trace_tst_pipeline_plugin_executions{job="fodc-proxy",result=~"panic|length_mismatch|late"}[30m]) unless banyandb_trace_tst_pipeline_plugin_executions{job="fodc-proxy",result=~"panic|length_mismatch|late"} offset 30m)
+              and
+              (count_over_time(banyandb_trace_tst_pipeline_plugin_executions{job="fodc-proxy",result=~"panic|length_mismatch|late"}[30m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[30m])) - 2)),
+              "metric", "banyandb_trace_tst_pipeline_plugin_executions:new", "", "")
+            or
+            label_replace(increase(banyandb_trace_tst_pipeline_plugin_batches{job="fodc-proxy",result="circuit_open"}[30m]), "metric", "banyandb_trace_tst_pipeline_plugin_batches", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_trace_tst_pipeline_plugin_batches{job="fodc-proxy",result="circuit_open"}[30m]) unless banyandb_trace_tst_pipeline_plugin_batches{job="fodc-proxy",result="circuit_open"} offset 30m)
+              and
+              (count_over_time(banyandb_trace_tst_pipeline_plugin_batches{job="fodc-proxy",result="circuit_open"}[30m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[30m])) - 2)),
+              "metric", "banyandb_trace_tst_pipeline_plugin_batches:new", "", "")
+            or
+            label_replace(increase(banyandb_trace_pipeline_sampler_load_failed{job="fodc-proxy"}[30m]), "metric", "banyandb_trace_pipeline_sampler_load_failed", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_trace_pipeline_sampler_load_failed{job="fodc-proxy"}[30m]) unless banyandb_trace_pipeline_sampler_load_failed{job="fodc-proxy"} offset 30m)
+              and
+              (count_over_time(banyandb_trace_pipeline_sampler_load_failed{job="fodc-proxy"}[30m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[30m])) - 2)),
+              "metric", "banyandb_trace_pipeline_sampler_load_failed:new", "", "")
+          ) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} trace sampling plugin failed"
+          description: "{{ $value | printf \"%.0f\" }} trace plugin failures (panic, length_mismatch, late, circuit_open, sampler_load_failed) on {{ $labels.pod_name }} in the last 30m (threshold: > 0)."
+          graph: 'label_replace(banyandb_trace_tst_pipeline_plugin_executions{job="fodc-proxy",result=~"panic|length_mismatch|late",pod_name="{{ $labels.pod_name }}"}, "metric", "executions", "", "") or label_replace(banyandb_trace_tst_pipeline_plugin_batches{job="fodc-proxy",result="circuit_open",pod_name="{{ $labels.pod_name }}"}, "metric", "batches", "", "") or label_replace(banyandb_trace_pipeline_sampler_load_failed{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}, "metric", "sampler_load_failed", "", "")'
+
+      # A merge whose drop-ID set reached its ceiling keeps the traces the plugin asked to drop (they are retained, so
+      # the storage that sampling should free is not freed); no data is lost, hence warning. The counter has the labels
+      # group and lane, is created at the first such merge (the showcase has no series although the plugin runs; its
+      # drop_set_budget_bytes is 48 MiB) and has the new-series term
+      # of the header; any increase fires.
+      - alert: BanyanDBTraceDropSetCeilingReached
+        expr: |
+          sum by (pod_name) (
+            label_replace(increase(banyandb_trace_tst_pipeline_merges_ceiling_reached{job="fodc-proxy"}[30m]), "metric", "banyandb_trace_tst_pipeline_merges_ceiling_reached", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_trace_tst_pipeline_merges_ceiling_reached{job="fodc-proxy"}[30m]) unless banyandb_trace_tst_pipeline_merges_ceiling_reached{job="fodc-proxy"} offset 30m)
+              and
+              (count_over_time(banyandb_trace_tst_pipeline_merges_ceiling_reached{job="fodc-proxy"}[30m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[30m])) - 2)),
+              "metric", "banyandb_trace_tst_pipeline_merges_ceiling_reached:new", "", "")
+          ) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} trace merges reached the drop-set ceiling"
+          description: "{{ $value | printf \"%.0f\" }} trace merges on {{ $labels.pod_name }} reached the drop-set ceiling in the last 30m, so the traces the plugin asked to drop were retained (threshold: > 0)."
+          graph: 'banyandb_trace_tst_pipeline_merges_ceiling_reached{job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'
+
+      # The counters that exist from start-up (the liaison gRPC total_panic, the metadata total_panics, the trace
+      # merge_panic_recovered) are read with increase() only: a panic before the first scrape of the counter (first sample
+      # already above 0) is not counted. banyandb_panic_total and plugin_telemetry_panic_total are registered at their first
+      # event and have a new-series term (see the header); the scheduler panic gauges exist from start-up.
+      - alert: BanyanDBPanic
+        expr: |
+          sum by (pod_name) (
+            label_replace(increase(banyandb_panic_total{job="fodc-proxy"}[15m]), "metric", "banyandb_panic_total", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_panic_total{job="fodc-proxy"}[15m]) unless banyandb_panic_total{job="fodc-proxy"} offset 15m)
+              and
+              (count_over_time(banyandb_panic_total{job="fodc-proxy"}[15m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[15m])) - 2)),
+              "metric", "banyandb_panic_total:new", "", "")
+            or
+            label_replace(increase(banyandb_liaison_grpc_total_panic{job="fodc-proxy"}[15m]), "metric", "banyandb_liaison_grpc_total_panic", "", "")
+            or
+            label_replace(increase(banyandb_measure_metadata_total_panics{job="fodc-proxy"}[15m]), "metric", "banyandb_measure_metadata_total_panics", "", "")
+            or
+            label_replace(increase(banyandb_stream_metadata_total_panics{job="fodc-proxy"}[15m]), "metric", "banyandb_stream_metadata_total_panics", "", "")
+            or
+            label_replace(increase(banyandb_trace_metadata_total_panics{job="fodc-proxy"}[15m]), "metric", "banyandb_trace_metadata_total_panics", "", "")
+            or
+            label_replace(increase(banyandb_trace_pipeline_plugin_telemetry_panic_total{job="fodc-proxy"}[15m]), "metric", "banyandb_trace_pipeline_plugin_telemetry_panic_total", "", "")
+            or
+            label_replace(
+              (min_over_time(banyandb_trace_pipeline_plugin_telemetry_panic_total{job="fodc-proxy"}[15m]) unless banyandb_trace_pipeline_plugin_telemetry_panic_total{job="fodc-proxy"} offset 15m)
+              and
+              (count_over_time(banyandb_trace_pipeline_plugin_telemetry_panic_total{job="fodc-proxy"}[15m]) < on (instance, pod_name) group_left() (max by (instance, pod_name) (count_over_time(banyandb_system_up_time{job="fodc-proxy"}[15m])) - 2)),
+              "metric", "banyandb_trace_pipeline_plugin_telemetry_panic_total:new", "", "")
+            or
+            label_replace(increase(banyandb_trace_tst_total_merge_panic_recovered{job="fodc-proxy"}[15m]), "metric", "banyandb_trace_tst_total_merge_panic_recovered", "", "")
+            or
+            label_replace(increase(banyandb_observability_scheduler_tasks_panic{job="fodc-proxy"}[15m]), "metric", "banyandb_observability_scheduler_tasks_panic", "", "")
+            or
+            label_replace(increase(banyandb_measure_scheduler_tasks_panic{job="fodc-proxy"}[15m]), "metric", "banyandb_measure_scheduler_tasks_panic", "", "")
+            or
+            label_replace(increase(banyandb_stream_storage_scheduler_tasks_panic{job="fodc-proxy"}[15m]), "metric", "banyandb_stream_storage_scheduler_tasks_panic", "", "")
+            or
+            label_replace(increase(banyandb_trace_storage_scheduler_tasks_panic{job="fodc-proxy"}[15m]), "metric", "banyandb_trace_storage_scheduler_tasks_panic", "", "")
+          ) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} recovered from a panic"
+          description: "{{ $value | printf \"%.0f\" }} panics were recovered on {{ $labels.pod_name }} in the last 15m (threshold: > 0)."
+          graph: '{__name__=~"banyandb_.*panic.*",job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'
+
+      # segments_deleted_total exists from start-up (value 0), so the first deletion is an increase; a deletion before the
+      # first scrape of the counter (first sample already above 0) is not counted.
+      - alert: BanyanDBForcedRetentionDeletion
+        expr: |
+          sum by (pod_name) (
+            label_replace(increase(banyandb_storage_retention_measure_forced_retention_segments_deleted_total{job="fodc-proxy"}[30m]), "metric", "banyandb_storage_retention_measure_forced_retention_segments_deleted_total", "", "")
+            or
+            label_replace(increase(banyandb_storage_retention_stream_forced_retention_segments_deleted_total{job="fodc-proxy"}[30m]), "metric", "banyandb_storage_retention_stream_forced_retention_segments_deleted_total", "", "")
+            or
+            label_replace(increase(banyandb_storage_retention_trace_forced_retention_segments_deleted_total{job="fodc-proxy"}[30m]), "metric", "banyandb_storage_retention_trace_forced_retention_segments_deleted_total", "", "")
+          ) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "BanyanDB {{ $labels.pod_name }} deleted data early because the disk is nearly full"
+          description: "{{ $value | printf \"%.0f\" }} segments were deleted by forced retention on {{ $labels.pod_name }} in the last 30m (threshold: > 0); stored data was lost."
+          graph: '{__name__=~"banyandb_storage_retention_.*_forced_retention_segments_deleted_total",job="fodc-proxy",pod_name="{{ $labels.pod_name }}"}'

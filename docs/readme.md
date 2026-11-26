@@ -127,6 +127,8 @@ Currently, the features supported are:
 | `flink-monitor`         | Deploy OpenTelemetry and export Flink monitoring metrics to SkyWalking for analysis and display on UI.                                                                                 
 | `banyandb-monitor`      | Deploy OpenTelemetry and export BanyanDB monitoring metrics to SkyWalking for analysis and display on UI.                                                                              |                                                    |
 | `asz`                   | Deploy the [SkyWalking AI Sessionizer](https://github.com/apache/skywalking-ai-sessionizer) and feed the `AI_AGENT` layer from its scenario feed: one generated Claude Code conversation every 30 minutes, picked at random from ten scenarios. | No real agent runs in the showcase: the conversations are generated. Only support deployment in the Kubernetes environment. |
+| `prometheus`            | Deploy Prometheus with the BanyanDB alerting rules and an Alertmanager. On Kubernetes it upgrades the existing `prometheus` Helm release in place and scrape jobs follow `FEATURE_FLAGS`. Sending the alerts to Slack is optional and off by default. | Not in the default `FEATURE_FLAGS`. Add `prometheus-slack` to post to Slack. See [Prometheus feature](#prometheus-feature). |
+| `prometheus-slack`      | Make the Alertmanager of the `prometheus` feature post the alerts to Slack. | Docker Compose and Kubernetes. Needs `prometheus` in `FEATURE_FLAGS`, in any order. Docker Compose needs `PROMETHEUS_SLACK_TOKEN` (see [Prometheus feature on Docker Compose](#prometheus-feature-on-docker-compose)); Kubernetes needs the Secret `alertmanager-slack` created first (see [Prometheus feature](#prometheus-feature)). |
 ### Kubernetes
 
 To deploy the example application in Kubernetes, please make sure that you have `kubectl` command available, and it can
@@ -153,6 +155,106 @@ make undeploy.kubernetes
 make redeploy.kubernetes # equivalent to make undeploy.kubernetes deploy.kubernetes
 ```
 
+#### Prometheus feature
+
+The `prometheus` feature runs Prometheus and an Alertmanager with the BanyanDB alerting rules.
+
+- The rules live in one file, `deploy/platform/config/prometheus/rules/banyandb.yaml`, shared by Kubernetes and Docker
+  Compose. They are loaded only with the `banyandb` feature on Kubernetes.
+- Sending the alerts to Slack is off by default. The Alertmanager is still deployed, and the alerts are visible in its
+  UI only. To post to Slack, use a bot token (`xoxb-`, scope `chat:write`, invited to the channel) and
+  `PROMETHEUS_SLACK_CHANNEL` (`#skywalking-demo-notifications` by default). On both platforms add the
+  `prometheus-slack` feature to `FEATURE_FLAGS` together with `prometheus`; the order does not matter.
+- `BanyanDBNodeMissing` judges by the nodes that actually report, so the number of nodes needs no configuration. When a
+  `deploy` makes a `pod_name` disappear (a scale-down, a changed `RELEASE` or `NAMESPACE`, a removed role), the alert
+  keeps firing for about 1h after the last sample of that `pod_name`, so it fires again once the deploy silence has
+  ended (on Kubernetes, 17m by default); wait for it to end or silence it by hand.
+- The thresholds of the rules depend on the load, so adjust them to your own workload.
+- On Kubernetes `undeploy` does not uninstall the `prometheus` release. A Prometheus that stays after the BanyanDB is
+  gone keeps firing `BanyanDBMetricsAbsent`: uninstall the release by hand or silence the alert.
+- Alertmanager v0.27 checks the answer of Slack's `chat.postMessage` (`notify/slack/slack.go`, `checkJSONResponseError`):
+  `ok: false` makes the notification fail with `error response from Slack: <error>` (for example `invalid_auth` or
+  `not_in_channel`), which shows in the Alertmanager log and in its `alertmanager_notifications_failed_total` metric.
+
+##### Kubernetes
+
+The `prometheus` feature runs `helm upgrade` on the existing `prometheus` release (chart
+`prometheus-community/prometheus`) in the `PROMETHEUS_NAMESPACE` namespace (`monitoring`); the upgrade creates the
+Alertmanager resources (StatefulSet, Service, ConfigMap and so on) that the release did not have. It fails if the release
+does not exist or is not a `prometheus` chart release. It runs last in `deploy`, and `undeploy` keeps the release, since
+deleting it would delete its PVC and the metrics.
+
+- Prerequisites of the user that runs `make deploy.kubernetes`: besides `helm`, in `PROMETHEUS_NAMESPACE` the right to
+  `exec` into pods (`pods/exec`, for `amtool` in the Alertmanager Pod), get Secrets (with `prometheus-slack`), get and
+  delete StatefulSets and delete Pods (the recreate of the Alertmanager StatefulSet below).
+- `make redeploy.kubernetes` deletes the main release first. Without the Secret that `prometheus-slack` needs it then
+  fails, so create the Secret first or use `deploy`.
+- Rollback: `helm -n monitoring history prometheus` lists the revisions and `helm -n monitoring rollback prometheus
+  <revision>` restores one of them. Rolling back to the revision from before the feature restores its scrape
+  configuration and values and removes the Alertmanager resources that the feature added.
+- Access: `kubectl -n monitoring port-forward svc/prometheus-server 9090:80` for Prometheus
+  (http://localhost:9090) and `kubectl -n monitoring port-forward svc/prometheus-alertmanager 9093` for the Alertmanager
+  (http://localhost:9093/#/alerts, which also shows that an alert has reached it). Use `PROMETHEUS_NAMESPACE` for
+  `monitoring`; with another `PROMETHEUS_RELEASE` the Service names follow the chart (`<release>-server`,
+  `<release>-alertmanager`).
+
+- The first upgrade rewrites the whole scrape configuration of the `prometheus-server` ConfigMap. The jobs follow the
+  features in `FEATURE_FLAGS`: `prometheus` and `kubernetes-nodes-cadvisor` always, `fodc-proxy` only with `banyandb`
+  and the OAP job only with `so11y`. A `FEATURE_FLAGS` without `banyandb` or `so11y` deletes the matching job from
+  the release, so add `prometheus` to the full default list instead of passing it alone:
+
+  ```shell
+  make deploy.kubernetes FEATURE_FLAGS="$(sed -n 's/^FEATURE_FLAGS ?= //p' deploy/platform/kubernetes/Makefile.in),prometheus"
+  ```
+
+- With the `prometheus-slack` feature, create the Secret `PROMETHEUS_SLACK_SECRET` (`alertmanager-slack` by default)
+  in `PROMETHEUS_NAMESPACE` before deploying, with the Slack bot token under the key `slack-bot-token`. `deploy` checks
+  it before it upgrades the main release. The Secret is not needed without `prometheus-slack`, which needs `prometheus`
+  and fails the deploy without it. In the example, replace `monitoring` with your `PROMETHEUS_NAMESPACE` and
+  `alertmanager-slack` with your `PROMETHEUS_SLACK_SECRET`:
+
+  ```shell
+  kubectl create secret generic alertmanager-slack -n monitoring --from-literal=slack-bot-token="$SLACK_BOT_TOKEN"
+  make deploy.kubernetes FEATURE_FLAGS="$(sed -n 's/^FEATURE_FLAGS ?= //p' deploy/platform/kubernetes/Makefile.in),prometheus,prometheus-slack"
+  ```
+
+- While the BanyanDB StatefulSets roll out, `deploy` silences `BanyanDBNodeRestarted` and `BanyanDBNodeMissing` in the
+  Alertmanager (silence S1, at most `PROMETHEUS_DEPLOY_SILENCE_MAX`, `45m` by default), then adds a second silence for
+  `PROMETHEUS_DEPLOY_SILENCE` (`17m`) after the Prometheus upgrade and expires S1. `PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT`
+  (`30m`) bounds the wait for the rollout. A failing silence command only prints a warning, and `DEBUG=true` skips the
+  silences. The first deploy has no Alertmanager yet, so it skips S1. The variables are numbers with `s`, `m` or `h`,
+  and `deploy` rejects them before it changes anything unless:
+  - `PROMETHEUS_DEPLOY_SILENCE` is at least `16m`, because `BanyanDBNodeRestarted` looks at resets over 15m;
+  - `PROMETHEUS_DEPLOY_SILENCE_MAX` is at least `PROMETHEUS_DEPLOY_ROLLOUT_TIMEOUT` plus `15m`.
+- If `deploy` fails after it added S1, S1 stays until `PROMETHEUS_DEPLOY_SILENCE_MAX` is over and the two alerts stay
+  silenced. Its id is in `deploy/platform/kubernetes/generated/prometheus-deploy-silence-id`. List the silences and
+  expire it by hand:
+
+  ```shell
+  AMTOOL="kubectl -n monitoring exec sts/prometheus-alertmanager -c alertmanager -- amtool --alertmanager.url=http://localhost:9093"
+  $AMTOOL silence query
+  $AMTOOL silence expire <silence id>
+  ```
+
+- Alertmanager keeps its silences and notification log in an emptyDir (`alertmanager.persistence.enabled: false` in
+  `deploy/platform/config/prometheus/values.yaml`). Recreating the Pod (node migration, switching `prometheus-slack` on or
+  off, which changes the Secret volume, or a chart upgrade that changes the Pod template) loses the silences, including the
+  deploy silence S1, and the notification log, so an alert that is already firing may be notified once more.
+- To keep them, set `alertmanager.persistence.enabled: true` in the values yourself. A StatefulSet's `volumeClaimTemplates`
+  cannot be changed, so:
+  - Switching from emptyDir to a PVC (false to true), or changing its size or class, makes `helm upgrade` fail. Run
+    `kubectl -n <ns> delete sts <name> --cascade=orphan` and delete the Pod, then deploy again. The Alertmanager is
+    unavailable for a short time, and the silences and notification log in the emptyDir are lost.
+  - Switching from a PVC back to emptyDir (true to false) needs the same StatefulSet deletion. The PVC `storage-<sts name>-0`
+    is kept (the chart sets no `persistentVolumeClaimRetentionPolicy`, so deleting the StatefulSet leaves the PVC), the
+    Pod uses an emptyDir and the data on the PVC is no longer used. Switching to true again binds the same PVC and brings
+    back its old silences and notification log. Delete the PVC by hand when you do not need it.
+- Alertmanager runs with `configmapReload`: changing the channel, the config or the template updates the Alertmanager
+  in place, without recreating the Pod and losing its silences. Switching `prometheus-slack` on or off changes the
+  Secret volume, which recreates the Pod once.
+- `helm upgrade` does not reuse the values of the existing release: the `prometheus` feature passes its own values, so
+  values set by hand on the release are replaced.
+
 ### Docker Compose
 
 #### Deploy
@@ -165,6 +267,70 @@ make undeploy.docker
 # Redeploy
 make redeploy.docker # equivalent to make undeploy.docker deploy.docker
 ```
+
+#### Prometheus feature on Docker Compose
+
+The `prometheus` feature deploys Prometheus and an Alertmanager. It needs `single-node` or `cluster` in
+`FEATURE_FLAGS`, and is not in the default list.
+
+- Prometheus is at http://localhost:9091 and the Alertmanager at http://localhost:9093. To add it to the default list:
+
+  ```shell
+  make deploy.docker FEATURE_FLAGS="$(sed -n 's/^FEATURE_FLAGS ?= //p' deploy/platform/docker/Makefile.in),prometheus"
+  ```
+
+- To send the alerts to Slack, add the `prometheus-slack` feature together with `prometheus`, in any order. The bot
+  token comes from the environment variable `PROMETHEUS_SLACK_TOKEN` (a compose secret: it is not passed as a container
+  environment variable, but inside the Alertmanager container it is the file
+  `/etc/alertmanager-secrets/slack-bot-token`), the channel from `PROMETHEUS_SLACK_CHANNEL`
+  (`#skywalking-demo-notifications` by default):
+
+  ```shell
+  PROMETHEUS_SLACK_TOKEN="$SLACK_BOT_TOKEN" PROMETHEUS_SLACK_CHANNEL='#my-channel' \
+    make deploy.docker FEATURE_FLAGS=single-node,prometheus,prometheus-slack
+  ```
+
+  Without `PROMETHEUS_SLACK_TOKEN`, `docker compose config` still succeeds but `make deploy.docker` fails with
+  `environment variable "PROMETHEUS_SLACK_TOKEN" required by secret ... is not set`. `make undeploy.docker` does not
+  need the token.
+
+  - An empty `PROMETHEUS_SLACK_TOKEN=` is not rejected: the deploy succeeds and every send to Slack fails (see the
+    `ok: false` note above).
+  - After a `deploy.docker` that failed for a missing token, setting the token and running `make deploy.docker` again
+    may reuse the old Alertmanager container, which has no token file. Run `make undeploy.docker` (with the same
+    `FEATURE_FLAGS`) first, then deploy.
+
+- Docker Compose scrapes differently from Kubernetes (`deploy/platform/docker/config/prometheus/prometheus.yml`): its
+  scrape configuration is one fixed file that does not change with `FEATURE_FLAGS`. Prometheus scrapes the FODC port of the
+  standalone BanyanDB directly (`banyandb:2121`, job `fodc-proxy`) and adds the labels `pod_name: banyandb` and
+  `container_name: liaison` by hand, since the rules select by those labels; there is no fodc-proxy Pod, so no `pod`
+  label. There is no cadvisor job. The OAP job `skywalking-so11y` is always present (DNS names `oap` and `oap1`, so
+  single-node logs a failed lookup for `oap1`), also without the `so11y` feature.
+- These rules never fire on Docker Compose, since their metrics do not exist or are not reported by the standalone node:
+  `BanyanDBQueueRetryExhausted`, `BanyanDBQueuePubBacklogGrowing`, `BanyanDBWriteQueueStuck`, `BanyanDBSyncPartsFailed`
+  and the warm and cold `BanyanDBMergeLatencyHigh`. `BanyanDBQueueRetryExhausted` and `BanyanDBQueuePubBacklogGrowing`
+  read the queue publisher's counters, which the standalone node (a local queue) does not have.
+  `BanyanDBWriteQueueStuck` and `BanyanDBSyncPartsFailed` read the liaison write queue, which the standalone node does
+  not have. `BanyanDBMemoryProtectorHigh` does not fire because the memory protector
+  limit is 0, which its expression leaves out (`limit > 0`), not because the metric is missing.
+  `BanyanDBTracePlugin*` and `BanyanDBTraceDropSetCeilingReached` read the trace sampling plugin metrics, which exist only with the `banyandb-tail-sampling`
+  feature (not in the default `FEATURE_FLAGS` of Docker Compose); without it they do not fire. On Kubernetes the
+  tail sampling plugin is enabled in `deploy/platform/kubernetes/values.yaml`, so these metrics exist there.
+  `BanyanDBQueryLatencyHigh` and `BanyanDBStreamWriteErrors` read metrics of the standalone node's gRPC server and
+  storage and do work. `BanyanDBSeriesGrowthHigh` is paused (commented out in `banyandb.yaml`) because BanyanDB counts
+  series per node, so series moved between data nodes are counted twice.
+- When the only BanyanDB node goes down, `BanyanDBMetricsAbsent` fires: `BanyanDBNodeMissing` needs another node that
+  still reports.
+- `BanyanDBNodeRestarted` does not fire on a first deploy. It fires for about 15 minutes when the up time of a node that
+  Prometheus already knows gets smaller, for example when `make deploy.docker` recreates only the BanyanDB container.
+  `make redeploy.docker` recreates every container, including the BanyanDB one, but it also drops the Prometheus data,
+  so it does not fire either.
+- Nothing is persisted: `make undeploy.docker` loses the Prometheus data and the Alertmanager silences.
+- Changing only `PROMETHEUS_SLACK_CHANNEL` or `PROMETHEUS_SLACK_TOKEN` and running `make deploy.docker` again does not
+  recreate the Alertmanager (the secrets are mounted, so compose does not see the change): run `make redeploy.docker`
+  with the same `FEATURE_FLAGS` (including `prometheus-slack`). After editing the mounted Alertmanager config or
+  templates, run `make redeploy.docker` too, or `curl -X POST http://localhost:9093/-/reload`.
+- Prometheus reads the rules at start: after changing them, run `make redeploy.docker` with the same `FEATURE_FLAGS`.
 
 ## Traffic Flow
 
